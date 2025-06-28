@@ -2,29 +2,40 @@ import {Registers} from "./Registers";
 import {Memory} from "../memory/Memory";
 import {opcodeTable_aH_aL} from "./opcode/OpcodeTable";
 import {Instructions} from "./Instructions";
+import {Flags} from "./Flags";
 
 
 
 export class Cpu {
     memory: Memory
 
+    flags: Flags = {
+        I: false,
+        U: false,
+        H: false,
+        N: false,
+        Z: false,
+        V: false,
+        C: false,
+        UI: false
+    }
+    
     registers: Registers = new Registers()
     instructions: Instructions = new Instructions()
+
     sleep: boolean = false
 
     constructor(memory: Memory) {
         this.memory = memory;
+
+        this.registers.pc = this.memory.readShort(0)
+        this.flags.I = true
     }
 
     execute() {
         if (!this.sleep) {
             this.loadInstructions()
-
             opcodeTable_aH_aL.execute(this)
-        }
-
-        if (!this.registers.flags.I) {
-            // TODO interrupts
         }
     }
 

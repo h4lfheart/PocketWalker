@@ -1,27 +1,27 @@
 export class Instructions {
-    ab: number
-    cd: number
-    ef: number
+    ab: number = 0
+    cd: number = 0
+    ef: number = 0
 
-    a: number
-    b: number
-    c: number
-    d: number
-    e: number
-    f: number
+    a: number = 0
+    b: number = 0
+    c: number = 0
+    d: number = 0
+    e: number = 0
+    f: number = 0
 
-    aH: number
-    aL: number
-    bH: number
-    bL: number
-    cH: number
-    cL: number
-    dH: number
-    dL: number
-    eH: number
-    eL: number
-    fH: number
-    fL: number
+    aH: number = 0
+    aL: number = 0
+    bH: number = 0
+    bL: number = 0
+    cH: number = 0
+    cL: number = 0
+    dH: number = 0
+    dL: number = 0
+    eH: number = 0
+    eL: number = 0
+    fH: number = 0
+    fL: number = 0
 
     set(a: number, b: number, c: number, d: number, e: number, f: number) {
         this.a = a

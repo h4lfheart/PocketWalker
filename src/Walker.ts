@@ -1,10 +1,9 @@
-import { readFileSync } from 'fs';
+import { readFileSync } from 'node:fs';
 import {Cpu} from "./cpu/Cpu";
 import {Memory} from "./memory/Memory";
 
 const ROM_SIZE = 1024 * 64
 const EEPROM_SIZE = 1024 * 64
-const ENTRY_PC = 0x02C4
 
 export class Walker {
 
@@ -26,12 +25,11 @@ export class Walker {
 
         this.cpu = new Cpu(this.rom)
 
-        this.cpu.registers.pc = ENTRY_PC
         this.running = true;
     }
 
 
-    run() {
+    async run() {
         while (this.running) {
             this.cpu.execute()
         }

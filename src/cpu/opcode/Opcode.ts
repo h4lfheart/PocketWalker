@@ -4,5 +4,5 @@ export interface Opcode {
     name: string
     bytes: number
     execute: (cpu: Cpu) => void
-    isTable: boolean
+    isTable?: boolean
 }
