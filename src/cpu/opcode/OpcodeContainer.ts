@@ -1,8 +1,6 @@
 import {Opcode} from "./Opcode";
 import {Cpu} from "../Cpu";
 
-let opCount: number = 0
-
 interface PatternEntry {
     firstPattern: (input: number) => boolean;
     secondPattern: (input: number) => boolean;
@@ -65,20 +63,19 @@ export class OpcodeContainer {
         let opcode = this.table.get(firstValue)?.get(secondValue) ?? null
         if (opcode == null) opcode = this.findPatternMatch(firstValue, secondValue)
         if (opcode == null) {
-            console.log(`Made it to ${opCount} operations`)
+            console.log(`Made it to ${cpu.opcodeCount} operations`)
             throw Error(`Opcode with 0x${firstValue.toString(16)} 0x${secondValue.toString(16)} does not exist in table ${this.name}`)
         }
 
         const preExecutePC = cpu.registers.pc;
-        opcode.execute(cpu);
+        const result = opcode.execute(cpu);
         cpu.registers.pc += opcode.bytes
 
 
         if (!opcode.isTable)
         {
             //console.log(`${opCount} - 0x${preExecutePC.toString(16).toUpperCase()} - I: ${cpu.flags.I?1:0} N: ${cpu.flags.N?1:0} Z: ${cpu.flags.Z?1:0} V: ${cpu.flags.V?1:0} C: ${cpu.flags.C?1:0}`)
-            console.log(`${opCount} - 0x${preExecutePC.toString(16)} - ${opcode.name}`)
-            opCount++
+            console.log(`${cpu.opcodeCount} - 0x${preExecutePC.toString(16)} - ${result == undefined ? opcode.name : result}`)
         }
     }
 

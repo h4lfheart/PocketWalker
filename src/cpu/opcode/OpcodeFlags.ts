@@ -27,7 +27,7 @@ export function setIncFlags(cpu: Cpu, value: number, bits: number): void {
     const result = value + 1;
     cpu.flags.N = (result & negativeFlag) !== 0;
     cpu.flags.Z = result === 0;
-    cpu.flags.V = ((~value & result) & negativeFlag) !== 0;
+    cpu.flags.V = (value & negativeFlag) !== 0 && result === 0;
 }
 
 export function setDecFlags(cpu: Cpu, value: number, bits: number): void {
@@ -35,7 +35,7 @@ export function setDecFlags(cpu: Cpu, value: number, bits: number): void {
     const result = value - 1;
     cpu.flags.N = (result & negativeFlag) !== 0;
     cpu.flags.Z = result === 0;
-    cpu.flags.V = ((value & ~result) & negativeFlag) !== 0;
+    cpu.flags.V = value === 0 && (result & negativeFlag) !== 0;
 }
 
 export function setAddFlags(cpu: Cpu, valueRd: number, valueRs: number, bits: number): void {

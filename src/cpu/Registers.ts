@@ -1,3 +1,5 @@
+import {toUnsignedByte, toUnsignedInt, toUnsignedShort} from "../utils/BitUtils";
+
 export class Registers {
     pc: number = 0
     sp: number = -1
@@ -16,7 +18,7 @@ export class Registers {
         this.uint16View = new Uint16Array(this.buffer);
         this.uint8View = new Uint8Array(this.buffer);
 
-        this.uint32View.fill(0);
+        this.uint16View.fill(0);
     }
 
     pushStack(pc: number) {
@@ -29,10 +31,25 @@ export class Registers {
         return this.stack.pop()!
     }
 
+    getDisplay8(control: number): string {
+        const regIndex = control & 0b0111;
+        const isLow = (control >> 3) & 1;
+
+        return isLow ? `RL${regIndex}` : `RH${regIndex}`
+    }
+
+    getDisplay16(control: number): string {
+        const regIndex = control & 0b0111;
+        const isE = (control >> 3) & 1;
+
+        return isE ? `E${regIndex}` : `R${regIndex}`
+    }
+
     getRegister8(control: number): number {
         const regIndex = control & 0b0111;
-        const isHigh = (control >> 3) & 1;
-        const byteIndex = regIndex * 4 + (isHigh ? 1 : 0);
+        const isLow = (control >> 3) & 1;
+        const byteIndex = regIndex * 4 + (isLow ? 0 : 1);  // Fixed: *4 for 32-bit spacing
+
         return this.uint8View[byteIndex];
     }
 
@@ -50,21 +67,21 @@ export class Registers {
 
     setRegister8(control: number, value: number) {
         const regIndex = control & 0b0111;
-        const isHigh = (control >> 3) & 1;
-        const byteIndex = regIndex * 4 + (isHigh ? 1 : 0);
-        this.uint8View[byteIndex] = value & 0xFF;
+        const isLow = (control >> 3) & 1;
+        const byteIndex = regIndex * 4 + (isLow ? 0 : 1);
+        this.uint8View[byteIndex] = toUnsignedByte(value);
     }
 
     setRegister16(control: number, value: number) {
         const regIndex = control & 0b0111;
         const isE = (control >> 3) & 1;
         const uint16Index = regIndex * 2 + (isE ? 1 : 0);
-        this.uint16View[uint16Index] = value & 0xFFFF;
+        this.uint16View[uint16Index] = toUnsignedShort(value);
     }
 
     setRegister32(control: number, value: number) {
         const regIndex = control & 0b0111;
-        this.uint32View[regIndex] = value >>> 0;
+        this.uint32View[regIndex] = toUnsignedInt(value);
     }
 
 }

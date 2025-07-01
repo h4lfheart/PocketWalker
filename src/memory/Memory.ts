@@ -1,3 +1,4 @@
+
 export class Memory {
     private memory: Uint8Array;
 
@@ -10,6 +11,7 @@ export class Memory {
     }
 
     writeByte(address: number, value: number) {
+        if (this.memory[address] == value) return
         this.memory[address] = value
     }
 
