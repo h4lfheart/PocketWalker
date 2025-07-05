@@ -12,7 +12,6 @@ export class Memory {
 
     writeByte(address: number, value: number) {
         address &= 0xFFFF
-
         this.memory[address] = value
     }
 

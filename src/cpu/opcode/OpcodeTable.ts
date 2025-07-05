@@ -589,6 +589,23 @@ opcodeTable_aH_aL.register(0x6, 0x4, {
     }
 })
 
+opcodeTable_aH_aL.register(0x6, 0x5, {
+    name: "XOR.W Rs, Rd",
+    bytes: 2,
+    execute: cpu => {
+        const rs = cpu.instructions.bH
+        const rd = cpu.instructions.bL
+
+        const rsValue = cpu.registers.getRegister16(rs)
+        const rdValue = cpu.registers.getRegister16(rd)
+
+        const value = rsValue ^ rdValue
+        cpu.registers.setRegister16(rd, value)
+
+        setMovFlags(cpu, value, 16)
+    }
+})
+
 opcodeTable_aH_aL.register(0x6, 0x8, {
     name: "MOV.B @ERs,Rd / MOV.B Rs, @ERd",
     bytes: 2,
@@ -1262,6 +1279,25 @@ opcodeTable_aHaL_bH.register(0x0A, 0x0, {
     }
 })
 
+opcodeTable_aHaL_bH.register(0x0A, range(0x8, 0xF), {
+    name: "ADD.L ERs, ERd",
+    bytes: 2,
+    execute: cpu => {
+        const erd = cpu.instructions.bL
+        const ers = cpu.instructions.bH & 0b111
+
+        const erdValue = cpu.registers.getRegister32(erd)
+        const ersValue = cpu.registers.getRegister32(ers)
+
+        const value = erdValue + ersValue
+        cpu.registers.setRegister32(erd, value)
+
+        setAddFlags(cpu, erdValue, ersValue, 32)
+
+        return `ADD.L ${cpu.registers.getDisplay32(ers)}, ${cpu.registers.getDisplay32(erd)}`
+    }
+})
+
 opcodeTable_aHaL_bH.register(0xB, 0x0, {
     name: "ADDS #1, ERd",
     bytes: 2,
@@ -1457,6 +1493,21 @@ opcodeTable_aHaL_bH.register(0x10, 0x1, {
     }
 })
 
+opcodeTable_aHaL_bH.register(0x10, 0x3, {
+    name: "SHLL.L ERd",
+    bytes: 2,
+    execute: cpu => {
+        const erd = cpu.instructions.bL
+        const erdValue = cpu.registers.getRegister16(erd)
+
+        const value = erdValue << 1
+        cpu.registers.setRegister16(erd, value)
+
+        cpu.flags.C = ((erdValue >> 31) & 1) == 1
+        setMovFlags(cpu, value, 8)
+    }
+})
+
 opcodeTable_aHaL_bH.register(0x11, 0x0, {
     name: "SHLR.B Rd",
     bytes: 2,
@@ -1531,6 +1582,22 @@ opcodeTable_aHaL_bH.register(0x17, 0x7, {
         setMovFlags(cpu, value, 32)
 
         return `EXTU.L ${cpu.registers.getDisplay32(erd)}`
+    }
+})
+
+opcodeTable_aHaL_bH.register(0x17, 0x9, {
+    name: "NEG.W Rd",
+    bytes: 2,
+    execute: cpu => {
+        const rd = cpu.instructions.bL
+        const rdValue = cpu.registers.getRegister16(rd)
+
+        if (rdValue != 0x8000)
+            cpu.registers.setRegister16(rd, -rdValue)
+
+        setSubFlags(cpu, 0, rdValue, 16)
+
+        return `NEG.W ${cpu.registers.getDisplay16(rd)}`
     }
 })
 
@@ -1645,6 +1712,18 @@ opcodeTable_aHaL_bH.register(0x58, 0x2, {
     }
 })
 
+opcodeTable_aHaL_bH.register(0x58, 0x3, {
+    name: "BLS d:16",
+    bytes: 4,
+    execute: cpu => {
+        const disp = toSignedShort(cpu.instructions.cd)
+        if (cpu.flags.C || cpu.flags.Z)
+            cpu.registers.pc += disp
+
+        return `BLS ${disp}`
+    }
+})
+
 opcodeTable_aHaL_bH.register(0x58, 0x4, {
     name: "BCC d:16",
     bytes: 4,
@@ -1654,6 +1733,18 @@ opcodeTable_aHaL_bH.register(0x58, 0x4, {
             cpu.registers.pc += disp
 
         return `BCC ${disp}`
+    }
+})
+
+opcodeTable_aHaL_bH.register(0x58, 0x5, {
+    name: "BCS d:16",
+    bytes: 4,
+    execute: cpu => {
+        const disp = toSignedShort(cpu.instructions.cd)
+        if (cpu.flags.C)
+            cpu.registers.pc += disp
+
+        return `BCS ${disp}`
     }
 })
 
@@ -1818,6 +1909,23 @@ opcodeTable_aHaL_bH.register(0x7A, 0x1, {
 //endregion
 
 //region opcodeTable_aHaLbHbLcH_cL
+
+opcodeTable_aHaLbHbLcH_cL.register(0x1c05, 0x2, {
+    name: "MULXS.W Rs, ERd",
+    bytes: 4,
+    execute: cpu => {
+        const rs = cpu.instructions.dH
+        const rsValue = cpu.registers.getRegister16(rs)
+
+        const erd = cpu.instructions.dL & 0b111
+        const erdValue = cpu.registers.getRegister32(erd)
+
+        cpu.registers.setRegister32(erd, (erdValue & 0xFFFF) * (rsValue))
+
+        cpu.flags.Z = rsValue == 0
+        cpu.flags.N = Boolean(rsValue & 0b1000_0000_0000_0000)
+    }
+})
 
 opcodeTable_aHaLbHbLcH_cL.register(0x1d05, 0x3, {
     name: "DIVXS.W Rs, ERd",

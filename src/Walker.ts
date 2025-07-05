@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import {Cpu, CPU_CYCLES_PER_SECOND} from "./cpu/Cpu";
+import {Cpu, CPU_CYCLES_PER_SECOND, KEY_CIRCLE, KEY_LEFT, KEY_RIGHT} from "./cpu/Cpu";
 import {Memory} from "./memory/Memory";
 import {EepRom} from "./eeprom/EepRom";
 import {Ssu} from "./ssu/Ssu";
@@ -24,6 +24,8 @@ export class Walker {
     eeprom: EepRom
     accelerometer: Accelerometer
     lcd: Lcd
+
+    lastTime: number = 0
 
     constructor(romPath: string, eepromPath: string | null = null) {
 
@@ -52,20 +54,45 @@ export class Walker {
     }
 
 
-    run() {
-        // TODO separate sdl thread and emulator thread
+    async run() {
         const window = sdl.video.createWindow({ title: "PocketWalker", height: LCD_HEIGHT * 8, width: LCD_WIDTH * 8, resizable: false })
+
+        window.on("keyDown", (args: any) => {
+            switch (args.key) {
+                case "left":
+                    this.cpu.pushKey(KEY_LEFT)
+                    break
+                case "right":
+                    this.cpu.pushKey(KEY_RIGHT)
+                    break
+                case "down":
+                    this.cpu.pushKey(KEY_CIRCLE)
+                    break
+                case "escape":
+                    this.running = false
+                    window.destroy()
+                    break
+            }
+        })
 
         while (this.running) {
             this.cpu.execute()
 
-            // TODO clean this up and optimize
             if (this.cpu.cycleCount >= CPU_CYCLES_PER_SECOND / TICKS_PER_SECOND) {
                 this.cpu.cycleCount -= CPU_CYCLES_PER_SECOND / TICKS_PER_SECOND
 
                 this.cpu.interrupts.rtcInterrupt()
 
                 this.renderWindow(window)
+
+                const desiredTime = 1000 / TICKS_PER_SECOND
+
+                const elapsed = performance.now() - this.lastTime
+                if (elapsed < desiredTime) {
+                    await new Promise(resolve => setTimeout(resolve, desiredTime - elapsed))
+                }
+
+                this.lastTime = performance.now()
             }
         }
     }
@@ -74,8 +101,8 @@ export class Walker {
         const buffer = Buffer.alloc(LCD_WIDTH * LCD_HEIGHT * 3)
         for (let y = 0; y < LCD_HEIGHT; y++) {
             const stripeOffset = y % 8
-            const row = Math.floor(y / 8)  // Fix: Use Math.floor for integer division
-            const rowOffset = row * LCD_WIDTH * LCD_COLUMN_SIZE  // Make sure LCD_COLUMN_SIZE = 2
+            const row = Math.floor(y / 8)
+            const rowOffset = row * LCD_WIDTH * LCD_COLUMN_SIZE
             const bufferOffset = this.lcd.bufferIndex * LCD_WIDTH * LCD_BUFFER_SEPARATION
 
             for (let x = 0; x < LCD_WIDTH; x++) {
@@ -94,7 +121,7 @@ export class Walker {
             }
         }
 
-        this.lcd.bufferIndex = this.lcd.bufferIndex ? 0 : 1  // Fix: Match C logic
+        this.lcd.bufferIndex = this.lcd.bufferIndex ? 0 : 1
 
         window.render(LCD_WIDTH, LCD_HEIGHT, 3 * LCD_WIDTH, 'rgb24', buffer)
     }

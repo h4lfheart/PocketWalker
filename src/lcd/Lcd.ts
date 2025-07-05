@@ -17,10 +17,10 @@ export const LCD_HEIGHT = 64
 export const LCD_COLUMN_SIZE = 2
 export const LCD_BUFFER_SEPARATION = 16
 
-export const LCD_COLOR_0 = 0x333333
-export const LCD_COLOR_1 = 0x666666
-export const LCD_COLOR_2 = 0x999999
-export const LCD_COLOR_3 = 0xCCCCCC
+export const LCD_COLOR_0 = 0x24271E
+export const LCD_COLOR_1 = 0x494E3B
+export const LCD_COLOR_2 = 0x6D7659
+export const LCD_COLOR_3 = 0x929D76
 
 export const LCD_PALETTE = [LCD_COLOR_3, LCD_COLOR_2, LCD_COLOR_1, LCD_COLOR_0]
 

@@ -43,13 +43,17 @@ import {
     Interrupts,
     IRRI0,
     IRRTB1,
-    QUARTER_SECOND_INTERRUPT_ENABLE, VECTOR_RTC_QUARTER, VECTOR_RTC_HALF, VECTOR_RTC_ONE
+    QUARTER_SECOND_INTERRUPT_ENABLE, VECTOR_RTC_QUARTER, VECTOR_RTC_HALF, VECTOR_RTC_ONE, VECTOR_IRQ0
 } from "./Interrupts";
 import {CLOCK_CYCLES_PER_SECOND, TIMER_B1_STANDBY, Timers, VECTOR_TIMER_B1} from "./timer/Timers";
 import {TIMER_B_COUNTING} from "./timer/TimerB";
 import {toUnsignedByte} from "../utils/BitUtils";
 
 export const CPU_CYCLES_PER_SECOND = 3686400
+
+export const KEY_CIRCLE = (1 << 0)
+export const KEY_LEFT = (1 << 2)
+export const KEY_RIGHT = (1 << 4)
 
 export class Cpu {
     // TODO create component system to hold all components instead of passing them as needed
@@ -70,6 +74,8 @@ export class Cpu {
     cycleCount: number = 0
     clockCycleCount: number = 0
     opcodeCount: number = 0
+
+    inputQueue: number[] = []
 
     constructor(memory: Memory, ssu: Ssu, eeprom: EepRom, accelerometer: Accelerometer, lcd: Lcd) {
         this.memory = memory;
@@ -110,11 +116,13 @@ export class Cpu {
         // key input
         // TODO key reading and interrupt
         if (this.registers.pc == 0x9B84) {
-
+            if (this.inputQueue.length > 0) {
+                this.memory.writeByte(0xFFDE, this.inputQueue.pop()!)
+            }
         }
 
         if (this.registers.pc == 0x79B8) {
-            debugger
+            this.memory.writeShort(0xF78E, 250)
         }
 
         if (!this.sleep) {
@@ -134,7 +142,7 @@ export class Cpu {
             }
 
             if (this.interrupts.enableRegister1 & IEN0 && this.interrupts.flagRegister1 & IRRI0) {
-                debugger
+                interrupt(VECTOR_IRQ0)
             } else if (this.interrupts.enableRegister1 & IENRTC) {
                 if (this.interrupts.rtcFlagRegister & QUARTER_SECOND_INTERRUPT_ENABLE) {
                     interrupt(VECTOR_RTC_QUARTER)
@@ -219,7 +227,7 @@ export class Cpu {
                                         this.eeprom.state = EepRomState.GettingBytes
                                         break;
                                     case EepRomState.GettingBytes:
-                                        this.ssu.receiveRegister = this.eeprom.memory.readByte((this.eeprom.highAddress << 8) | this.eeprom.lowAddress + this.eeprom.offset)
+                                        this.ssu.receiveRegister = this.eeprom.memory.readByte(((this.eeprom.highAddress << 8) | this.eeprom.lowAddress) + this.eeprom.offset)
                                         this.eeprom.offset++
                                         this.ssu.statusRegister |= SSSR_TRANSMIT_END
                                         break;
@@ -314,7 +322,7 @@ export class Cpu {
                                         this.lcd.offset = 0
                                     } else if (LCD_HIGH_COLUMN_RANGE.includes(this.ssu.transmitRegister)) {
                                         this.lcd.column &= 0xF
-                                        this.lcd.column |= (this.ssu.transmitRegister & 0xF) << 4
+                                        this.lcd.column |= (this.ssu.transmitRegister & 0b111) << 4
                                         this.lcd.offset = 0
                                     } else if (LCD_PAGE_RANGE.includes(this.ssu.transmitRegister)) {
                                         this.lcd.page = this.ssu.transmitRegister & 0xF
@@ -355,5 +363,16 @@ export class Cpu {
 
         if (!this.sleep)
             this.opcodeCount++
+    }
+
+    pushKey(key: number) {
+
+        if (!this.flags.I && key == KEY_CIRCLE) {
+            this.interrupts.flagRegister1 |= IRRI0
+        }
+
+        this.inputQueue.push(key)
+        this.inputQueue.push(0) // TODO use real keyUp event from sdl
+        this.sleep = false
     }
 }
