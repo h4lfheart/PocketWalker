@@ -71,11 +71,32 @@ export class OpcodeContainer {
         const result = opcode.execute(cpu);
         cpu.registers.pc += opcode.bytes
 
+        const startDebug = 4472000
+        const debugLength = 1000
+
+        const inRange = cpu.opcodeCount >= startDebug && cpu.opcodeCount <= startDebug + debugLength
+
+        const debugOpcode = false
+        const debugRegisters = false
+        const debugFlags = false
 
         if (!opcode.isTable)
         {
-            //console.log(`${opCount} - 0x${preExecutePC.toString(16).toUpperCase()} - I: ${cpu.flags.I?1:0} N: ${cpu.flags.N?1:0} Z: ${cpu.flags.Z?1:0} V: ${cpu.flags.V?1:0} C: ${cpu.flags.C?1:0}`)
-            console.log(`${cpu.opcodeCount} - 0x${preExecutePC.toString(16)} - ${result == undefined ? opcode.name : result}`)
+            if (debugOpcode) {
+                console.log(`${cpu.opcodeCount} - 0x${preExecutePC.toString(16)} - ${result == undefined ? opcode.name : result}`)
+            }
+
+            if (debugRegisters) {
+                let erString = `${cpu.opcodeCount} - `
+                for (let i = 0; i < 8; i++) {
+                    erString += `ER${i}: [0x${cpu.registers.getRegister32(i).toString(16).padStart(8, '0')}], `
+                }
+                console.log(erString)
+            }
+
+            if (debugFlags) {
+                console.log(`${cpu.opcodeCount} - I: ${cpu.flags.I?1:0}, H: ${cpu.flags.H?1:0}, N: ${cpu.flags.N?1:0}, Z: ${cpu.flags.Z?1:0}, V: ${cpu.flags.V?1:0}, C: ${cpu.flags.C?1:0}`)
+            }
         }
     }
 

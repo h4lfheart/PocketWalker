@@ -55,6 +55,7 @@ export class Ssu {
 
     set transmitRegister(value: number) {
         this.memory.writeByte(SSTDR_ADDR, value)
+
     }
 
     get receiveRegister(): number {

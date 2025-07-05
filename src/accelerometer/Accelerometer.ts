@@ -16,5 +16,5 @@ export class Accelerometer {
 
 export enum AccelerometerState {
     Waiting,
-    TransferringBytes
+    GettingBytes
 }
