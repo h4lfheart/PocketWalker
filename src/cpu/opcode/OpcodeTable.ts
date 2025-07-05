@@ -368,6 +368,18 @@ opcodeTable_aH_aL.register(0x4, 0x7, {
     }
 })
 
+opcodeTable_aH_aL.register(0x4, 0xA, {
+    name: "BPL d:8",
+    bytes: 2,
+    execute: cpu => {
+        const disp = toSignedByte(cpu.instructions.b)
+        if (!cpu.flags.N)
+            cpu.registers.pc += disp
+
+        return `BPL ${disp}`
+    }
+})
+
 opcodeTable_aH_aL.register(0x4, 0xB, {
     name: "BMI d:8",
     bytes: 2,
@@ -377,6 +389,18 @@ opcodeTable_aH_aL.register(0x4, 0xB, {
             cpu.registers.pc += disp
 
         return `BMI ${disp}`
+    }
+})
+
+opcodeTable_aH_aL.register(0x4, 0xD, {
+    name: "BLT d:8",
+    bytes: 2,
+    execute: cpu => {
+        const disp = toSignedByte(cpu.instructions.b)
+        if (cpu.flags.N != cpu.flags.V)
+            cpu.registers.pc += disp
+
+        return `BLT ${disp}`
     }
 })
 
@@ -929,8 +953,8 @@ opcodeTable_aH_aL.register(0x7, 0x7, {
     name: "BLD #xx:3, Rd",
     bytes: 2,
     execute: cpu => {
-        if (cpu.instructions.bH >> 7 == 1) { // BILD ??
-            return
+        if (cpu.instructions.bH >> 3 == 1) { // BILD ??
+            debugger
         }
 
         const bit = cpu.instructions.bH & 0b111
@@ -1728,6 +1752,22 @@ opcodeTable_aHaL_bH.register(0x79, 0x3, {
     }
 })
 
+opcodeTable_aHaL_bH.register(0x79, 0x4, {
+    name: "OR.W #xx:16, Rd",
+    bytes: 4,
+    execute: cpu => {
+        const rd = cpu.instructions.bL
+        const rdValue = cpu.registers.getRegister16(rd)
+
+        const imm = cpu.instructions.cd
+
+        const value = rdValue | imm
+        cpu.registers.setRegister16(rd, value)
+
+        setMovFlags(cpu, value, 16)
+    }
+})
+
 opcodeTable_aHaL_bH.register(0x79, 0x6, {
     name: "AND.W #xx:16, Rd",
     bytes: 4,
@@ -1799,6 +1839,29 @@ opcodeTable_aHaLbHbLcH_cL.register(0x1d05, 0x3, {
     }
 })
 
+opcodeTable_aHaLbHbLcH_cL.registerPattern(num => ((num >> 12) & 0xFF) == 0x7D && (num & 0xF) == 0x06, num => num == 0x7, {
+    name: "BST #xx:3, @ERd",
+    bytes: 4,
+    execute: cpu => {
+        if (cpu.instructions.dH >> 3 == 1) { // BIST ??
+            debugger
+        }
+
+        const erd = cpu.instructions.bH & 0b111
+        const erdValue = cpu.registers.getRegister32(erd)
+        const memoryValue = cpu.memory.readByte(erdValue)
+
+        const imm = cpu.instructions.dH
+
+        if (cpu.flags.C) {
+            cpu.memory.writeByte(erdValue, memoryValue | (1 << imm))
+        } else {
+            cpu.memory.writeByte(erdValue, memoryValue & ~(1 << imm))
+        }
+
+    }
+})
+
 opcodeTable_aHaLbHbLcH_cL.registerPattern(num => ((num >> 12) & 0xFF) == 0x7D && (num & 0xFF) == 0x07, num => num == 0x0, {
     name: "BSET #xx:3, @ERd",
     bytes: 4,
@@ -1827,8 +1890,8 @@ opcodeTable_aHaLbHbLcH_cL.registerPattern(num => ((num >> 12) & 0xFF) == 0x7E &&
     name: "BLD #xx:3, @aa:8",
     bytes: 4,
     execute: cpu => {
-        if (cpu.instructions.bH >> 7 == 1) { // BILD ??
-            return
+        if (cpu.instructions.dH >> 3 == 1) { // BILD ??
+            debugger
         }
 
         const bit = cpu.instructions.dH & 0b111
