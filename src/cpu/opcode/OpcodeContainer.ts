@@ -71,7 +71,7 @@ export class OpcodeContainer {
         const result = opcode.execute(cpu);
         cpu.registers.pc += opcode.bytes
 
-        const startDebug = 4476709
+        const startDebug = 4286000
         const debugLength = 1000
 
         const inRange = cpu.opcodeCount >= startDebug && cpu.opcodeCount <= startDebug + debugLength

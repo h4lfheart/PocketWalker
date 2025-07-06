@@ -45,9 +45,22 @@ import {
     IRRTB1,
     QUARTER_SECOND_INTERRUPT_ENABLE, VECTOR_RTC_QUARTER, VECTOR_RTC_HALF, VECTOR_RTC_ONE, VECTOR_IRQ0
 } from "./Interrupts";
-import {CLOCK_CYCLES_PER_SECOND, TIMER_B1_STANDBY, Timers, VECTOR_TIMER_B1} from "./timer/Timers";
+import {
+    CLOCK_CYCLES_PER_SECOND,
+    TIMER_B1_STANDBY,
+    TIMER_W_STANDBY,
+    Timers,
+    VECTOR_TIMER_B1,
+    VECTOR_TIMER_W
+} from "./timer/Timers";
 import {TIMER_B_COUNTING} from "./timer/TimerB";
 import {toUnsignedByte} from "../utils/BitUtils";
+import {
+    TIMER_W_CONTROL_COUNTER_CLEAR,
+    TIMER_W_MODE_COUNTING,
+    TIMER_W_INTERRUPT_ENABLE_A,
+    TIMER_W_STATUS_MATCH_FLAG_A
+} from "./timer/TimerW";
 
 export const CPU_CYCLES_PER_SECOND = 3686400
 
@@ -90,6 +103,8 @@ export class Cpu {
         this.timers = new Timers(this.memory)
 
         this.registers.pc = this.memory.readShort(0)
+        this.flags.I = true
+
     }
 
     execute() {
@@ -121,7 +136,9 @@ export class Cpu {
             }
         }
 
-        if (this.registers.pc == 0x79B8) {
+        // set watts to 250
+        // TODO where is this actually stored? is it an eeprom thing? don't want to have it set it like this
+        if (this.registers.pc == 0x9a4e && this.memory.readShort(0xF78E) == 0) {
             this.memory.writeShort(0xF78E, 250)
         }
 
@@ -131,15 +148,16 @@ export class Cpu {
             opcodeTable_aH_aL.execute(this)
         }
 
-        if (!this.flags.I) {
-            const interrupt = (addr: number) => {
-                this.interrupts.savedAddress = this.registers.pc
-                this.interrupts.savedFlags = this.flags.copy()
+        const interrupt = (addr: number) => {
+            this.interrupts.savedAddress = this.registers.pc
+            this.interrupts.savedFlags = this.flags.copy()
 
-                this.registers.pc = addr
-                this.flags.I = true
-                this.sleep = false
-            }
+            this.registers.pc = addr
+            this.flags.I = true
+            this.sleep = false
+        }
+
+        if (!this.flags.I) {
 
             if (this.interrupts.enableRegister1 & IEN0 && this.interrupts.flagRegister1 & IRRI0) {
                 interrupt(VECTOR_IRQ0)
@@ -300,13 +318,12 @@ export class Cpu {
                             if (this.ssu.progress == 7) {
                                 this.ssu.progress = 0
 
-                                const addr = (this.lcd.page * LCD_WIDTH * LCD_COLUMN_SIZE) + this.lcd.column * LCD_COLUMN_SIZE + this.lcd.offset
+                                const addr = (this.lcd.page * LCD_WIDTH * LCD_COLUMN_SIZE) + (this.lcd.column * LCD_COLUMN_SIZE) + this.lcd.offset
                                 this.lcd.memory.writeByte(addr, this.ssu.transmitRegister)
 
                                 if (this.lcd.offset == 1) {
                                     this.lcd.column++
                                 }
-
                                 this.lcd.offset++
                                 this.lcd.offset %= 2
 
@@ -348,16 +365,39 @@ export class Cpu {
             if (this.cycleCount % (Math.trunc(CPU_CYCLES_PER_SECOND / CLOCK_CYCLES_PER_SECOND)) == 0) {
                 this.clockCycleCount++
 
-                if (this.timers.B.running && (this.clockCycleCount % this.timers.B.cycleCountSelect) == 0) {
-                    this.timers.B.counter = toUnsignedByte(this.timers.B.counter + 1)
+                const timerB = this.timers.B
+                const timerW = this.timers.W
 
-                    if (this.timers.B.counter == 0) {
+                if (timerB.running && (this.clockCycleCount % timerB.cycleCountSelect) == 0) {
+                    timerB.counter = toUnsignedByte(timerB.counter + 1)
+
+                    if (timerB.counter == 0) {
                         this.interrupts.flagRegister2 |= IRRTB1
-                        this.timers.B.counter = this.timers.B.loadValue
+                        timerB.counter = timerB.loadValue
                     }
                 }
 
-                this.timers.B.running = Boolean(this.timers.clockStop1 & TIMER_B1_STANDBY) && Boolean(this.timers.B.mode & TIMER_B_COUNTING)
+                if (timerW.running) {
+                    if (timerW.mode & TIMER_W_MODE_COUNTING) {
+                        timerW.counter++
+                    }
+
+                    if (timerW.counter == timerW.registerA) {
+                        if (timerW.controlRegister & TIMER_W_CONTROL_COUNTER_CLEAR) {
+                            timerW.counter = 0
+                        }
+
+                        timerW.status |= TIMER_W_STATUS_MATCH_FLAG_A
+
+                        if (timerW.interruptEnable & TIMER_W_INTERRUPT_ENABLE_A && !this.flags.I) {
+                            interrupt(VECTOR_TIMER_W)
+                        }
+                    }
+                }
+
+                timerB.running = Boolean(this.timers.clockStop1 & TIMER_B1_STANDBY) && Boolean(timerB.mode & TIMER_B_COUNTING)
+                timerW.running = Boolean(this.timers.clockStop2 & TIMER_W_STANDBY) && Boolean(timerW.mode & TIMER_W_MODE_COUNTING)
+
             }
         }
 
@@ -366,13 +406,12 @@ export class Cpu {
     }
 
     pushKey(key: number) {
-
         if (!this.flags.I && key == KEY_CIRCLE) {
             this.interrupts.flagRegister1 |= IRRI0
         }
 
-        this.inputQueue.push(key)
         this.inputQueue.push(0) // TODO use real keyUp event from sdl
+        this.inputQueue.push(key)
         this.sleep = false
     }
 }

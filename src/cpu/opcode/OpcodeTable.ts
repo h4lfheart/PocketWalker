@@ -1,6 +1,6 @@
 import {OpcodeContainer} from "./OpcodeContainer";
 import {range} from "../../utils/CollectionUtils";
-import {setAddFlags, setDecFlags, setFlags, setIncFlags, setMovFlags, setSubFlags} from "./OpcodeFlags";
+import {setAddFlags, setDecFlags, setIncFlags, setMovFlags, setSubFlags} from "./OpcodeFlags";
 import {toSignedByte, toSignedShort, toUnsignedInt, toUnsignedShort} from "../../utils/BitUtils";
 import {SSRDR_ADDR, SSSR_RECEIVE_DATA_FULL, SSSR_TRANSMIT_EMPTY, SSSR_TRANSMIT_END, SSTDR_ADDR} from "../../ssu/Ssu";
 import {TIMER_B_COUNTER_ADDR} from "../timer/TimerB";
@@ -27,12 +27,50 @@ opcodeTable_aH_aL.register(0x0, 0x0, {
     execute: () => "NOP"
 })
 
+opcodeTable_aH_aL.register(0x0, 0x2, {
+    name: "STC.B CCR, Rd",
+    bytes: 2,
+    execute: cpu => {
+        const rd = cpu.instructions.bL
+        cpu.registers.setRegister8(rd, cpu.flags.ccr)
+    }
+})
+
 opcodeTable_aH_aL.register(0x0, 0x3, {
     name: "LDC.B Rs, CCR",
     bytes: 2,
     execute: cpu => {
-        const value = cpu.registers.getRegister8(cpu.instructions.bL)
-        setFlags(cpu, value)
+        const rs = cpu.instructions.bL
+        const rsValue = cpu.registers.getRegister8(rs)
+        cpu.flags.ccr = rsValue
+    }
+})
+
+opcodeTable_aH_aL.register(0x0, 0x4, {
+    name: "ORC #xx:8, CCR",
+    bytes: 2,
+    execute: cpu => {
+        const imm = cpu.instructions.b
+        cpu.flags.ccr |= imm
+    }
+})
+
+opcodeTable_aH_aL.register(0x0, 0x5, {
+    name: "XORC #xx:8, CCR",
+    bytes: 2,
+    execute: cpu => {
+        const imm = cpu.instructions.b
+        cpu.flags.ccr ^= imm
+    }
+})
+
+opcodeTable_aH_aL.register(0x0, 0x6, {
+    name: "ANDC #xx:8, CCR",
+    bytes: 2,
+    execute: cpu => {
+        const imm = cpu.instructions.b
+
+        cpu.flags.ccr &= imm
     }
 })
 
@@ -41,7 +79,8 @@ opcodeTable_aH_aL.register(0x0, 0x7, {
     bytes: 2,
     execute: cpu => {
         const imm = cpu.instructions.b
-        setFlags(cpu, imm)
+
+        cpu.flags.ccr = imm
     }
 })
 
@@ -95,7 +134,6 @@ opcodeTable_aH_aL.register(0x0, 0xC, {
         cpu.registers.setRegister8(rd, rsValue)
 
         setMovFlags(cpu, rsValue, 8)
-
 
         return `MOV.B ${cpu.registers.getDisplay8(rs)}, ${cpu.registers.getDisplay8(rd)}`
     }
@@ -392,6 +430,18 @@ opcodeTable_aH_aL.register(0x4, 0xB, {
     }
 })
 
+opcodeTable_aH_aL.register(0x4, 0xC, {
+    name: "BGE d:8",
+    bytes: 2,
+    execute: cpu => {
+        const disp = toSignedByte(cpu.instructions.b)
+        if (cpu.flags.N == cpu.flags.V)
+            cpu.registers.pc += disp
+
+        return `BGE ${disp}`
+    }
+})
+
 opcodeTable_aH_aL.register(0x4, 0xD, {
     name: "BLT d:8",
     bytes: 2,
@@ -459,7 +509,7 @@ opcodeTable_aH_aL.register(0x5, 0x3, {
         const rs = cpu.instructions.bH
         const rsValue = cpu.registers.getRegister16(rs)
 
-        const erd = cpu.instructions.bL & 0b111
+        const erd = cpu.instructions.bL
         const erdValue = cpu.registers.getRegister32(erd)
 
         const quotient = toUnsignedInt(erdValue / rsValue)
@@ -508,7 +558,7 @@ opcodeTable_aH_aL.register(0x5, 0x9, {
     name: "JMP @ERn",
     bytes: 0,
     execute: cpu => {
-        const ern = cpu.instructions.bH & 0b111
+        const ern = cpu.instructions.bH
         const ernValue = cpu.registers.getRegister32(ern)
 
         // TODO debug registers
@@ -606,6 +656,23 @@ opcodeTable_aH_aL.register(0x6, 0x5, {
     }
 })
 
+opcodeTable_aH_aL.register(0x6, 0x6, {
+    name: "AND.W Rs, Rd",
+    bytes: 2,
+    execute: cpu => {
+        const rs = cpu.instructions.bH
+        const rd = cpu.instructions.bL
+
+        const rsValue = cpu.registers.getRegister16(rs)
+        const rdValue = cpu.registers.getRegister16(rd)
+
+        const value = rsValue & rdValue
+        cpu.registers.setRegister16(rd, value)
+
+        setMovFlags(cpu, value, 16)
+    }
+})
+
 opcodeTable_aH_aL.register(0x6, 0x8, {
     name: "MOV.B @ERs,Rd / MOV.B Rs, @ERd",
     bytes: 2,
@@ -615,7 +682,7 @@ opcodeTable_aH_aL.register(0x6, 0x8, {
             const rs = cpu.instructions.bL
             const rsValue = cpu.registers.getRegister8(rs)
 
-            const erd = cpu.instructions.bH & 0b111
+            const erd = cpu.instructions.bH
             const erdValue = cpu.registers.getRegister32(erd)
 
             cpu.memory.writeByte(erdValue, rsValue)
@@ -624,7 +691,7 @@ opcodeTable_aH_aL.register(0x6, 0x8, {
             return `MOV.B ${cpu.registers.getDisplay8(rs)}, @${cpu.registers.getDisplay32(erd)}`
         } else {
 
-            const ers = cpu.instructions.bH & 0b111
+            const ers = cpu.instructions.bH
             const ersValue = cpu.registers.getRegister32(ers)
             const memoryValue = cpu.memory.readByte(ersValue)
 
@@ -645,7 +712,7 @@ opcodeTable_aH_aL.register(0x6, 0x9, {
             const rs = cpu.instructions.bL
             const rsValue = cpu.registers.getRegister16(rs)
 
-            const erd = cpu.instructions.bH & 0b111
+            const erd = cpu.instructions.bH
             const erdValue = cpu.registers.getRegister32(erd)
 
             cpu.memory.writeShort(erdValue, rsValue)
@@ -654,7 +721,7 @@ opcodeTable_aH_aL.register(0x6, 0x9, {
             return `MOV.W ${cpu.registers.getDisplay16(rs)}, @${cpu.registers.getDisplay32(erd)}`
         } else {
 
-            const ers = cpu.instructions.bH & 0b111
+            const ers = cpu.instructions.bH
             const ersValue = cpu.registers.getRegister32(ers)
             const memoryValue = cpu.memory.readShort(ersValue)
 
@@ -816,7 +883,7 @@ opcodeTable_aH_aL.register(0x6, 0xC, {
             const rs = cpu.instructions.bL
             const rsValue = cpu.registers.getRegister8(rs)
 
-            const erd = cpu.instructions.bH & 0b111
+            const erd = cpu.instructions.bH
             const erdValue = cpu.registers.getRegister32(erd)
             const erdAdjustValue = toUnsignedInt(erdValue - 1)
             cpu.registers.setRegister32(erd, erdAdjustValue)
@@ -850,7 +917,7 @@ opcodeTable_aH_aL.register(0x6, 0xD, {
             const rs = cpu.instructions.bL
             const rsValue = cpu.registers.getRegister16(rs)
 
-            const erd = cpu.instructions.bH & 0b111
+            const erd = cpu.instructions.bH
             const erdValue = cpu.registers.getRegister32(erd)
             const newAddr = toUnsignedInt(erdValue - 2)
             cpu.registers.setRegister32(erd, newAddr)
@@ -867,7 +934,7 @@ opcodeTable_aH_aL.register(0x6, 0xD, {
             const newValue = toUnsignedInt(ersRegValue + 2)
             cpu.registers.setRegister32(ers, newValue)
 
-            const rd = cpu.instructions.bL & 0b111
+            const rd = cpu.instructions.bL
             cpu.registers.setRegister16(rd, ersMemoryValue)
             setMovFlags(cpu, ersMemoryValue, 16)
         }
@@ -886,7 +953,7 @@ opcodeTable_aH_aL.register(0x6, 0xE, {
             const rs = cpu.instructions.bL
             const rsValue = cpu.registers.getRegister8(rs)
 
-            const erd = cpu.instructions.bH & 0b111
+            const erd = cpu.instructions.bH
             const erdValue = cpu.registers.getRegister32(erd)
 
             cpu.memory.writeByte(erdValue + disp, rsValue)
@@ -917,7 +984,7 @@ opcodeTable_aH_aL.register(0x6, 0xF, {
             const rs = cpu.instructions.bL
             const rsValue = cpu.registers.getRegister16(rs)
 
-            const erd = cpu.instructions.bH & 0b111
+            const erd = cpu.instructions.bH
             const erdValue = cpu.registers.getRegister32(erd)
 
             cpu.memory.writeShort(erdValue + disp, rsValue)
@@ -1028,6 +1095,22 @@ opcodeTable_aH_aL.register(0xA, range(0x0, 0xF), {
     }
 })
 
+opcodeTable_aH_aL.register(0xB, range(0x0, 0xF), {
+    name: "SUBX.B #xx:8, Rd",
+    bytes: 2,
+    execute: cpu => {
+        const rd = cpu.instructions.aL
+        const rdValue = cpu.registers.getRegister8(rd)
+
+        const imm = cpu.instructions.b
+
+        const value = rdValue - imm - Number(cpu.flags.C)
+        cpu.registers.setRegister8(cpu.instructions.bL, value)
+
+        setSubFlags(cpu, rd, imm + Number(cpu.flags.C), 8)
+    }
+})
+
 opcodeTable_aH_aL.register(0xC, range(0x0, 0xF), {
     name: "OR.B #xx:8, Rd",
     bytes: 2,
@@ -1106,7 +1189,7 @@ opcodeTable_aHaL_bH.register(0x1, 0x0, {
                     const ers = cpu.instructions.dL
                     const ersValue = cpu.registers.getRegister32(ers)
 
-                    const erd = cpu.instructions.dH & 0b111
+                    const erd = cpu.instructions.dH
                     const erdValue = cpu.registers.getRegister32(erd)
 
                     cpu.memory.writeInt(erdValue, ersValue)
@@ -1118,7 +1201,7 @@ opcodeTable_aHaL_bH.register(0x1, 0x0, {
                     const ersValue = cpu.registers.getRegister32(ers)
                     const memoryValue = cpu.memory.readInt(ersValue)
 
-                    const rd = cpu.instructions.dL & 0b111
+                    const rd = cpu.instructions.dL
                     cpu.registers.setRegister32(rd, memoryValue)
 
                     setMovFlags(cpu, memoryValue, 32)
@@ -1190,10 +1273,10 @@ opcodeTable_aHaL_bH.register(0x1, 0x0, {
             {
                 const decrement = (cpu.instructions.dH >> 3) & 1
                 if (decrement) {
-                    const ers = cpu.instructions.dL & 0b1111
+                    const ers = cpu.instructions.dL
                     const ersValue = cpu.registers.getRegister32(ers)
 
-                    const erd = cpu.instructions.dH & 0b111
+                    const erd = cpu.instructions.dH
                     const erdValue = cpu.registers.getRegister32(erd)
                     const newAddr = toUnsignedInt(erdValue - 4)
                     cpu.registers.setRegister32(erd, newAddr)
@@ -1210,7 +1293,7 @@ opcodeTable_aHaL_bH.register(0x1, 0x0, {
 
                     cpu.registers.setRegister32(ers, toUnsignedInt(ersRegValue + 4))
 
-                    const erd = cpu.instructions.dL & 0b111
+                    const erd = cpu.instructions.dL
                     cpu.registers.setRegister32(erd, ersMemoryValue)
 
                     setMovFlags(cpu, ersMemoryValue, 32)
@@ -1228,7 +1311,7 @@ opcodeTable_aHaL_bH.register(0x1, 0x0, {
                     const rs = cpu.instructions.dL
                     const rsValue = cpu.registers.getRegister32(rs)
 
-                    const erd = cpu.instructions.dH & 0b111
+                    const erd = cpu.instructions.dH
                     const erdValue = cpu.registers.getRegister32(erd)
 
                     cpu.memory.writeInt(erdValue + disp, rsValue)
@@ -1240,7 +1323,7 @@ opcodeTable_aHaL_bH.register(0x1, 0x0, {
                     const ersRegValue = cpu.registers.getRegister32(ers)
                     const memoryValue = cpu.memory.readInt(ersRegValue + disp)
 
-                    const rd = cpu.instructions.dL & 0b111
+                    const rd = cpu.instructions.dL
                     cpu.registers.setRegister32(rd, memoryValue)
 
                     setMovFlags(cpu, memoryValue, 32)
@@ -1284,7 +1367,7 @@ opcodeTable_aHaL_bH.register(0x0A, range(0x8, 0xF), {
     bytes: 2,
     execute: cpu => {
         const erd = cpu.instructions.bL
-        const ers = cpu.instructions.bH & 0b111
+        const ers = cpu.instructions.bH
 
         const erdValue = cpu.registers.getRegister32(erd)
         const ersValue = cpu.registers.getRegister32(ers)
@@ -1457,8 +1540,8 @@ opcodeTable_aHaL_bH.register(0xF, range(0x8, 0xF), {
     name: "MOV.L ERs, ERd",
     bytes: 2,
     execute: cpu => {
-        const rd = cpu.instructions.bL & 0b111
-        const rs = cpu.instructions.bH & 0b111
+        const rd = cpu.instructions.bL
+        const rs = cpu.instructions.bH
 
         const rsValue = cpu.registers.getRegister32(rs)
 
@@ -1585,6 +1668,22 @@ opcodeTable_aHaL_bH.register(0x17, 0x7, {
     }
 })
 
+opcodeTable_aHaL_bH.register(0x17, 0x8, {
+    name: "NEG.B Rd",
+    bytes: 2,
+    execute: cpu => {
+        const rd = cpu.instructions.bL
+        const rdValue = cpu.registers.getRegister8(rd)
+
+        if (rdValue != 0x80)
+            cpu.registers.setRegister16(rd, -rdValue)
+
+        setSubFlags(cpu, 0, rdValue, 8)
+
+        return `NEG.W ${cpu.registers.getDisplay8(rd)}`
+    }
+})
+
 opcodeTable_aHaL_bH.register(0x17, 0x9, {
     name: "NEG.W Rd",
     bytes: 2,
@@ -1646,10 +1745,10 @@ opcodeTable_aHaL_bH.register(0x1a, range(0x8, 0xF), {
     name: "SUB.L ERs, ERd",
     bytes: 2,
     execute: cpu => {
-        const erd = cpu.instructions.bL & 0b111
+        const erd = cpu.instructions.bL
         const erdValue = cpu.registers.getRegister32(erd)
 
-        const ers = cpu.instructions.bH & 0b111
+        const ers = cpu.instructions.bH
         const ersValue = cpu.registers.getRegister32(ers)
 
         const value = erdValue - ersValue
@@ -1697,6 +1796,23 @@ opcodeTable_aHaL_bH.register(0x1b, 0x9, {
         const erd = cpu.instructions.bL
         const erdValue = cpu.registers.getRegister32(erd)
         cpu.registers.setRegister32(erd, toUnsignedInt(erdValue - 4))
+    }
+})
+
+
+opcodeTable_aHaL_bH.register(0x1F, range(0x8, 0xF), {
+    name: "CMP.L ERs, ERd",
+    bytes: 2,
+    execute: cpu => {
+        const ers = cpu.instructions.bH
+        const erd = cpu.instructions.bL
+
+        const rsValue = cpu.registers.getRegister32(ers)
+        const rdValue = cpu.registers.getRegister32(erd)
+
+        setSubFlags(cpu, rdValue, rsValue, 32)
+
+        return `CMP.L ${cpu.registers.getDisplay32(ers)}, ${cpu.registers.getDisplay32(erd)}`
     }
 })
 
@@ -1917,7 +2033,7 @@ opcodeTable_aHaLbHbLcH_cL.register(0x1c05, 0x2, {
         const rs = cpu.instructions.dH
         const rsValue = cpu.registers.getRegister16(rs)
 
-        const erd = cpu.instructions.dL & 0b111
+        const erd = cpu.instructions.dL
         const erdValue = cpu.registers.getRegister32(erd)
 
         cpu.registers.setRegister32(erd, (erdValue & 0xFFFF) * (rsValue))
@@ -1934,7 +2050,7 @@ opcodeTable_aHaLbHbLcH_cL.register(0x1d05, 0x3, {
         const rs = cpu.instructions.dH
         const rsValue = cpu.registers.getRegister16(rs)
 
-        const erd = cpu.instructions.dL & 0b111
+        const erd = cpu.instructions.dL
         const erdValue = cpu.registers.getRegister32(erd)
 
         const quotient = toSignedShort(erdValue / rsValue)
@@ -1955,7 +2071,7 @@ opcodeTable_aHaLbHbLcH_cL.registerPattern(num => ((num >> 12) & 0xFF) == 0x7D &&
             debugger
         }
 
-        const erd = cpu.instructions.bH & 0b111
+        const erd = cpu.instructions.bH
         const erdValue = cpu.registers.getRegister32(erd)
         const memoryValue = cpu.memory.readByte(erdValue)
 
@@ -1975,7 +2091,7 @@ opcodeTable_aHaLbHbLcH_cL.registerPattern(num => ((num >> 12) & 0xFF) == 0x7D &&
     bytes: 4,
     execute: cpu => {
         const bit = cpu.instructions.dH & 0b111
-        const erd = cpu.instructions.bH & 0b111
+        const erd = cpu.instructions.bH
         const erdValue = cpu.registers.getRegister32(erd) & 0xFFFF
 
         cpu.memory.writeByte(erdValue, cpu.memory.readByte(erdValue) | (1 << bit))
@@ -1987,7 +2103,7 @@ opcodeTable_aHaLbHbLcH_cL.registerPattern(num => ((num >> 12) & 0xFF) == 0x7D &&
     bytes: 4,
     execute: cpu => {
         const bit = cpu.instructions.dH & 0b111
-        const erd = cpu.instructions.bH & 0b111
+        const erd = cpu.instructions.bH
         const erdValue = cpu.registers.getRegister32(erd) & 0xFFFF
 
         cpu.memory.writeByte(erdValue, cpu.memory.readByte(erdValue) & ~(1 << bit))

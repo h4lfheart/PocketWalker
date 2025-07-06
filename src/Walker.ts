@@ -5,7 +5,7 @@ import {EepRom} from "./eeprom/EepRom";
 import {Ssu} from "./ssu/Ssu";
 import {Accelerometer} from "./accelerometer/Accelerometer";
 import sdl from '@kmamal/sdl'
-import {Lcd, LCD_BUFFER_SEPARATION, LCD_COLUMN_SIZE, LCD_HEIGHT, LCD_PALETTE, LCD_WIDTH} from "./lcd/Lcd";
+import {Lcd, LCD_COLUMN_SIZE, LCD_HEIGHT, LCD_PALETTE, LCD_WIDTH} from "./lcd/Lcd";
 
 const ROM_SIZE = 1024 * 64
 const EEPROM_SIZE = 1024 * 64
@@ -55,6 +55,7 @@ export class Walker {
 
 
     async run() {
+        // TODO properly separate emulator and window thread
         const window = sdl.video.createWindow({ title: "PocketWalker", height: LCD_HEIGHT * 8, width: LCD_WIDTH * 8, resizable: false })
 
         window.on("keyDown", (args: any) => {
@@ -68,10 +69,6 @@ export class Walker {
                 case "down":
                     this.cpu.pushKey(KEY_CIRCLE)
                     break
-                case "escape":
-                    this.running = false
-                    window.destroy()
-                    break
             }
         })
 
@@ -82,7 +79,6 @@ export class Walker {
                 this.cpu.cycleCount -= CPU_CYCLES_PER_SECOND / TICKS_PER_SECOND
 
                 this.cpu.interrupts.rtcInterrupt()
-
                 this.renderWindow(window)
 
                 const desiredTime = 1000 / TICKS_PER_SECOND
@@ -90,38 +86,40 @@ export class Walker {
                 const elapsed = performance.now() - this.lastTime
                 if (elapsed < desiredTime) {
                     await new Promise(resolve => setTimeout(resolve, desiredTime - elapsed))
+                } else {
+                    await new Promise(resolve => setImmediate(resolve))
                 }
 
                 this.lastTime = performance.now()
             }
+
         }
+
     }
 
     renderWindow(window: sdl.Sdl.Video.Window) {
         const buffer = Buffer.alloc(LCD_WIDTH * LCD_HEIGHT * 3)
         for (let y = 0; y < LCD_HEIGHT; y++) {
-            const stripeOffset = y % 8
-            const row = Math.floor(y / 8)
-            const rowOffset = row * LCD_WIDTH * LCD_COLUMN_SIZE
-            const bufferOffset = this.lcd.bufferIndex * LCD_WIDTH * LCD_BUFFER_SEPARATION
+           const stripeOffset = y % 8
+           const row = Math.floor(y / 8)
+           const rowOffset = row * LCD_WIDTH * LCD_COLUMN_SIZE
 
-            for (let x = 0; x < LCD_WIDTH; x++) {
-                const baseIndex = 2 * x + bufferOffset + rowOffset
+           for (let x = 0; x < LCD_WIDTH; x++) {
+               const baseIndex = 2 * x + rowOffset
 
-                const firstBit = (this.lcd.memory.readByte(baseIndex) >> stripeOffset) & 1
-                const secondBit = (this.lcd.memory.readByte(baseIndex + 1) >> stripeOffset) & 1
+               const firstBit = (this.lcd.memory.readByte(baseIndex) >> stripeOffset) & 1
+               const secondBit = (this.lcd.memory.readByte(baseIndex + 1) >> stripeOffset) & 1
 
-                const paletteIndex = (firstBit << 1) | secondBit
-                const color = LCD_PALETTE[paletteIndex]
+               const paletteIndex = (firstBit << 1) | secondBit
+               const color = LCD_PALETTE[paletteIndex]
 
-                const baseOffset = (y * LCD_WIDTH + x) * 3
-                buffer[baseOffset] = (color >> 16) & 0xFF
-                buffer[baseOffset + 1] = (color >> 8) & 0xFF
-                buffer[baseOffset + 2] = (color >> 0) & 0xFF
-            }
-        }
+               const baseOffset = (y * LCD_WIDTH + x) * 3
+               buffer[baseOffset] = (color >> 16) & 0xFF
+               buffer[baseOffset + 1] = (color >> 8) & 0xFF
+               buffer[baseOffset + 2] = (color >> 0) & 0xFF
 
-        this.lcd.bufferIndex = this.lcd.bufferIndex ? 0 : 1
+           }
+       }
 
         window.render(LCD_WIDTH, LCD_HEIGHT, 3 * LCD_WIDTH, 'rgb24', buffer)
     }
