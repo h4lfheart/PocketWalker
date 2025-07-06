@@ -2,11 +2,6 @@
 import {Memory} from "../memory/Memory";
 import {Flags} from "./Flags";
 
-export const VECTOR_RTC_QUARTER = 0xA65E
-export const VECTOR_RTC_HALF = 0xA674
-export const VECTOR_RTC_ONE = 0xA682
-export const VECTOR_IRQ0 = 0xA300
-
 export const IENR1_ADDR = 0xFFF3
 export const IENR2_ADDR = 0xFFF4
 export const IRR1_ADDR = 0xFFF6

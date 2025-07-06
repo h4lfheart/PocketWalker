@@ -43,15 +43,13 @@ import {
     Interrupts,
     IRRI0,
     IRRTB1,
-    QUARTER_SECOND_INTERRUPT_ENABLE, VECTOR_RTC_QUARTER, VECTOR_RTC_HALF, VECTOR_RTC_ONE, VECTOR_IRQ0
+    QUARTER_SECOND_INTERRUPT_ENABLE
 } from "./Interrupts";
 import {
     CLOCK_CYCLES_PER_SECOND,
     TIMER_B1_STANDBY,
     TIMER_W_STANDBY,
-    Timers,
-    VECTOR_TIMER_B1,
-    VECTOR_TIMER_W
+    Timers
 } from "./timer/Timers";
 import {TIMER_B_COUNTING} from "./timer/TimerB";
 import {toUnsignedByte} from "../utils/BitUtils";
@@ -61,6 +59,7 @@ import {
     TIMER_W_INTERRUPT_ENABLE_A,
     TIMER_W_STATUS_MATCH_FLAG_A
 } from "./timer/TimerW";
+import {VectorTable} from "./VectorTable";
 
 export const CPU_CYCLES_PER_SECOND = 3686400
 
@@ -82,6 +81,7 @@ export class Cpu {
     instructions: Instructions
     interrupts: Interrupts
     timers: Timers
+    vectorTable: VectorTable
 
     sleep: boolean = false
     cycleCount: number = 0
@@ -101,8 +101,9 @@ export class Cpu {
         this.instructions = new Instructions(this.memory)
         this.interrupts = new Interrupts(this.memory)
         this.timers = new Timers(this.memory)
+        this.vectorTable = new VectorTable(this.memory)
 
-        this.registers.pc = this.memory.readShort(0)
+        this.registers.pc = this.vectorTable.reset
         this.flags.I = true
 
     }
@@ -129,17 +130,16 @@ export class Cpu {
         }
 
         // key input
-        // TODO key reading and interrupt
         if (this.registers.pc == 0x9B84) {
             if (this.inputQueue.length > 0) {
-                this.memory.writeByte(0xFFDE, this.inputQueue.pop()!)
+                this.memory.writeByte(0xFFDE, this.inputQueue.shift()!)
             }
         }
 
-        // set watts to 250
+        // set watts
         // TODO where is this actually stored? is it an eeprom thing? don't want to have it set it like this
         if (this.registers.pc == 0x9a4e && this.memory.readShort(0xF78E) == 0) {
-            this.memory.writeShort(0xF78E, 250)
+            this.memory.writeShort(0xF78E, 255)
         }
 
         if (!this.sleep) {
@@ -160,17 +160,17 @@ export class Cpu {
         if (!this.flags.I) {
 
             if (this.interrupts.enableRegister1 & IEN0 && this.interrupts.flagRegister1 & IRRI0) {
-                interrupt(VECTOR_IRQ0)
+                interrupt(this.vectorTable.irq0)
             } else if (this.interrupts.enableRegister1 & IENRTC) {
                 if (this.interrupts.rtcFlagRegister & QUARTER_SECOND_INTERRUPT_ENABLE) {
-                    interrupt(VECTOR_RTC_QUARTER)
+                    interrupt(this.vectorTable.rtcQuarterSecond)
                 } else if (this.interrupts.rtcFlagRegister & HALF_SECOND_INTERRUPT_ENABLE) {
-                    interrupt(VECTOR_RTC_HALF)
+                    interrupt(this.vectorTable.rtcHalfSecond)
                 } else if (this.interrupts.rtcFlagRegister & ONE_SECOND_INTERRUPT_ENABLE) {
-                    interrupt(VECTOR_RTC_ONE)
+                    interrupt(this.vectorTable.rtcSecond)
                 }
             } else if (this.interrupts.enableRegister2 & IENTB1 && this.interrupts.flagRegister2 & IRRTB1) {
-                interrupt(VECTOR_TIMER_B1)
+                interrupt(this.vectorTable.timerB)
             }
         }
 
@@ -390,7 +390,7 @@ export class Cpu {
                         timerW.status |= TIMER_W_STATUS_MATCH_FLAG_A
 
                         if (timerW.interruptEnable & TIMER_W_INTERRUPT_ENABLE_A && !this.flags.I) {
-                            interrupt(VECTOR_TIMER_W)
+                            interrupt(this.vectorTable.timerW)
                         }
                     }
                 }
@@ -410,8 +410,8 @@ export class Cpu {
             this.interrupts.flagRegister1 |= IRRI0
         }
 
-        this.inputQueue.push(0) // TODO use real keyUp event from sdl
         this.inputQueue.push(key)
+        this.inputQueue.push(0) // TODO use real keyUp event from sdl
         this.sleep = false
     }
 }

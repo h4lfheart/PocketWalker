@@ -5,7 +5,8 @@ import {EepRom} from "./eeprom/EepRom";
 import {Ssu} from "./ssu/Ssu";
 import {Accelerometer} from "./accelerometer/Accelerometer";
 import sdl from '@kmamal/sdl'
-import {Lcd, LCD_COLUMN_SIZE, LCD_HEIGHT, LCD_PALETTE, LCD_WIDTH} from "./lcd/Lcd";
+import {PNG} from 'pngjs'
+import {Lcd, LCD_BUFFER_SEPARATION, LCD_COLOR_3, LCD_COLUMN_SIZE, LCD_HEIGHT, LCD_PALETTE, LCD_WIDTH} from "./lcd/Lcd";
 
 const ROM_SIZE = 1024 * 64
 const EEPROM_SIZE = 1024 * 64
@@ -13,6 +14,10 @@ const ACCEL_SIZE = 29
 const LCD_SIZE = 128 * 176 / 4
 
 export const TICKS_PER_SECOND = 4
+
+const MARGIN_SIZE = 4
+const MARGIN_COLOR = LCD_COLOR_3
+const LCD_SCALAR = 8
 
 export class Walker {
 
@@ -56,7 +61,16 @@ export class Walker {
 
     async run() {
         // TODO properly separate emulator and window thread
-        const window = sdl.video.createWindow({ title: "PocketWalker", height: LCD_HEIGHT * 8, width: LCD_WIDTH * 8, resizable: false })
+
+        const windowWidth = (LCD_WIDTH + MARGIN_SIZE * 2) * LCD_SCALAR
+        const windowHeight = (LCD_HEIGHT + MARGIN_SIZE * 2) * LCD_SCALAR
+        const window = sdl.video.createWindow({
+            title: "PocketWalker",
+            height: windowHeight,
+            width: windowWidth,
+            resizable: false
+        })
+        window.setIcon(30, 30, 30 * 4, 'rgba32', PNG.sync.read(readFileSync("../assets/logo.png")).data)
 
         window.on("keyDown", (args: any) => {
             switch (args.key) {
@@ -98,31 +112,43 @@ export class Walker {
     }
 
     renderWindow(window: sdl.Sdl.Video.Window) {
-        const buffer = Buffer.alloc(LCD_WIDTH * LCD_HEIGHT * 3)
+        const windowWidth = LCD_WIDTH + MARGIN_SIZE * 2
+        const windowHeight = LCD_HEIGHT + MARGIN_SIZE * 2
+        const buffer = Buffer.alloc(windowWidth * windowHeight * 3)
+
+        for (let i = 0; i < buffer.length; i += 3) {
+            buffer[i] = (MARGIN_COLOR >> 16) & 0xFF
+            buffer[i + 1] = (MARGIN_COLOR >> 8) & 0xFF
+            buffer[i + 2] = (MARGIN_COLOR >> 0) & 0xFF
+        }
+
         for (let y = 0; y < LCD_HEIGHT; y++) {
-           const stripeOffset = y % 8
-           const row = Math.floor(y / 8)
-           const rowOffset = row * LCD_WIDTH * LCD_COLUMN_SIZE
+            const stripeOffset = y % 8
+            const row = Math.floor(y / 8)
+            const rowOffset = row * LCD_WIDTH * LCD_COLUMN_SIZE
+            const bufferOffset = this.lcd.bufferIndex * LCD_WIDTH * LCD_BUFFER_SEPARATION
 
-           for (let x = 0; x < LCD_WIDTH; x++) {
-               const baseIndex = 2 * x + rowOffset
+            for (let x = 0; x < LCD_WIDTH; x++) {
+                const baseIndex = 2 * x + rowOffset + bufferOffset
 
-               const firstBit = (this.lcd.memory.readByte(baseIndex) >> stripeOffset) & 1
-               const secondBit = (this.lcd.memory.readByte(baseIndex + 1) >> stripeOffset) & 1
+                const firstBit = (this.lcd.memory.readByte(baseIndex) >> stripeOffset) & 1
+                const secondBit = (this.lcd.memory.readByte(baseIndex + 1) >> stripeOffset) & 1
 
-               const paletteIndex = (firstBit << 1) | secondBit
-               const color = LCD_PALETTE[paletteIndex]
+                const paletteIndex = (firstBit << 1) | secondBit
+                const color = LCD_PALETTE[paletteIndex]
 
-               const baseOffset = (y * LCD_WIDTH + x) * 3
-               buffer[baseOffset] = (color >> 16) & 0xFF
-               buffer[baseOffset + 1] = (color >> 8) & 0xFF
-               buffer[baseOffset + 2] = (color >> 0) & 0xFF
+                const windowX = x + MARGIN_SIZE
+                const windowY = y + MARGIN_SIZE
+                const baseOffset = (windowY * windowWidth + windowX) * 3
 
-           }
-       }
+                buffer[baseOffset] = (color >> 16) & 0xFF
+                buffer[baseOffset + 1] = (color >> 8) & 0xFF
+                buffer[baseOffset + 2] = (color >> 0) & 0xFF
+            }
+        }
 
-        window.render(LCD_WIDTH, LCD_HEIGHT, 3 * LCD_WIDTH, 'rgb24', buffer)
+        this.lcd.bufferIndex = this.lcd.bufferIndex ? 0 : 1
+
+        window.render(windowWidth, windowHeight, 3 * windowWidth, 'rgb24', buffer)
     }
-
-
 }

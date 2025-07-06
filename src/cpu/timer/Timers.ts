@@ -7,9 +7,6 @@ export const CLOCK_CYCLES_PER_SECOND = 32768
 export const CLOCK_STOP_1_ADDR = 0xFFFA
 export const CLOCK_STOP_2_ADDR = 0xFFFB
 
-export const VECTOR_TIMER_B1 = 0x06FA
-export const VECTOR_TIMER_W = 0x3A4A
-
 export const TIMER_B1_STANDBY = (1 << 2)
 export const FLASH_MEMORY_STANDBY = (1 << 1)
 export const RTC_STANDBY = (1 << 0)
