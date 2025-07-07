@@ -1,7 +1,7 @@
 import {OpcodeContainer} from "./OpcodeContainer";
-import {range} from "../../utils/CollectionUtils";
+import {range} from "../../../utils/CollectionUtils";
 import {setAddFlags, setDecFlags, setIncFlags, setMovFlags, setSubFlags} from "./OpcodeFlags";
-import {toSignedByte, toSignedShort, toUnsignedInt, toUnsignedShort} from "../../utils/BitUtils";
+import {toSignedByte, toSignedShort, toUnsignedInt, toUnsignedShort} from "../../../utils/BitUtils";
 import {SSRDR_ADDR, SSSR_RECEIVE_DATA_FULL, SSSR_TRANSMIT_EMPTY, SSSR_TRANSMIT_END, SSTDR_ADDR} from "../../ssu/Ssu";
 import {TIMER_B_COUNTER_ADDR} from "../timer/TimerB";
 
@@ -1646,11 +1646,26 @@ opcodeTable_aHaL_bH.register(0x11, 0x1, {
         const rd = cpu.instructions.bL
         const rdValue = cpu.registers.getRegister16(rd);
 
-        const value = (rdValue >> 1) | (rdValue & 0b1000_0000_0000_0000)
+        const value = (rdValue >> 1)
         cpu.registers.setRegister16(rd, value)
 
         cpu.flags.C = Boolean(rdValue & 1)
         setMovFlags(cpu, value, 16)
+    }
+})
+
+opcodeTable_aHaL_bH.register(0x11, 0x3, {
+    name: "SHLR.L ERd",
+    bytes: 2,
+    execute: cpu => {
+        const erd = cpu.instructions.bL
+        const erdValue = cpu.registers.getRegister32(erd);
+
+        const value = (erdValue >> 1)
+        cpu.registers.setRegister32(erd, value)
+
+        cpu.flags.C = Boolean(erdValue & 1)
+        setMovFlags(cpu, value, 32)
     }
 })
 
@@ -1661,7 +1676,7 @@ opcodeTable_aHaL_bH.register(0x11, 0x9, {
         const rd = cpu.instructions.bL
         const rdValue = cpu.registers.getRegister16(rd);
 
-        const value = rdValue >> 1
+        const value = (rdValue >> 1) | (rdValue & 0x8000)
         cpu.registers.setRegister16(rd, value)
 
         cpu.flags.C = Boolean(rdValue & 1)

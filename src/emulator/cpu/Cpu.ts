@@ -15,7 +15,7 @@ import {
     SSSR_RECEIVE_DATA_FULL,
     SSSR_TRANSMIT_EMPTY,
     SSSR_TRANSMIT_END,
-    Ssu, FTIOB_PIN, FTIOD_PIN, FTIOC_PIN
+    Ssu, FTIOB_PIN, FTIOC_PIN
 } from "../ssu/Ssu";
 import {
     EepRom,
@@ -52,14 +52,12 @@ import {
     Timers
 } from "./timer/Timers";
 import {TIMER_B_COUNTING} from "./timer/TimerB";
-import {toUnsignedByte} from "../utils/BitUtils";
+import {toUnsignedByte} from "../../utils/BitUtils";
 import {
     TIMER_W_CONTROL_COUNTER_CLEAR,
     TIMER_W_MODE_COUNTING,
     TIMER_W_INTERRUPT_ENABLE_A,
     TIMER_W_STATUS_MATCH_FLAG_A,
-    TIMER_W_STATUS_MATCH_FLAG_B,
-    TIMER_W_INTERRUPT_ENABLE_B,
     TIMER_W_STATUS_OVERFLOW_FLAG, TIMER_W_INTERRUPT_ENABLE_OVERFLOW
 } from "./timer/TimerW";
 import {VectorTable} from "./VectorTable";
@@ -402,24 +400,6 @@ export class Cpu {
                         }
 
                         timerW.status |= TIMER_W_STATUS_MATCH_FLAG_A
-                    }
-
-                    if (timerW.counter == timerW.registerB) {
-                        let portValue = this.ssu.getPort(PORT_8_ADDR)
-                        if (portValue & FTIOB_PIN) {
-                            this.ssu.setPort(PORT_8_ADDR, portValue & ~FTIOB_PIN)
-                        } else {
-                            this.ssu.setPort(PORT_8_ADDR, portValue | FTIOB_PIN)
-                        }
-                    }
-
-                    if (timerW.counter == timerW.registerC) {
-                        let portValue = this.ssu.getPort(PORT_8_ADDR)
-                        if (portValue & FTIOC_PIN) {
-                            this.ssu.setPort(PORT_8_ADDR, portValue & ~FTIOC_PIN)
-                        } else {
-                            this.ssu.setPort(PORT_8_ADDR, portValue | FTIOC_PIN)
-                        }
                     }
 
                     if (!this.flags.I) {

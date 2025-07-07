@@ -1,4 +1,4 @@
-import {toUnsignedByte, toUnsignedInt, toUnsignedShort} from "../utils/BitUtils";
+import {toUnsignedByte, toUnsignedInt, toUnsignedShort} from "../../utils/BitUtils";
 import {Memory} from "../memory/Memory";
 
 export class Registers {

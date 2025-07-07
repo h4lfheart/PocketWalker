@@ -1,5 +1,5 @@
 import {Memory} from "../memory/Memory";
-import {range} from "../utils/CollectionUtils";
+import {range} from "../../utils/CollectionUtils";
 
 export const LCD_PAGE_SIZE = 0xFF
 export const LCD_PAGE_COUNT = 21

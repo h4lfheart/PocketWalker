@@ -1,13 +1,13 @@
 import {readFileSync, writeFileSync} from 'node:fs';
-import {Cpu, CPU_CYCLES_PER_SECOND, KEY_CIRCLE, KEY_LEFT, KEY_RIGHT} from "./cpu/Cpu";
-import {Memory} from "./memory/Memory";
-import {EepRom} from "./eeprom/EepRom";
-import {FTIOB_PIN, PORT_8_ADDR, Ssu} from "./ssu/Ssu";
-import {Accelerometer} from "./accelerometer/Accelerometer";
+import {Cpu, CPU_CYCLES_PER_SECOND, KEY_CIRCLE, KEY_LEFT, KEY_RIGHT} from "./emulator/cpu/Cpu";
+import {Memory} from "./emulator/memory/Memory";
+import {EepRom} from "./emulator/eeprom/EepRom";
+import {Ssu} from "./emulator/ssu/Ssu";
+import {Accelerometer} from "./emulator/accelerometer/Accelerometer";
 import sdl from '@kmamal/sdl'
 import {PNG} from 'pngjs'
-import {Lcd, LCD_BUFFER_SEPARATION, LCD_COLOR_3, LCD_COLUMN_SIZE, LCD_HEIGHT, LCD_PALETTE, LCD_WIDTH} from "./lcd/Lcd";
-import Speaker from "speaker";
+import {Lcd, LCD_BUFFER_SEPARATION, LCD_COLOR_3, LCD_COLUMN_SIZE, LCD_HEIGHT, LCD_PALETTE, LCD_WIDTH} from "./emulator/lcd/Lcd";
+
 
 const ROM_SIZE = 1024 * 64
 const EEPROM_SIZE = 1024 * 64
@@ -111,62 +111,51 @@ export class Walker {
             this.running = false
         })
 
-        const sampleRate = 41000
-        const speaker = new Speaker({
-            channels: 1,
-            bitDepth: 16,
-            sampleRate: sampleRate,
-        });
+        const sampleRate = 44100
+        const playbackInstance = sdl.audio.openDevice({ type: 'playback' }, {channels: 1, frequency: sampleRate, format: 's16sys'})
+        playbackInstance.play()
 
         let currentPhase = 0;
+        let audioRenderFreq = 256
 
         while (this.running) {
             this.cpu.execute();
 
-            if (this.cpu.cycleCount % (CPU_CYCLES_PER_SECOND / (256)) == 0) {
-                const audioTime = 1 / 256
-                const sampleCount = Math.ceil(sampleRate * audioTime)
-                const amplitude = 16383
 
-                function fillSquareWave(
-                    buffer: Buffer,
-                    frequency: number
-                ): void {
-                    const samplesPerCycle = sampleRate / frequency;
-                    const halfCycle = samplesPerCycle / 2;
-                    const numSamples = buffer.length / 2;
+            if (this.cpu.cycleCount % (CPU_CYCLES_PER_SECOND / (audioRenderFreq)) == 0) {
+                console.log(this.lcd.contrast)
+
+                // TODO there's gotta be a better way to do this (volume level option)
+                let amplitude = 16383
+                if (this.cpu.timers.W.registerB != this.cpu.timers.W.registerC)
+                    amplitude *= 0.25
+
+
+                const sampleCount = Math.ceil(sampleRate / audioRenderFreq)
+                const buf = Buffer.alloc(sampleCount * 2)
+                const freq = this.cpu.timers.W.running ? 31500 / (this.cpu.timers.W.registerA) : 0
+                if (freq > 100 && isFinite(freq)) {
+                    const samplesPerCycle = sampleRate / freq;
+                    const onSamples = samplesPerCycle * 0.5;
+                    const numSamples = buf.length / 2;
 
                     for (let i = 0; i < numSamples; i++) {
                         const cyclePosition = (currentPhase + i) % samplesPerCycle;
-                        const sample = cyclePosition < halfCycle ? amplitude : -amplitude;
-                        buffer.writeInt16LE(sample, i * 2);
+                        const sample = cyclePosition < onSamples ? amplitude : -amplitude;
+                        buf.writeInt16LE(sample, i * 2);
                     }
 
                     currentPhase = (currentPhase + numSamples) % samplesPerCycle;
                 }
 
-                function fillSilence(buffer: Buffer) {
-                    const numSamples = buffer.length / 2;
-                    for (let i = 0; i < numSamples; i++) {
-                        buffer.writeInt16LE(0, i * 2);
-                    }
-                }
 
-                const buf = Buffer.alloc(sampleCount * 2)
-                const freq = this.cpu.timers.W.running ? 31500 / (this.cpu.timers.W.registerA) : 0
-                if (freq > 0 && isFinite(freq)) {
-                    fillSquareWave(buf, freq)
-                } else {
-                    fillSilence(buf)
-                }
-
-                speaker.write(buf)
+                playbackInstance.enqueue(buf)
 
             }
 
             if (this.cpu.cycleCount >= CPU_CYCLES_PER_SECOND / (TICKS_PER_SECOND * tickMultiplier)) {
                 this.cpu.cycleCount -= CPU_CYCLES_PER_SECOND / (TICKS_PER_SECOND * tickMultiplier)
-                
+
                 this.cpu.interrupts.rtcInterrupt()
                 this.renderWindow(window)
 
@@ -183,10 +172,6 @@ export class Walker {
             }
 
         }
-
-    }
-
-    renderAudio(speaker: Speaker) {
 
     }
 
