@@ -14,6 +14,8 @@
   "dependencies": {
     "@kmamal/sdl": "^0.11.8",
     "@types/node": "^24.0.4",
-    "pngjs": "^7.0.0"
+    "naudiodon": "^2.3.6",
+    "pngjs": "^7.0.0",
+    "speaker": "^0.5.5"
   }
 }

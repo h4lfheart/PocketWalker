@@ -8,14 +8,14 @@ import {
     EEPROM_PIN,
     LCD_DATA_PIN,
     LCD_PIN,
-    PORT_1_ADDR,
+    PORT_1_ADDR, PORT_8_ADDR,
     PORT_9_ADDR,
     SSER_RECEIVE_ENABLED,
     SSER_TRANSMIT_ENABLED,
     SSSR_RECEIVE_DATA_FULL,
     SSSR_TRANSMIT_EMPTY,
     SSSR_TRANSMIT_END,
-    Ssu
+    Ssu, FTIOB_PIN, FTIOD_PIN, FTIOC_PIN
 } from "../ssu/Ssu";
 import {
     EepRom,
@@ -57,7 +57,10 @@ import {
     TIMER_W_CONTROL_COUNTER_CLEAR,
     TIMER_W_MODE_COUNTING,
     TIMER_W_INTERRUPT_ENABLE_A,
-    TIMER_W_STATUS_MATCH_FLAG_A
+    TIMER_W_STATUS_MATCH_FLAG_A,
+    TIMER_W_STATUS_MATCH_FLAG_B,
+    TIMER_W_INTERRUPT_ENABLE_B,
+    TIMER_W_STATUS_OVERFLOW_FLAG, TIMER_W_INTERRUPT_ENABLE_OVERFLOW
 } from "./timer/TimerW";
 import {VectorTable} from "./VectorTable";
 
@@ -67,6 +70,7 @@ export const KEY_NONE = 0
 export const KEY_CIRCLE = (1 << 0)
 export const KEY_LEFT = (1 << 2)
 export const KEY_RIGHT = (1 << 4)
+
 
 export class Cpu {
     // TODO create component system to hold all components instead of passing them as needed
@@ -88,6 +92,8 @@ export class Cpu {
     cycleCount: number = 0
     clockCycleCount: number = 0
     opcodeCount: number = 0
+
+    pinChanges: number = 0
 
     inputQueue: number[] = []
 
@@ -143,7 +149,7 @@ export class Cpu {
             this.memory.writeShort(0xF78E, 255)
         }
 
-        //if (this.registers.pc == 0x3726) debugger
+        //if (this.registers.pc == 0x388a) debugger
 
         if (!this.sleep) {
             this.instructions.loadInstructions(this.registers.pc)
@@ -178,12 +184,12 @@ export class Cpu {
         }
 
 
-        if (this.ssu.port(PORT_9_ADDR) & ACCELERATOR_PIN) {
+        if (this.ssu.getPort(PORT_9_ADDR) & ACCELERATOR_PIN) {
             this.accelerometer.state = AccelerometerState.Waiting
             this.accelerometer.offset = 0
         }
 
-        if (this.ssu.port(PORT_1_ADDR) & EEPROM_PIN) {
+        if (this.ssu.getPort(PORT_1_ADDR) & EEPROM_PIN) {
             this.eeprom.state = EepRomState.Waiting
             this.eeprom.offset = 0
         }
@@ -201,7 +207,8 @@ export class Cpu {
 
                 if (this.ssu.enableRegister & SSER_TRANSMIT_ENABLED && this.ssu.enableRegister & SSER_RECEIVE_ENABLED) {
                     if (~this.ssu.statusRegister & SSSR_TRANSMIT_EMPTY) {
-                        if (~this.ssu.port(PORT_9_ADDR) & ACCELERATOR_PIN) {
+
+                        if (~this.ssu.getPort(PORT_9_ADDR) & ACCELERATOR_PIN) {
                             switch (this.accelerometer.state) {
                                 case AccelerometerState.Waiting:
                                     this.accelerometer.address = this.ssu.transmitRegister & 0xF
@@ -220,7 +227,7 @@ export class Cpu {
                             }
                         }
 
-                        if (~this.ssu.port(PORT_1_ADDR) & EEPROM_PIN) {
+                        if (~this.ssu.getPort(PORT_1_ADDR) & EEPROM_PIN) {
                             this.ssu.progress++
                             if (this.ssu.progress == 7) {
                                 this.ssu.progress = 0
@@ -263,7 +270,7 @@ export class Cpu {
                 } else if (this.ssu.enableRegister & SSER_TRANSMIT_ENABLED) {
                     if (~this.ssu.statusRegister & SSSR_TRANSMIT_EMPTY) {
 
-                        if (~this.ssu.port(PORT_9_ADDR) & ACCELERATOR_PIN) {
+                        if (~this.ssu.getPort(PORT_9_ADDR) & ACCELERATOR_PIN) {
                             switch (this.accelerometer.state) {
                                 case AccelerometerState.Waiting:
                                     this.accelerometer.address = this.ssu.transmitRegister
@@ -280,7 +287,7 @@ export class Cpu {
                             }
                         }
 
-                        if (~this.ssu.port(PORT_1_ADDR) & EEPROM_PIN) {
+                        if (~this.ssu.getPort(PORT_1_ADDR) & EEPROM_PIN) {
                             this.ssu.progress++
                             if (this.ssu.progress == 7) {
                                 this.ssu.progress = 0
@@ -316,7 +323,7 @@ export class Cpu {
                             }
                         }
 
-                        if (this.ssu.port(PORT_1_ADDR) & LCD_DATA_PIN) {
+                        if (this.ssu.getPort(PORT_1_ADDR) & LCD_DATA_PIN) {
                             this.ssu.progress++
                             if (this.ssu.progress == 7) {
                                 this.ssu.progress = 0
@@ -333,7 +340,7 @@ export class Cpu {
                                 this.ssu.statusRegister |= SSSR_TRANSMIT_EMPTY
                                 this.ssu.statusRegister |= SSSR_TRANSMIT_END
                             }
-                        } else if (~this.ssu.port(PORT_1_ADDR) & LCD_PIN) {
+                        } else if (~this.ssu.getPort(PORT_1_ADDR) & LCD_PIN) {
                             switch (this.lcd.state) {
                                 case LcdState.Waiting:
                                     if (LCD_LOW_COLUMN_RANGE.includes(this.ssu.transmitRegister)) {
@@ -380,22 +387,53 @@ export class Cpu {
                     }
                 }
 
-                if (timerW.running) {
+                if (timerW.running && (this.clockCycleCount % timerW.cycleCountSelect) == 0) {
                     if (timerW.mode & TIMER_W_MODE_COUNTING) {
                         timerW.counter++
                     }
 
-                    if (timerW.counter == timerW.registerA) {
+                    if (timerW.counter == 0) {
+                        timerW.status |= TIMER_W_STATUS_OVERFLOW_FLAG
+                    }
+
+                    if (timerW.counter >= timerW.registerA) {
                         if (timerW.controlRegister & TIMER_W_CONTROL_COUNTER_CLEAR) {
                             timerW.counter = 0
                         }
 
                         timerW.status |= TIMER_W_STATUS_MATCH_FLAG_A
+                    }
 
-                        if (timerW.interruptEnable & TIMER_W_INTERRUPT_ENABLE_A && !this.flags.I) {
-                            interrupt(this.vectorTable.timerW)
+                    if (timerW.counter == timerW.registerB) {
+                        let portValue = this.ssu.getPort(PORT_8_ADDR)
+                        if (portValue & FTIOB_PIN) {
+                            this.ssu.setPort(PORT_8_ADDR, portValue & ~FTIOB_PIN)
+                        } else {
+                            this.ssu.setPort(PORT_8_ADDR, portValue | FTIOB_PIN)
                         }
                     }
+
+                    if (timerW.counter == timerW.registerC) {
+                        let portValue = this.ssu.getPort(PORT_8_ADDR)
+                        if (portValue & FTIOC_PIN) {
+                            this.ssu.setPort(PORT_8_ADDR, portValue & ~FTIOC_PIN)
+                        } else {
+                            this.ssu.setPort(PORT_8_ADDR, portValue | FTIOC_PIN)
+                        }
+                    }
+
+                    if (!this.flags.I) {
+                        if (timerW.status & TIMER_W_STATUS_OVERFLOW_FLAG && timerW.interruptEnable & TIMER_W_INTERRUPT_ENABLE_OVERFLOW) {
+                            interrupt(this.vectorTable.timerW)
+                            timerW.status &= ~TIMER_W_STATUS_OVERFLOW_FLAG
+                        }
+
+                        if (timerW.status & TIMER_W_STATUS_MATCH_FLAG_A && timerW.interruptEnable & TIMER_W_INTERRUPT_ENABLE_A) {
+                            interrupt(this.vectorTable.timerW)
+                            timerW.status &= ~TIMER_W_STATUS_MATCH_FLAG_A
+                        }
+                    }
+
                 }
 
                 timerB.running = Boolean(this.timers.clockStop1 & TIMER_B1_STANDBY) && Boolean(timerB.mode & TIMER_B_COUNTING)

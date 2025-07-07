@@ -22,6 +22,10 @@ export const LCD_DATA_PIN = (1 << 1)
 export const LCD_PIN = (1 << 0)
 export const ACCELERATOR_PIN = (1 << 0)
 
+export const FTIOB_PIN = (1 << 2)
+export const FTIOC_PIN = (1 << 3)
+export const FTIOD_PIN = (1 << 4)
+
 export class Ssu {
     memory: Memory
 
@@ -66,7 +70,11 @@ export class Ssu {
         this.memory.writeByte(SSRDR_ADDR, value)
     }
 
-    port(addr: number): number {
+    getPort(addr: number): number {
         return this.memory.readByte(addr)
+    }
+
+    setPort(addr: number, value: number) {
+        this.memory.writeByte(addr, value)
     }
 }
