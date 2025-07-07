@@ -4,10 +4,14 @@ import {Memory} from "./emulator/memory/Memory";
 import {EepRom} from "./emulator/eeprom/EepRom";
 import {Ssu} from "./emulator/ssu/Ssu";
 import {Accelerometer} from "./emulator/accelerometer/Accelerometer";
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
 import sdl from '@kmamal/sdl'
 import {PNG} from 'pngjs'
 import {Lcd, LCD_BUFFER_SEPARATION, LCD_COLOR_3, LCD_COLUMN_SIZE, LCD_HEIGHT, LCD_PALETTE, LCD_WIDTH} from "./emulator/lcd/Lcd";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const ROM_SIZE = 1024 * 64
 const EEPROM_SIZE = 1024 * 64
@@ -17,7 +21,6 @@ const LCD_SIZE = 128 * 176 / 4
 export const TICKS_PER_SECOND = 4
 
 const MARGIN_SIZE = 4
-const MARGIN_COLOR = LCD_COLOR_3
 const LCD_SCALAR = 8
 
 export class Walker {
@@ -76,7 +79,7 @@ export class Walker {
             width: windowWidth,
             resizable: false
         })
-        window.setIcon(30, 30, 30 * 4, 'rgba32', PNG.sync.read(readFileSync("../assets/logo.png")).data)
+        window.setIcon(30, 30, 30 * 4, 'rgba32', PNG.sync.read(readFileSync(resolve(__dirname, '..', 'assets', 'logo.png'))).data)
 
         window.on("keyDown", (args: any) => {
             switch (args.key) {
@@ -123,8 +126,6 @@ export class Walker {
 
 
             if (this.cpu.cycleCount % (CPU_CYCLES_PER_SECOND / (audioRenderFreq)) == 0) {
-                console.log(this.lcd.contrast)
-
                 // TODO there's gotta be a better way to do this (volume level option)
                 let amplitude = 16383
                 if (this.cpu.timers.W.registerB != this.cpu.timers.W.registerC)
@@ -182,9 +183,9 @@ export class Walker {
         const buffer = Buffer.alloc(windowWidth * windowHeight * 3)
 
         for (let i = 0; i < buffer.length; i += 3) {
-            buffer[i] = (MARGIN_COLOR >> 16) & 0xFF
-            buffer[i + 1] = (MARGIN_COLOR >> 8) & 0xFF
-            buffer[i + 2] = (MARGIN_COLOR >> 0) & 0xFF
+            buffer[i] = (LCD_PALETTE[0] >> 16) & 0xFF
+            buffer[i + 1] = (LCD_PALETTE[0] >> 8) & 0xFF
+            buffer[i + 2] = (LCD_PALETTE[0] >> 0) & 0xFF
         }
 
         for (let y = 0; y < LCD_HEIGHT; y++) {
