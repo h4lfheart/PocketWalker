@@ -685,6 +685,27 @@ opcodeTable_aH_aL.register(0x6, 0x6, {
     }
 })
 
+opcodeTable_aH_aL.register(0x6, 0x7, {
+    name: "BST #xx:3, Rd",
+    bytes: 2,
+    execute: cpu => {
+        if (cpu.instructions.dH >> 3 == 1) { // BIST ??
+            debugger
+        }
+
+        const rd = cpu.instructions.bL
+        const rdValue = cpu.registers.getRegister8(rd)
+
+        const imm = cpu.instructions.bH
+
+        if (cpu.flags.C) {
+            cpu.registers.setRegister8(rd, rdValue | (1 << imm))
+        } else {
+            cpu.registers.setRegister8(rd, rdValue& ~(1 << imm))
+        }
+    }
+})
+
 opcodeTable_aH_aL.register(0x6, 0x8, {
     name: "MOV.B @ERs,Rd / MOV.B Rs, @ERd",
     bytes: 2,
@@ -1664,6 +1685,20 @@ opcodeTable_aHaL_bH.register(0x12, 0x8, {
     }
 })
 
+
+opcodeTable_aHaL_bH.register(0x17, 0x0, {
+    name: "NOT.B Rd",
+    bytes: 2,
+    execute: cpu => {
+        const rd = cpu.instructions.bL
+        const rdValue = cpu.registers.getRegister8(rd)
+
+        const newValue = ~rdValue
+        cpu.registers.setRegister8(rd, newValue)
+        setMovFlags(cpu, newValue, 8)
+    }
+})
+
 opcodeTable_aHaL_bH.register(0x17, 0x5, {
     name: "EXTU.W Rd",
     bytes: 2,
@@ -1915,6 +1950,19 @@ opcodeTable_aHaL_bH.register(0x58, 0x7, {
         return `BEQ ${disp}`
     }
 })
+
+opcodeTable_aHaL_bH.register(0x58, 0xC, {
+    name: "BGE d:16",
+    bytes: 4,
+    execute: cpu => {
+        const disp = toSignedShort(cpu.instructions.cd)
+        if (cpu.flags.N == cpu.flags.V)
+            cpu.registers.pc += disp
+
+        return `BGE ${disp}`
+    }
+})
+
 
 opcodeTable_aHaL_bH.register(0x58, 0xD, {
     name: "BLT d:16",

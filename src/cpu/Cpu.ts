@@ -63,6 +63,7 @@ import {VectorTable} from "./VectorTable";
 
 export const CPU_CYCLES_PER_SECOND = 3686400
 
+export const KEY_NONE = 0
 export const KEY_CIRCLE = (1 << 0)
 export const KEY_LEFT = (1 << 2)
 export const KEY_RIGHT = (1 << 4)
@@ -141,6 +142,8 @@ export class Cpu {
         if (this.registers.pc == 0x9a4e && this.memory.readShort(0xF78E) == 0) {
             this.memory.writeShort(0xF78E, 255)
         }
+
+        //if (this.registers.pc == 0x3726) debugger
 
         if (!this.sleep) {
             this.instructions.loadInstructions(this.registers.pc)
@@ -411,7 +414,7 @@ export class Cpu {
         }
 
         this.inputQueue.push(key)
-        this.inputQueue.push(0) // TODO use real keyUp event from sdl
+        this.inputQueue.push(KEY_NONE)
         this.sleep = false
     }
 }

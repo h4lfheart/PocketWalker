@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import {readFileSync, writeFileSync} from 'node:fs';
 import {Cpu, CPU_CYCLES_PER_SECOND, KEY_CIRCLE, KEY_LEFT, KEY_RIGHT} from "./cpu/Cpu";
 import {Memory} from "./memory/Memory";
 import {EepRom} from "./eeprom/EepRom";
@@ -20,6 +20,8 @@ const MARGIN_COLOR = LCD_COLOR_3
 const LCD_SCALAR = 8
 
 export class Walker {
+    eepromPath: string | null
+
 
     running: boolean = true
 
@@ -33,6 +35,8 @@ export class Walker {
     lastTime: number = 0
 
     constructor(romPath: string, eepromPath: string | null = null) {
+
+        this.eepromPath = eepromPath
 
         const romBuffer = new Uint8Array(ROM_SIZE)
         readFileSync(romPath).copy(romBuffer)
@@ -62,10 +66,11 @@ export class Walker {
     async run() {
         // TODO properly separate emulator and window thread
 
+        let tickMultiplier = 1
         const windowWidth = (LCD_WIDTH + MARGIN_SIZE * 2) * LCD_SCALAR
         const windowHeight = (LCD_HEIGHT + MARGIN_SIZE * 2) * LCD_SCALAR
         const window = sdl.video.createWindow({
-            title: "PocketWalker",
+            title: "Pocket-Walker",
             height: windowHeight,
             width: windowWidth,
             resizable: false
@@ -83,19 +88,38 @@ export class Walker {
                 case "down":
                     this.cpu.pushKey(KEY_CIRCLE)
                     break
+                case "tab":
+                    tickMultiplier = 4
+                    break
             }
+        })
+
+        window.on("keyUp", (args: any) => {
+            switch (args.key) {
+                case "tab":
+                    tickMultiplier = 1
+                    break
+            }
+        })
+
+        window.on("close", () => {
+            if (this.eepromPath != null) {
+                writeFileSync(this.eepromPath, this.eeprom.memory.buffer)
+            }
+
+            this.running = false
         })
 
         while (this.running) {
             this.cpu.execute()
 
-            if (this.cpu.cycleCount >= CPU_CYCLES_PER_SECOND / TICKS_PER_SECOND) {
-                this.cpu.cycleCount -= CPU_CYCLES_PER_SECOND / TICKS_PER_SECOND
+            if (this.cpu.cycleCount >= CPU_CYCLES_PER_SECOND / (TICKS_PER_SECOND * tickMultiplier)) {
+                this.cpu.cycleCount -= CPU_CYCLES_PER_SECOND / (TICKS_PER_SECOND * tickMultiplier)
 
                 this.cpu.interrupts.rtcInterrupt()
                 this.renderWindow(window)
 
-                const desiredTime = 1000 / TICKS_PER_SECOND
+                const desiredTime = 1000 / (TICKS_PER_SECOND * tickMultiplier)
 
                 const elapsed = performance.now() - this.lastTime
                 if (elapsed < desiredTime) {
