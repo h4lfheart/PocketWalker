@@ -5,6 +5,7 @@ export const SSSR_ADDR = 0xF0E4
 export const SSRDR_ADDR = 0xF0E9
 export const SSTDR_ADDR = 0xF0EB
 
+// TODO turn these flags and all others into enums for organization, it'shard to tell what flags are used on what registers
 export const SSER_TRANSMIT_ENABLED = (1 << 7)
 export const SSER_RECEIVE_ENABLED = (1 << 6)
 

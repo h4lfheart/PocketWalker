@@ -8,14 +8,14 @@ import {
     EEPROM_PIN,
     LCD_DATA_PIN,
     LCD_PIN,
-    PORT_1_ADDR, PORT_8_ADDR,
+    PORT_1_ADDR,
     PORT_9_ADDR,
     SSER_RECEIVE_ENABLED,
     SSER_TRANSMIT_ENABLED,
     SSSR_RECEIVE_DATA_FULL,
     SSSR_TRANSMIT_EMPTY,
     SSSR_TRANSMIT_END,
-    Ssu, FTIOB_PIN, FTIOC_PIN
+    Ssu,
 } from "../ssu/Ssu";
 import {
     EepRom,
@@ -64,10 +64,12 @@ import {VectorTable} from "./VectorTable";
 
 export const CPU_CYCLES_PER_SECOND = 3686400
 
-export const KEY_NONE = 0
-export const KEY_CIRCLE = (1 << 0)
-export const KEY_LEFT = (1 << 2)
-export const KEY_RIGHT = (1 << 4)
+export enum InputKey {
+    KEY_NONE = 0,
+    KEY_CENTER = (1 << 0),
+    KEY_LEFT = (1 << 2),
+    KEY_RIGHT = (1 << 4)
+}
 
 
 export class Cpu {
@@ -111,6 +113,7 @@ export class Cpu {
         this.registers.pc = this.vectorTable.reset
         this.flags.I = true
 
+
     }
 
     execute() {
@@ -146,8 +149,6 @@ export class Cpu {
         if (this.registers.pc == 0x9a4e && this.memory.readShort(0xF78E) == 0) {
             this.memory.writeShort(0xF78E, 255)
         }
-
-        //if (this.registers.pc == 0x388a) debugger
 
         if (!this.sleep) {
             this.instructions.loadInstructions(this.registers.pc)
@@ -426,13 +427,13 @@ export class Cpu {
             this.opcodeCount++
     }
 
-    pushKey(key: number) {
-        if (!this.flags.I && key == KEY_CIRCLE) {
+    pushKey(key: InputKey) {
+        if (!this.flags.I && key == InputKey.KEY_CENTER) {
             this.interrupts.flagRegister1 |= IRRI0
         }
 
         this.inputQueue.push(key)
-        this.inputQueue.push(KEY_NONE)
+        this.inputQueue.push(InputKey.KEY_NONE)
         this.sleep = false
     }
 }

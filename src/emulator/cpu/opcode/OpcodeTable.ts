@@ -466,6 +466,18 @@ opcodeTable_aH_aL.register(0x4, 0xE, {
     }
 })
 
+opcodeTable_aH_aL.register(0x4, 0xF, {
+    name: "BLE d:8",
+    bytes: 2,
+    execute: cpu => {
+        const disp = toSignedByte(cpu.instructions.b)
+        if (cpu.flags.Z || (cpu.flags.N != cpu.flags.V))
+            cpu.registers.pc += disp
+
+        return `BLE ${disp}`
+    }
+})
+
 opcodeTable_aH_aL.register(0x5, 0x0, {
     name: "MULXU.B Rs, Rd",
     bytes: 2,
@@ -689,16 +701,17 @@ opcodeTable_aH_aL.register(0x6, 0x7, {
     name: "BST #xx:3, Rd",
     bytes: 2,
     execute: cpu => {
-        if (cpu.instructions.dH >> 3 == 1) { // BIST ??
-            debugger
-        }
-
+        const isInverse = cpu.instructions.dH >> 3 == 1
         const rd = cpu.instructions.bL
         const rdValue = cpu.registers.getRegister8(rd)
 
         const imm = cpu.instructions.bH
 
-        if (cpu.flags.C) {
+        let isOne = cpu.flags.C
+        if (isInverse)
+            isOne = !isOne
+
+        if (isOne) {
             cpu.registers.setRegister8(rd, rdValue | (1 << imm))
         } else {
             cpu.registers.setRegister8(rd, rdValue& ~(1 << imm))
@@ -1480,92 +1493,6 @@ opcodeTable_aHaL_bH.register(0xB, 0x9, {
         const rd = cpu.instructions.bL
         const rdValue = cpu.registers.getRegister32(rd)
         cpu.registers.setRegister32(rd, rdValue + 4)
-    }
-})
-
-opcodeTable_aHaL_bH.register(0xF, 0x0, {
-    name: "DAA Rd",
-    bytes: 4,
-    execute: cpu => {
-        // TODO I have no clue if this works, not implemented in other emulators so it may be an issue :)
-        const rd = cpu.instructions.bL
-        let regValue = cpu.registers.getRegister8(rd);
-
-        const cFlag = cpu.flags.C;
-        const hFlag = cpu.flags.H;
-
-        const upperNibble = (regValue >> 4) & 0x0F;
-        const lowerNibble = regValue & 0x0F;
-
-        let adjustmentValue = 0x00;
-        let newCFlag = cFlag;
-
-        if (!cFlag) {
-            if (upperNibble >= 0x0 && upperNibble <= 0x9) {
-                if (!hFlag) {
-                    if (lowerNibble >= 0x0 && lowerNibble <= 0x9) {
-                        adjustmentValue = 0x00;
-                        newCFlag = false;
-                    } else if (lowerNibble >= 0xA && lowerNibble <= 0xF) {
-                        adjustmentValue = 0x06;
-                        newCFlag = false;
-                    }
-                } else { // hFlag is true
-                    if (lowerNibble >= 0x0 && lowerNibble <= 0x3) {
-                        adjustmentValue = 0x06;
-                        newCFlag = false;
-                    }
-                }
-            } else if (upperNibble >= 0xA && upperNibble <= 0xF) {
-                if (!hFlag) {
-                    if (lowerNibble >= 0x0 && lowerNibble <= 0x9) {
-                        adjustmentValue = 0x60;
-                        newCFlag = true;
-                    } else if (lowerNibble >= 0xA && lowerNibble <= 0xF) {
-                        adjustmentValue = 0x66;
-                        newCFlag = true;
-                    }
-                } else { // hFlag is true
-                    if (lowerNibble >= 0x0 && lowerNibble <= 0x3) {
-                        adjustmentValue = 0x66;
-                        newCFlag = true;
-                    }
-                }
-            }
-        } else { // cFlag is true
-            if (upperNibble >= 0x1 && upperNibble <= 0x2) {
-                if (!hFlag) {
-                    if (lowerNibble >= 0x0 && lowerNibble <= 0x9) {
-                        adjustmentValue = 0x60;
-                        newCFlag = true;
-                    } else if (lowerNibble >= 0xA && lowerNibble <= 0xF) {
-                        adjustmentValue = 0x66;
-                        newCFlag = true;
-                    }
-                } else {
-                    if (lowerNibble >= 0x0 && lowerNibble <= 0x3) {
-                        adjustmentValue = 0x66;
-                        newCFlag = true;
-                    }
-                }
-            } else if (upperNibble >= 0x3 && upperNibble <= 0xF) {
-                if (!hFlag && lowerNibble >= 0x0 && lowerNibble <= 0x9) {
-                    adjustmentValue = 0x60;
-                    newCFlag = true;
-                } else {
-                    adjustmentValue = 0x66;
-                    newCFlag = true;
-                }
-            }
-        }
-
-        regValue = (regValue + adjustmentValue) & 0xFF;
-
-        cpu.registers.setRegister8(rd, regValue);
-
-        cpu.flags.C = newCFlag;
-        cpu.flags.N = (regValue & 0x80) !== 0;
-        cpu.flags.Z = regValue === 0;
     }
 })
 
