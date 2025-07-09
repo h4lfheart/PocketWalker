@@ -20,6 +20,7 @@ export class OpcodeContainer {
         this.opcode = {
             name: name,
             bytes: 0,
+            cycles: 0,
             execute: cpu => {
                 this.execute(cpu)
             },
@@ -70,6 +71,7 @@ export class OpcodeContainer {
         const preExecutePC = cpu.registers.pc;
         const result = opcode.execute(cpu);
         cpu.registers.pc += opcode.bytes
+        cpu.cyclesCompleted += opcode.cycles
 
         const startDebug = 4244500
         const debugLength = 1000

@@ -9,7 +9,7 @@ import {
     LCD_DATA_PIN,
     LCD_PIN,
     PORT_1_ADDR,
-    PORT_9_ADDR,
+    PORT_9_ADDR, PORT_B_ADDR,
     SSER_RECEIVE_ENABLED,
     SSER_TRANSMIT_ENABLED,
     SSSR_RECEIVE_DATA_FULL,
@@ -90,12 +90,11 @@ export class Cpu {
 
     sleep: boolean = false
     cycleCount: number = 0
+    audioCycleCount: number = 0
     clockCycleCount: number = 0
     opcodeCount: number = 0
 
-    pinChanges: number = 0
-
-    inputQueue: number[] = []
+    cyclesCompleted: number = 0
 
     constructor(memory: Memory, ssu: Ssu, eeprom: EepRom, accelerometer: Accelerometer, lcd: Lcd) {
         this.memory = memory;
@@ -137,11 +136,13 @@ export class Cpu {
             return
         }
 
-        // key input
-        if (this.registers.pc == 0x9B84) {
-            if (this.inputQueue.length > 0) {
-                this.memory.writeByte(0xFFDE, this.inputQueue.shift()!)
-            }
+        // set key port back to zero after processing
+        // TODO create handlers for certain instruction addr (although these solutions are bad and should be replicate with "hardware")
+        if (this.registers.pc == 0x9C3E) {
+            // TODO how does the hardware handle it?
+            // emulator processes inputs slower for some reason
+            if (this.ssu.getPort(PORT_B_ADDR) != 0)
+                this.ssu.setPort(PORT_B_ADDR, InputKey.KEY_NONE)
         }
 
         // set watts
@@ -193,10 +194,11 @@ export class Cpu {
             this.eeprom.offset = 0
         }
 
-        // TODO add cycles property to opcode
-        const cyclesCompleted = 2
-        for (let i = 0; i < cyclesCompleted; i++) {
+        this.cyclesCompleted = 2 // TODO cycles have been added, but audio sounds worse
+
+        for (let i = 0; i < this.cyclesCompleted; i++) {
             this.cycleCount++
+            this.audioCycleCount++
 
             if ((this.cycleCount % 4) == 0) {
 
@@ -425,6 +427,8 @@ export class Cpu {
 
         if (!this.sleep)
             this.opcodeCount++
+
+        this.cyclesCompleted = 0
     }
 
     pushKey(key: InputKey) {
@@ -432,8 +436,7 @@ export class Cpu {
             this.interrupts.flagRegister1 |= IRRI0
         }
 
-        this.inputQueue.push(key)
-        this.inputQueue.push(InputKey.KEY_NONE)
+        this.ssu.setPort(PORT_B_ADDR, key)
         this.sleep = false
     }
 }

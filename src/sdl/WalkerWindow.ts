@@ -36,8 +36,8 @@ export class WalkerWindow {
         const iconPng = PNG.sync.read(iconData)
         this.window.setIcon(iconPng.width, iconPng.height, iconPng.width * 4, 'rgba32', iconPng.data)
 
-        this.window.on('keyDown', args => this.onKeyDownHandler.invoke(args.key))
-        this.window.on('keyUp', args => this.onKeyUpHandler.invoke(args.key))
+        this.window.on('keyDown', (args: any) => this.onKeyDownHandler.invoke(args.key))
+        this.window.on('keyUp', (args: any) => this.onKeyUpHandler.invoke(args.key))
         this.window.on('close', () => this.onCloseHandler.invoke())
 
         this.window.render(1, 1, 3, 'rgb24', Buffer.alloc(3, 0xCC), {

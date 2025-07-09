@@ -17,6 +17,7 @@ export const PORT_1_ADDR = 0xFFD4
 export const PORT_3_ADDR = 0xFFD6
 export const PORT_8_ADDR = 0xFFDB
 export const PORT_9_ADDR = 0xFFDC
+export const PORT_B_ADDR = 0xFFDE
 
 export const EEPROM_PIN = (1 << 2)
 export const LCD_DATA_PIN = (1 << 1)

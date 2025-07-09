@@ -77,7 +77,9 @@ export class Walker {
         while (this.running) {
             this.cpu.execute();
 
-            if (this.cpu.cycleCount % (CPU_CYCLES_PER_SECOND / (AUDIO_RENDER_FREQUENCY * this.emulationSpeed)) == 0) {
+            if (this.cpu.audioCycleCount >= CPU_CYCLES_PER_SECOND / (AUDIO_RENDER_FREQUENCY * this.emulationSpeed)) {
+                this.cpu.audioCycleCount -= CPU_CYCLES_PER_SECOND / (AUDIO_RENDER_FREQUENCY * this.emulationSpeed)
+
                 this.onRenderAudioHandler.invoke({
                     frequency: this.cpu.timers.W.running ? 31500 / (this.cpu.timers.W.registerA) : 0,
                     volume: this.cpu.timers.W.registerB == this.cpu.timers.W.registerC ? 1.0 : 0.25,
@@ -89,6 +91,7 @@ export class Walker {
                 this.cpu.cycleCount -= CPU_CYCLES_PER_SECOND / (TICKS_PER_SECOND * this.emulationSpeed)
 
                 this.cpu.interrupts.rtcInterrupt()
+
                 this.renderLcd()
 
                 const desiredTime = 1000 / (TICKS_PER_SECOND * this.emulationSpeed)
