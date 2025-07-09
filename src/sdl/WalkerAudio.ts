@@ -32,12 +32,20 @@ export class WalkerAudio {
         let targetAmplitude = BASE_AMPLITUDE * volumeMultiplier
         if (frequency >= MIN_FREQUENCY && frequency <= MAX_FREQUENCY) {
             const samplesPerCycle = SAMPLE_RATE / frequency;
-            const onSamples = samplesPerCycle * 0.5;
             const numSamples = audioBuffer.length / 2;
 
+            const nyquistFreq = SAMPLE_RATE / 2;
+            const maxHarmonic = Math.floor(nyquistFreq / frequency);
+
             for (let i = 0; i < numSamples; i++) {
-                const cyclePosition = (this.currentPhase + i) % samplesPerCycle;
-                const sample = cyclePosition < onSamples ? targetAmplitude : -targetAmplitude;
+                const time = (this.currentPhase + i) / SAMPLE_RATE;
+                let sample = 0;
+
+                for (let h = 1; h <= maxHarmonic; h += 2) {
+                    sample += Math.sin(2 * Math.PI * frequency * h * time) / h;
+                }
+
+                sample = (sample * 4 / Math.PI) * targetAmplitude;
                 audioBuffer.writeInt16LE(sample, i * 2);
             }
 
