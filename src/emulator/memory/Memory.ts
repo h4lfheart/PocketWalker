@@ -33,7 +33,6 @@ export class Memory {
 
     writeInt(address: number, value: number) {
         address &= 0xFFFF
-        if (address == 0xff7c || address == (0xff7c + 1) || address == (0xff7c + 2) || address == (0xff7c + 3)) debugger
         this.buffer[address] = (value >> 24) & 0xFF
         this.buffer[address + 1] = (value >> 16) & 0xFF
         this.buffer[address + 2] = (value >> 8) & 0xFF

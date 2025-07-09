@@ -1,6 +1,6 @@
 type Callback<T = void> = (data: T) => void;
 
-export class EventHandler<T extends Record<string, any>> {
+export class EventHandler<T> {
     private listeners: Callback<T>[] = [];
 
     addListener(cb: Callback<T>) {

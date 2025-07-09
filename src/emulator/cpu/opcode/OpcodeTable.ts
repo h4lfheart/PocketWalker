@@ -2035,7 +2035,7 @@ opcodeTable_aHaL_bH.register(0x7A, 0x1, {
 
         const value = erdValue + imm
         cpu.registers.setRegister32(erd, value)
-        setAddFlags(cpu, value, 32)
+        setAddFlags(cpu, erdValue, imm, 32)
     }
 })
 
