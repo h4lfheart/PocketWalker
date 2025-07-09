@@ -6,6 +6,10 @@ export function toSignedShort(n: number): number {
     return (n & 0xFFFF) << 16 >> 16;
 }
 
+export function toSignedInt(n: number): number {
+    return n | 0
+}
+
 export function toUnsignedByte(n: number): number {
     return n & 0xFF;
 }

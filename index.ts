@@ -3,7 +3,7 @@ import {WalkerWindow} from "./src/sdl/WalkerWindow";
 import {InputKey} from "./src/emulator/cpu/Cpu";
 import {WalkerAudio} from "./src/sdl/WalkerAudio";
 
-const walker = new Walker("C:/walker.bin", "C:/Users/Max/Downloads/pweep.rom")
+const walker = new Walker("C:/walker.bin", "C:/Users/Max/Downloads/pw_jp_eep/pweep.rom")
 
 const window = new WalkerWindow(8)
 window.onClose(() => {
