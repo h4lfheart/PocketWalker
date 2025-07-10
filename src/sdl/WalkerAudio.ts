@@ -22,10 +22,12 @@ export class WalkerAudio {
 
     render(frequency: number, volumeMultiplier: number = 1, speed: number = 1) {
 
-        const latency = this.audio.queued / (SAMPLE_RATE / 1000);
         let sampleCount = Math.ceil(SAMPLE_RATE / (AUDIO_RENDER_FREQUENCY * speed));
+        const latency = this.audio.queued / (SAMPLE_RATE / 1000);
         if (latency > TARGET_LATENCY) {
             sampleCount = Math.max(1, sampleCount - 1);
+        } else if (latency < TARGET_LATENCY / 2) {
+            sampleCount += 1;
         }
 
         const audioBuffer = Buffer.alloc(sampleCount * 2)

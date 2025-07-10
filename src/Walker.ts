@@ -9,6 +9,7 @@ import {PNG} from 'pngjs'
 import {Lcd, LCD_BUFFER_SEPARATION, LCD_COLUMN_SIZE, LCD_HEIGHT, LCD_PALETTE, LCD_WIDTH} from "./emulator/lcd/Lcd";
 import {EventHandler} from "./utils/EventUtils";
 import {AUDIO_RENDER_FREQUENCY} from "./sdl/WalkerAudio";
+import {Rtc} from "./emulator/rtc/Rtc";
 
 const ROM_SIZE = 1024 * 64
 const EEPROM_SIZE = 1024 * 64
@@ -39,6 +40,7 @@ export class Walker {
     private eeprom: EepRom
     private accelerometer: Accelerometer
     private lcd: Lcd
+    private rtc: Rtc
 
     private lastTime: number = 0
 
@@ -64,19 +66,25 @@ export class Walker {
         lcdBuffer.fill(0x0)
         this.lcd = new Lcd((new Memory(lcdBuffer)))
 
+        this.rtc = new Rtc(this.rom)
+
         this.ssu = new Ssu(this.rom)
 
-        this.cpu = new Cpu(this.rom, this.ssu, this.eeprom, this.accelerometer, this.lcd)
+        this.cpu = new Cpu(this.rom, this.ssu, this.eeprom, this.accelerometer, this.lcd, this.rtc)
 
         this.running = true;
     }
 
 
     async run() {
-
         while (this.running) {
             this.cpu.execute();
 
+            if (!this.cpu.flags.I && !this.rtc.initialized) {
+                this.rtc.initialize()
+            }
+
+            // TODO run continious audio thread instead of sending packets
             if (this.cpu.audioCycleCount >= CPU_CYCLES_PER_SECOND / (AUDIO_RENDER_FREQUENCY * this.emulationSpeed)) {
                 this.cpu.audioCycleCount -= CPU_CYCLES_PER_SECOND / (AUDIO_RENDER_FREQUENCY * this.emulationSpeed)
 
@@ -90,7 +98,7 @@ export class Walker {
             if (this.cpu.cycleCount >= CPU_CYCLES_PER_SECOND / (TICKS_PER_SECOND * this.emulationSpeed)) {
                 this.cpu.cycleCount -= CPU_CYCLES_PER_SECOND / (TICKS_PER_SECOND * this.emulationSpeed)
 
-                this.cpu.interrupts.rtcInterrupt()
+                this.rtc.update()
 
                 this.renderLcd()
 

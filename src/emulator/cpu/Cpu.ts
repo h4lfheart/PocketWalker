@@ -35,15 +35,12 @@ import {
     LcdState
 } from "../lcd/Lcd";
 import {
-    ONE_SECOND_INTERRUPT_ENABLE,
-    HALF_SECOND_INTERRUPT_ENABLE,
     IEN0,
     IENRTC,
     IENTB1,
     Interrupts,
     IRRI0,
     IRRTB1,
-    QUARTER_SECOND_INTERRUPT_ENABLE
 } from "./Interrupts";
 import {
     CLOCK_CYCLES_PER_SECOND,
@@ -61,6 +58,10 @@ import {
     TIMER_W_STATUS_OVERFLOW_FLAG, TIMER_W_INTERRUPT_ENABLE_OVERFLOW
 } from "./timer/TimerW";
 import {VectorTable} from "./VectorTable";
+import {
+    HALF_SECOND_INTERRUPT_ENABLE, HOUR_INTERRUPT_ENABLE,
+    MINUTE_INTERRUPT_ENABLE, QUARTER_SECOND_INTERRUPT_ENABLE, Rtc, SECOND_INTERRUPT_ENABLE
+} from "../rtc/Rtc";
 
 export const CPU_CYCLES_PER_SECOND = 3686400
 
@@ -79,6 +80,7 @@ export class Cpu {
     eeprom: EepRom
     accelerometer: Accelerometer
     lcd: Lcd
+    rtc: Rtc
 
     flags: Flags = new Flags()
     
@@ -96,12 +98,13 @@ export class Cpu {
 
     cyclesCompleted: number = 0
 
-    constructor(memory: Memory, ssu: Ssu, eeprom: EepRom, accelerometer: Accelerometer, lcd: Lcd) {
+    constructor(memory: Memory, ssu: Ssu, eeprom: EepRom, accelerometer: Accelerometer, lcd: Lcd, rtc: Rtc) {
         this.memory = memory;
         this.ssu = ssu
         this.eeprom = eeprom;
         this.accelerometer = accelerometer
         this.lcd = lcd
+        this.rtc = rtc
 
         this.registers = new Registers(this.memory)
         this.instructions = new Instructions(this.memory)
@@ -171,12 +174,16 @@ export class Cpu {
             if (this.interrupts.enableRegister1 & IEN0 && this.interrupts.flagRegister1 & IRRI0) {
                 interrupt(this.vectorTable.irq0)
             } else if (this.interrupts.enableRegister1 & IENRTC) {
-                if (this.interrupts.rtcFlagRegister & QUARTER_SECOND_INTERRUPT_ENABLE) {
+                if (this.rtc.interruptFlag & QUARTER_SECOND_INTERRUPT_ENABLE) {
                     interrupt(this.vectorTable.rtcQuarterSecond)
-                } else if (this.interrupts.rtcFlagRegister & HALF_SECOND_INTERRUPT_ENABLE) {
+                } else if (this.rtc.interruptFlag & HALF_SECOND_INTERRUPT_ENABLE) {
                     interrupt(this.vectorTable.rtcHalfSecond)
-                } else if (this.interrupts.rtcFlagRegister & ONE_SECOND_INTERRUPT_ENABLE) {
+                } else if (this.rtc.interruptFlag & SECOND_INTERRUPT_ENABLE) {
                     interrupt(this.vectorTable.rtcSecond)
+                } else if (this.rtc.interruptFlag & MINUTE_INTERRUPT_ENABLE) {
+                    interrupt(this.vectorTable.rtcMinute)
+                } else if (this.rtc.interruptFlag & HOUR_INTERRUPT_ENABLE) {
+                    interrupt(this.vectorTable.rtcHour)
                 }
             } else if (this.interrupts.enableRegister2 & IENTB1 && this.interrupts.flagRegister2 & IRRTB1) {
                 interrupt(this.vectorTable.timerB)
@@ -194,7 +201,7 @@ export class Cpu {
             this.eeprom.offset = 0
         }
 
-        this.cyclesCompleted = 2 // TODO cycles have been added, but audio sounds worse
+        this.cyclesCompleted = 2 // TODO cycles have been added, but audio sounds worse, reverting for now
 
         for (let i = 0; i < this.cyclesCompleted; i++) {
             this.cycleCount++
