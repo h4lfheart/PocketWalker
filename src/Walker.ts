@@ -77,16 +77,23 @@ export class Walker {
 
 
     async run() {
+        const desiredTime = 1000 / (TICKS_PER_SECOND * this.emulationSpeed)
+        let videoCycleCount = 0
+        let audioCycleCount = 0
+        this.lastTime = performance.now()
         while (this.running) {
-            this.cpu.execute();
+            const cycles = this.cpu.execute();
+
+            videoCycleCount += cycles
+            audioCycleCount += cycles
 
             if (!this.cpu.flags.I && !this.rtc.initialized) {
                 this.rtc.initialize()
             }
 
-            // TODO run continious audio thread instead of sending packets
-            if (this.cpu.audioCycleCount >= CPU_CYCLES_PER_SECOND / (AUDIO_RENDER_FREQUENCY * this.emulationSpeed)) {
-                this.cpu.audioCycleCount -= CPU_CYCLES_PER_SECOND / (AUDIO_RENDER_FREQUENCY * this.emulationSpeed)
+            // TODO run continuous audio thread instead of sending packets
+            if (audioCycleCount >= CPU_CYCLES_PER_SECOND / (AUDIO_RENDER_FREQUENCY * this.emulationSpeed)) {
+                audioCycleCount -= CPU_CYCLES_PER_SECOND / (AUDIO_RENDER_FREQUENCY * this.emulationSpeed)
 
                 this.onRenderAudioHandler.invoke({
                     frequency: this.cpu.timers.W.running ? 31500 / (this.cpu.timers.W.registerA) : 0,
@@ -95,16 +102,16 @@ export class Walker {
                 })
             }
 
-            if (this.cpu.cycleCount >= CPU_CYCLES_PER_SECOND / (TICKS_PER_SECOND * this.emulationSpeed)) {
-                this.cpu.cycleCount -= CPU_CYCLES_PER_SECOND / (TICKS_PER_SECOND * this.emulationSpeed)
+            if (videoCycleCount >= CPU_CYCLES_PER_SECOND / (TICKS_PER_SECOND * this.emulationSpeed)) {
+                videoCycleCount -= CPU_CYCLES_PER_SECOND / (TICKS_PER_SECOND * this.emulationSpeed)
 
                 this.rtc.update()
 
                 this.renderLcd()
 
-                const desiredTime = 1000 / (TICKS_PER_SECOND * this.emulationSpeed)
-
-                const elapsed = performance.now() - this.lastTime
+                const currentTime = performance.now()
+                const elapsed = currentTime - this.lastTime
+                
                 if (elapsed < desiredTime) {
                     await new Promise(resolve => setTimeout(resolve, desiredTime - elapsed))
                 } else {
@@ -116,6 +123,16 @@ export class Walker {
 
         }
 
+    }
+
+    addStep() {
+        const prevValue = this.cpu.memory.readInt(0xF79C)
+        this.cpu.memory.writeInt(0xF79C, prevValue + 1)
+    }
+
+    addWatt() {
+        const prevValue = this.cpu.memory.readInt(0xF78E)
+        this.cpu.memory.writeInt(0xF78E, prevValue + 1)
     }
 
     addInput(key: number) {

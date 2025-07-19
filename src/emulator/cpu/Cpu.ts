@@ -83,7 +83,7 @@ export class Cpu {
     rtc: Rtc
 
     flags: Flags = new Flags()
-    
+
     registers: Registers
     instructions: Instructions
     interrupts: Interrupts
@@ -92,7 +92,6 @@ export class Cpu {
 
     sleep: boolean = false
     cycleCount: number = 0
-    audioCycleCount: number = 0
     clockCycleCount: number = 0
     opcodeCount: number = 0
 
@@ -115,32 +114,37 @@ export class Cpu {
         this.registers.pc = this.vectorTable.reset
         this.flags.I = true
 
-
     }
 
-    execute() {
+    execute(): number {
+        this.cyclesCompleted = 0
+
+        if (this.registers.pc == 0x08e6) {
+            debugger
+        }
+
         // skip factory tests
         if (this.registers.pc == 0x336) {
             this.registers.pc += 4
-            return
+            return 2
         }
 
         // skip battery check
         if (this.registers.pc == 0x350) {
             this.registers.pc += 4
             this.registers.setRegister8(0b1000, 0x00)
-            return
+            return 2
         }
 
         // accelerometer sleep
         // TODO add proper interrupt ??
         if (this.registers.pc == 0x7700) {
             this.registers.pc += 2
-            return
+            return 2
         }
 
         // set key port back to zero after processing
-        // TODO create handlers for certain instruction addr (although these solutions are bad and should be replicate with "hardware")
+        // TODO create handlers for certain instruction addr (although these solutions are bad and should be replicated with "hardware")
         if (this.registers.pc == 0x9C3E) {
             // TODO how does the hardware handle it?
             // emulator processes inputs slower for some reason
@@ -158,6 +162,8 @@ export class Cpu {
             this.instructions.loadInstructions(this.registers.pc)
 
             opcodeTable_aH_aL.execute(this)
+        } else {
+            this.cyclesCompleted = 1
         }
 
         const interrupt = (addr: number) => {
@@ -205,7 +211,6 @@ export class Cpu {
 
         for (let i = 0; i < this.cyclesCompleted; i++) {
             this.cycleCount++
-            this.audioCycleCount++
 
             if ((this.cycleCount % 4) == 0) {
 
@@ -435,7 +440,7 @@ export class Cpu {
         if (!this.sleep)
             this.opcodeCount++
 
-        this.cyclesCompleted = 0
+        return this.cyclesCompleted
     }
 
     pushKey(key: InputKey) {

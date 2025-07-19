@@ -25,6 +25,12 @@ window.onKeyDown(key => {
         case "tab":
             walker.emulationSpeed = 3
             break
+        case "s":
+            walker.addStep()
+            break
+        case "w":
+            walker.addWatt()
+            break
     }
 })
 
