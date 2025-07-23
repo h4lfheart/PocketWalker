@@ -2235,7 +2235,7 @@ opcodeTable_aHaLbHbLcH_cL.register(0x1d05, 0x3, {
 opcodeTable_aHaLbHbLcH_cL.register(0x1F06, 0x5, {
     name: "XOR.L ERs, ERd",
     bytes: 4,
-    cycles: 2 + 20,
+    cycles: 2,
     execute: cpu => {
         const ers = cpu.instructions.dH
         const erd = cpu.instructions.dL
