@@ -52,7 +52,6 @@ export class Walker {
 
 
     constructor(romPath: string, eepromPath: string | null = null) {
-
         this.eepromPath = eepromPath
 
         const romBuffer = new Uint8Array(ROM_SIZE)

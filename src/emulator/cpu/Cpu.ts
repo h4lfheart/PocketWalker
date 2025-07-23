@@ -1,6 +1,6 @@
 import {Registers} from "./Registers";
 import {Memory} from "../memory/Memory";
-import {opcodeTable_aH_aL} from "./opcode/OpcodeTable";
+import {OpcodeTable, opcodeTable_aH_aL} from "./opcode/OpcodeTable";
 import {Instructions} from "./Instructions";
 import {Flags} from "./Flags";
 import {
@@ -198,7 +198,7 @@ export class Cpu {
         if (!this.sleep) {
             this.instructions.loadInstructions(this.registers.pc)
 
-            opcodeTable_aH_aL.execute(this)
+            OpcodeTable.execute(this)
         } else {
             this.cyclesCompleted = 1
         }

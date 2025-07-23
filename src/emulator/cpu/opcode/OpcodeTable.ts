@@ -4,7 +4,13 @@ import {setAddFlags, setDecFlags, setIncFlags, setMovFlags, setSubFlags} from ".
 import {toSignedByte, toSignedInt, toSignedShort, toUnsignedInt, toUnsignedShort} from "../../../utils/BitUtils";
 import {SSRDR_ADDR, SSSR_RECEIVE_DATA_FULL, SSSR_TRANSMIT_EMPTY, SSSR_TRANSMIT_END, SSTDR_ADDR} from "../../ssu/Ssu";
 import {TIMER_B_COUNTER_ADDR} from "../timer/TimerB";
-import {Sci3, SCI3_RECEIVE_ADDR, SCI3_TRANSMIT_ADDR, Sci3Flags} from "../../ssu/Sci3";
+import {Cpu} from "../Cpu";
+
+export namespace OpcodeTable {
+    export function execute(cpu: Cpu) {
+        opcodeTable_aH_aL.execute(cpu)
+    }
+}
 
 export const opcodeTable_aH_aL = new OpcodeContainer("opcodeTable_aH_aL", cpu => cpu.instructions.aH, cpu => cpu.instructions.aL)
 export const opcodeTable_aHaL_bH = new OpcodeContainer("opcodeTable_aHaL_bH", cpu => (cpu.instructions.aH << 4) | cpu.instructions.aL, cpu => cpu.instructions.bH)
