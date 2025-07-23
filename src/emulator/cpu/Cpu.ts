@@ -9,12 +9,13 @@ import {
     LCD_DATA_PIN,
     LCD_PIN,
     PORT_1_ADDR,
-    PORT_9_ADDR, PORT_B_ADDR,
+    PORT_9_ADDR,
+    PORT_B_ADDR,
     SSER_RECEIVE_ENABLED,
-    SSER_TRANSMIT_ENABLED,
+    SSER_TRANSMIT_ENABLED, SSRDR_ADDR,
     SSSR_RECEIVE_DATA_FULL,
     SSSR_TRANSMIT_EMPTY,
-    SSSR_TRANSMIT_END,
+    SSSR_TRANSMIT_END, SSTDR_ADDR,
     Ssu,
 } from "../ssu/Ssu";
 import {
@@ -22,46 +23,44 @@ import {
     EEPROM_READ_MEMORY,
     EEPROM_READ_STATUS,
     EEPROM_WRITE,
-    EEPROM_WRITE_ENABLE, EEPROM_WRITE_UNLOCK,
+    EEPROM_WRITE_ENABLE,
+    EEPROM_WRITE_UNLOCK,
     EepRomState
 } from "../eeprom/EepRom";
 import {Accelerometer, AccelerometerState} from "../accelerometer/Accelerometer";
 import {
-    Lcd, LCD_COLUMN_SIZE,
+    Lcd,
+    LCD_COLUMN_SIZE,
     LCD_GETTING_CONTRAST,
     LCD_HIGH_COLUMN_RANGE,
     LCD_LOW_COLUMN_RANGE,
-    LCD_PAGE_RANGE, LCD_WIDTH,
+    LCD_PAGE_RANGE,
+    LCD_WIDTH,
     LcdState
 } from "../lcd/Lcd";
-import {
-    IEN0,
-    IENRTC,
-    IENTB1,
-    Interrupts,
-    IRRI0,
-    IRRTB1,
-} from "./Interrupts";
-import {
-    CLOCK_CYCLES_PER_SECOND,
-    TIMER_B1_STANDBY,
-    TIMER_W_STANDBY,
-    Timers
-} from "./timer/Timers";
-import {TIMER_B_COUNTING} from "./timer/TimerB";
-import {toUnsignedByte} from "../../utils/BitUtils";
+import {IEN0, IENRTC, IENTB1, Interrupts, IRRI0, IRRTB1,} from "./Interrupts";
+import {CLOCK_CYCLES_PER_SECOND, TIMER_B1_STANDBY, TIMER_W_STANDBY, Timers} from "./timer/Timers";
+import {TIMER_B_COUNTER_ADDR, TIMER_B_COUNTING} from "./timer/TimerB";
+import {toUnsignedByte, toUnsignedShort} from "../../utils/BitUtils";
 import {
     TIMER_W_CONTROL_COUNTER_CLEAR,
-    TIMER_W_MODE_COUNTING,
     TIMER_W_INTERRUPT_ENABLE_A,
+    TIMER_W_INTERRUPT_ENABLE_OVERFLOW,
+    TIMER_W_MODE_COUNTING,
     TIMER_W_STATUS_MATCH_FLAG_A,
-    TIMER_W_STATUS_OVERFLOW_FLAG, TIMER_W_INTERRUPT_ENABLE_OVERFLOW
+    TIMER_W_STATUS_OVERFLOW_FLAG
 } from "./timer/TimerW";
 import {VectorTable} from "./VectorTable";
 import {
-    HALF_SECOND_INTERRUPT_ENABLE, HOUR_INTERRUPT_ENABLE,
-    MINUTE_INTERRUPT_ENABLE, QUARTER_SECOND_INTERRUPT_ENABLE, Rtc, SECOND_INTERRUPT_ENABLE
+    HALF_SECOND_INTERRUPT_ENABLE,
+    HOUR_INTERRUPT_ENABLE,
+    MINUTE_INTERRUPT_ENABLE,
+    QUARTER_SECOND_INTERRUPT_ENABLE,
+    Rtc,
+    SECOND_INTERRUPT_ENABLE
 } from "../rtc/Rtc";
+import {SCI3_CONTROL_ADDR, SCI3_RECEIVE_ADDR, SCI3_TRANSMIT_ADDR, Sci3Flags} from "../ssu/Sci3";
+import {Socket} from "node:net";
 
 export const CPU_CYCLES_PER_SECOND = 3686400
 
@@ -97,6 +96,9 @@ export class Cpu {
 
     cyclesCompleted: number = 0
 
+    irReceiveQueue: number[] = []
+    irTransmitQueue: number[] = []
+
     constructor(memory: Memory, ssu: Ssu, eeprom: EepRom, accelerometer: Accelerometer, lcd: Lcd, rtc: Rtc) {
         this.memory = memory;
         this.ssu = ssu
@@ -114,14 +116,49 @@ export class Cpu {
         this.registers.pc = this.vectorTable.reset
         this.flags.I = true
 
+
+        this.memory.onRead(SSRDR_ADDR, () => {
+            this.ssu.statusRegister &= ~SSSR_RECEIVE_DATA_FULL
+        })
+
+        this.memory.onWrite(SSTDR_ADDR, () => {
+            this.ssu.statusRegister &= ~SSSR_TRANSMIT_EMPTY
+            this.ssu.statusRegister &= ~SSSR_TRANSMIT_END
+        })
+
+        this.memory.onRead(SCI3_RECEIVE_ADDR, value => {
+            this.ssu.sci3.status &= ~Sci3Flags.Status.RECEIVE_DATA_FULL
+            console.log(`RDR3: ${(value ^ 0xAA).toString(16)}`)
+        })
+
+        this.memory.onWrite(SCI3_TRANSMIT_ADDR, () => {
+            this.ssu.sci3.status &= ~Sci3Flags.Status.TRANSMIT_DATA_EMPTY
+            this.ssu.sci3.status &= ~Sci3Flags.Status.TRANSMIT_END
+        })
+
+        this.memory.onWrite(TIMER_B_COUNTER_ADDR, (value: number) => {
+            this.timers.B.loadValue = value
+        })
+
     }
+
+    lastItem: number = 0
+    pcHistory: string[] = []
 
     execute(): number {
         this.cyclesCompleted = 0
 
-        if (this.registers.pc == 0x08e6) {
-            debugger
+        if (this.lastItem != this.memory.readByte(0xf8ce)) {
+            this.lastItem = this.memory.readByte(0xf8ce)
+            console.log(`[SCI3] Received Command: 0x${this.lastItem.toString(16)}`)
         }
+
+        this.pcHistory.push(this.registers.pc.toString(16))
+        if (this.pcHistory.length >= 100) {
+            this.pcHistory.shift()
+        }
+
+        if (this.registers.pc == 0x0a74) debugger
 
         // skip factory tests
         if (this.registers.pc == 0x336) {
@@ -402,7 +439,7 @@ export class Cpu {
 
                 if (timerW.running && (this.clockCycleCount % timerW.cycleCountSelect) == 0) {
                     if (timerW.mode & TIMER_W_MODE_COUNTING) {
-                        timerW.counter++
+                        timerW.counter = toUnsignedShort(timerW.counter + 1)
                     }
 
                     if (timerW.counter == 0) {
@@ -441,6 +478,11 @@ export class Cpu {
             this.opcodeCount++
 
         return this.cyclesCompleted
+    }
+
+    queueIrReceiveData(data: Buffer) {
+        for (let item of data)
+            this.irReceiveQueue.push(item)
     }
 
     pushKey(key: InputKey) {

@@ -4,12 +4,13 @@ import {Memory} from "./emulator/memory/Memory";
 import {EepRom} from "./emulator/eeprom/EepRom";
 import {Ssu} from "./emulator/ssu/Ssu";
 import {Accelerometer} from "./emulator/accelerometer/Accelerometer";
-import sdl from '@kmamal/sdl'
-import {PNG} from 'pngjs'
 import {Lcd, LCD_BUFFER_SEPARATION, LCD_COLUMN_SIZE, LCD_HEIGHT, LCD_PALETTE, LCD_WIDTH} from "./emulator/lcd/Lcd";
 import {EventHandler} from "./utils/EventUtils";
 import {AUDIO_RENDER_FREQUENCY} from "./sdl/WalkerAudio";
 import {Rtc} from "./emulator/rtc/Rtc";
+import {Server, Socket} from "node:net";
+import * as net from "node:net";
+import {Sci3Flags} from "./emulator/ssu/Sci3";
 
 const ROM_SIZE = 1024 * 64
 const EEPROM_SIZE = 1024 * 64
@@ -17,6 +18,8 @@ const ACCEL_SIZE = 29
 const LCD_SIZE = 128 * 176 / 4
 
 export const TICKS_PER_SECOND = 4
+
+export const IR_BYTE_CYCLES = 320
 
 interface AudioProps {
     frequency: number,
@@ -41,6 +44,9 @@ export class Walker {
     private accelerometer: Accelerometer
     private lcd: Lcd
     private rtc: Rtc
+
+    private tcp: Socket
+    private tcpConnected: boolean = false
 
     private lastTime: number = 0
 
@@ -70,6 +76,24 @@ export class Walker {
 
         this.ssu = new Ssu(this.rom)
 
+        this.tcp = new Socket()
+        this.tcp.on('connect', () => {
+            console.log("[TCP] Connected")
+            this.tcpConnected = true
+        })
+        this.tcp.on('close', () => {
+            if (this.tcpConnected) {
+                console.log("[TCP] Disconnected")
+                this.tcpConnected = false
+            }
+        })
+        this.tcp.on('data', (data: Buffer) => {
+            this.cpu.queueIrReceiveData(data)
+            console.log(`[TCP] Buffer: ${Array.from(data).map(item => (item ^ 0xAA).toString(16)).join(' ')}`)
+        })
+
+        this.tcp.on('error', err => {})
+
         this.cpu = new Cpu(this.rom, this.ssu, this.eeprom, this.accelerometer, this.lcd, this.rtc)
 
         this.running = true;
@@ -80,15 +104,59 @@ export class Walker {
         const desiredTime = 1000 / (TICKS_PER_SECOND * this.emulationSpeed)
         let videoCycleCount = 0
         let audioCycleCount = 0
+        let irCycleCount = 0
+        let tcpCycleCount = 0
         this.lastTime = performance.now()
         while (this.running) {
             const cycles = this.cpu.execute();
 
             videoCycleCount += cycles
             audioCycleCount += cycles
+            irCycleCount += cycles
+            tcpCycleCount += cycles
 
             if (!this.cpu.flags.I && !this.rtc.initialized) {
                 this.rtc.initialize()
+            }
+
+            if (tcpCycleCount >= CPU_CYCLES_PER_SECOND / 2) {
+                tcpCycleCount -= CPU_CYCLES_PER_SECOND / 2
+
+                if (!this.tcpConnected)
+                    this.tcp.connect(8081, '0.0.0.0')
+            }
+
+            if (irCycleCount >= IR_BYTE_CYCLES) {
+                irCycleCount -= IR_BYTE_CYCLES
+
+                if (~this.ssu.sci3.control & Sci3Flags.Control.TRANSMIT_ENABLE) {
+                    this.ssu.sci3.status |= Sci3Flags.Status.TRANSMIT_DATA_EMPTY
+                }
+
+                if (this.ssu.sci3.control & Sci3Flags.Control.TRANSMIT_ENABLE) {
+                    if (~this.ssu.sci3.status & Sci3Flags.Status.TRANSMIT_DATA_EMPTY) {
+                        const transmitValue = this.ssu.sci3.transmitData
+                        const buffer =  Buffer.from([transmitValue])
+                        this.tcp.write(buffer)
+
+                        console.log(`[TCP] Transmit: 0x${(transmitValue ^ 0xAA).toString(16)}`)
+
+                        this.ssu.sci3.status |= Sci3Flags.Status.TRANSMIT_DATA_EMPTY
+                        this.ssu.sci3.status |= Sci3Flags.Status.TRANSMIT_END
+                    }
+                }
+
+                if (this.ssu.sci3.control & Sci3Flags.Control.RECEIVE_ENABLE) {
+                    if (~this.ssu.sci3.status & Sci3Flags.Status.RECEIVE_DATA_FULL) {
+                        if (this.cpu.irReceiveQueue.length > 0) {
+                            const receiveValue = this.cpu.irReceiveQueue.shift()!
+                            console.log(`[TCP] Receive: 0x${(receiveValue ^ 0xAA).toString(16)}`)
+
+                            this.ssu.sci3.receiveData = receiveValue
+                            this.ssu.sci3.status |= Sci3Flags.Status.RECEIVE_DATA_FULL
+                        }
+                    }
+                }
             }
 
             // TODO run continuous audio thread instead of sending packets
@@ -111,7 +179,7 @@ export class Walker {
 
                 const currentTime = performance.now()
                 const elapsed = currentTime - this.lastTime
-                
+
                 if (elapsed < desiredTime) {
                     await new Promise(resolve => setTimeout(resolve, desiredTime - elapsed))
                 } else {

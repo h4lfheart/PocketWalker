@@ -1,4 +1,5 @@
 import {Memory} from "../memory/Memory";
+import {Sci3} from "./Sci3";
 
 export const SSER_ADDR = 0xF0E3
 export const SSSR_ADDR = 0xF0E4
@@ -30,11 +31,13 @@ export const FTIOD_PIN = (1 << 4)
 
 export class Ssu {
     memory: Memory
+    sci3: Sci3
 
     progress: number = 0
 
     constructor(memory: Memory) {
         this.memory = memory
+        this.sci3 = new Sci3(memory)
 
         this.statusRegister = SSSR_TRANSMIT_EMPTY
     }

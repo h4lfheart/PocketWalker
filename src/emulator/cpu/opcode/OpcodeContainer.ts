@@ -64,8 +64,9 @@ export class OpcodeContainer {
         let opcode = this.table.get(firstValue)?.get(secondValue) ?? null
         if (opcode == null) opcode = this.findPatternMatch(firstValue, secondValue)
         if (opcode == null) {
+            debugger
             console.log(`Made it to ${cpu.opcodeCount} operations`)
-            throw Error(`Opcode with 0x${firstValue.toString(16)} 0x${secondValue.toString(16)} does not exist in table ${this.name}`)
+            throw Error(`Opcode at 0x${cpu.registers.pc.toString(16)} with 0x${firstValue.toString(16)} 0x${secondValue.toString(16)} does not exist in table ${this.name}`)
         }
 
         const preExecutePC = cpu.registers.pc;

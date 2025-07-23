@@ -4,6 +4,7 @@ import {setAddFlags, setDecFlags, setIncFlags, setMovFlags, setSubFlags} from ".
 import {toSignedByte, toSignedInt, toSignedShort, toUnsignedInt, toUnsignedShort} from "../../../utils/BitUtils";
 import {SSRDR_ADDR, SSSR_RECEIVE_DATA_FULL, SSSR_TRANSMIT_EMPTY, SSSR_TRANSMIT_END, SSTDR_ADDR} from "../../ssu/Ssu";
 import {TIMER_B_COUNTER_ADDR} from "../timer/TimerB";
+import {Sci3, SCI3_RECEIVE_ADDR, SCI3_TRANSMIT_ADDR, Sci3Flags} from "../../ssu/Sci3";
 
 export const opcodeTable_aH_aL = new OpcodeContainer("opcodeTable_aH_aL", cpu => cpu.instructions.aH, cpu => cpu.instructions.aL)
 export const opcodeTable_aHaL_bH = new OpcodeContainer("opcodeTable_aHaL_bH", cpu => (cpu.instructions.aH << 4) | cpu.instructions.aL, cpu => cpu.instructions.bH)
@@ -845,16 +846,6 @@ opcodeTable_aH_aL.register(0x6, 0xA, {
                 cpu.registers.pc += 4
                 cpu.cyclesCompleted += 2 + 1
 
-                // TODO create handlers through writeByte for specific memory addresses
-                if (addr == SSTDR_ADDR) {
-                    cpu.ssu.statusRegister &= ~SSSR_TRANSMIT_EMPTY
-                    cpu.ssu.statusRegister &= ~SSSR_TRANSMIT_END
-                }
-
-                if (addr == TIMER_B_COUNTER_ADDR) {
-                    cpu.timers.B.loadValue = value
-                }
-
                 return `MOV.B ${cpu.registers.getDisplay8(rs)}, @0x${addr.toString(16)}`
             }
             case 0xA: // Rs, @aa:24
@@ -881,11 +872,6 @@ opcodeTable_aH_aL.register(0x6, 0xA, {
 
                 cpu.registers.pc += 4
                 cpu.cyclesCompleted += 2 + 1
-
-                // TODO create handlers through writeByte for specific memory addresses
-                if (addr == SSRDR_ADDR) {
-                    cpu.ssu.statusRegister &= ~SSSR_RECEIVE_DATA_FULL
-                }
 
                 return `MOV.B @0x${addr.toString(16)}, ${cpu.registers.getDisplay8(rd)}`
             }
@@ -1723,6 +1709,22 @@ opcodeTable_aHaL_bH.register(0x12, 0x8, {
     }
 })
 
+opcodeTable_aHaL_bH.register(0x12, 0x9, {
+    name: "ROTL.W Rd",
+    bytes: 2,
+    cycles: 1,
+    execute: cpu => {
+        const rd = cpu.instructions.bL
+        const rdValue = cpu.registers.getRegister16(rd);
+
+        const msb = (rdValue >> 15) & 1
+        const value = (rdValue << 1) | msb
+        cpu.registers.setRegister16(rd, value)
+
+        cpu.flags.C = Boolean(msb)
+        setMovFlags(cpu, value, 16)
+    }
+})
 
 opcodeTable_aHaL_bH.register(0x17, 0x0, {
     name: "NOT.B Rd",
@@ -2221,6 +2223,24 @@ opcodeTable_aHaLbHbLcH_cL.register(0x1d05, 0x3, {
 
         cpu.flags.Z = quotient == 0
         cpu.flags.N = Boolean(quotient < 0)
+    }
+})
+
+opcodeTable_aHaLbHbLcH_cL.register(0x1F06, 0x5, {
+    name: "XOR.L ERs, ERd",
+    bytes: 4,
+    cycles: 2 + 20,
+    execute: cpu => {
+        const ers = cpu.instructions.dH
+        const erd = cpu.instructions.dL
+
+        const ersValue = cpu.registers.getRegister32(ers)
+        const erdValue = cpu.registers.getRegister32(erd)
+
+        const value = ersValue ^ erdValue
+        cpu.registers.setRegister32(erd, value)
+
+        setMovFlags(cpu, value, 32)
     }
 })
 
