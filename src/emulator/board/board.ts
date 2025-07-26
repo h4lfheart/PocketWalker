@@ -7,12 +7,14 @@ import {Lcd} from "../peripherals/lcd/lcd.ts";
 import {Timers} from "../timer/timers.ts";
 import {Rtc} from "../rtc/rtc.ts";
 import {parentPort} from "node:worker_threads";
+import {Sci3} from "../ir/sci3.ts";
 
 // per second
 export const CPU_TICKS = 3686400
 export const VISUAL_TICKS = 4
 export const AUDIO_TICKS = 256
 export const CLOCK_TICKS = 32768
+export const SCI3_TICKS = 115200
 
 export class Board {
     ram: Memory
@@ -20,6 +22,7 @@ export class Board {
     ssu: Ssu
     timers: Timers
     rtc: Rtc
+    sci3: Sci3
 
     accelerometer: Accelerometer
     eeprom: EepRom
@@ -31,6 +34,8 @@ export class Board {
         this.ssu = new Ssu(this)
         this.timers = new Timers(this)
         this.rtc = new Rtc(this)
+        this.sci3 = new Sci3(this)
+
         this.accelerometer = new Accelerometer(this)
         this.eeprom = new EepRom(this, new Memory(eepromData))
         this.lcd = new Lcd(this)
@@ -43,6 +48,10 @@ export class Board {
 
         if (cycles % Math.trunc(CPU_TICKS / CLOCK_TICKS) == 0) {
             this.timers.tick()
+        }
+
+        if (cycles % Math.trunc(CPU_TICKS / SCI3_TICKS) == 0) {
+            this.sci3.tick()
         }
 
         if (cycles % Math.trunc(CPU_TICKS / AUDIO_TICKS) == 0) {

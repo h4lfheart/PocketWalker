@@ -44,6 +44,10 @@ export class PocketWalker {
 
                     this.lastPerformanceTime = performance.now()
                 }
+
+                if (!this.board.sci3.tcp.connected && this.cycles % CPU_TICKS == 0) {
+                    this.board.sci3.tcp.socket.connect(8081, '0.0.0.0')
+                }
             }
         }
     }
