@@ -14,6 +14,7 @@ export class WalkerAudio {
     audio: AudioPlaybackInstance
 
     private currentPhase: number = 0
+    private lastFreq: number = 0
 
     constructor() {
         this.audio = sdl.audio.openDevice({ type: 'playback' }, {channels: 1, frequency: SAMPLE_RATE, format: 's16sys'})
@@ -21,6 +22,10 @@ export class WalkerAudio {
     }
 
     render(frequency: number, volumeMultiplier: number = 1, speed: number = 1) {
+        if (frequency != this.lastFreq) {
+            this.lastFreq = frequency
+            this.currentPhase = 0
+        }
 
         let sampleCount = Math.ceil(SAMPLE_RATE / (AUDIO_RENDER_FREQUENCY * speed));
         const latency = this.audio.queued / (SAMPLE_RATE / 1000);

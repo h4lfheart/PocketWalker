@@ -1,5 +1,5 @@
-import {toUnsignedByte, toUnsignedInt, toUnsignedShort} from "../../utils/BitUtils";
-import {Memory} from "../memory/Memory";
+import {Memory} from "../../memory/memory.ts"
+import {toUnsignedByte, toUnsignedInt, toUnsignedShort} from "../../../extensions/bit-extensions.ts"
 
 export class Registers {
     memory: Memory

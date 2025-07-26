@@ -1,7 +1,6 @@
-import {Memory} from "../memory/Memory";
+import {Memory} from "../../memory/memory.ts"
 
-export class Instructions {
-    memory: Memory
+export class Opcodes {
 
     ab: number = 0
     cd: number = 0
@@ -34,20 +33,16 @@ export class Instructions {
     hH: number = 0
     hL: number = 0
 
-    constructor(memory: Memory) {
-        this.memory = memory
-    }
+    load(memory: Memory, pc: number) {
 
-    loadInstructions(pc: number) {
-
-        const a = this.memory.readByte(pc)
-        const b = this.memory.readByte(pc + 1)
-        const c = this.memory.readByte(pc + 2)
-        const d = this.memory.readByte(pc + 3)
-        const e = this.memory.readByte(pc + 4)
-        const f = this.memory.readByte(pc + 5)
-        const g = this.memory.readByte(pc + 6)
-        const h = this.memory.readByte(pc + 7)
+        const a = memory.readByte(pc)
+        const b = memory.readByte(pc + 1)
+        const c = memory.readByte(pc + 2)
+        const d = memory.readByte(pc + 3)
+        const e = memory.readByte(pc + 4)
+        const f = memory.readByte(pc + 5)
+        const g = memory.readByte(pc + 6)
+        const h = memory.readByte(pc + 7)
 
         this.a = a
         this.b = b

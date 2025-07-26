@@ -8,6 +8,7 @@
     "build": "tsc"
   },
   "devDependencies": {
+    "tsx": "^4.20.3",
     "typescript": "^5.5.3"
   },
   "private": true,
@@ -15,6 +16,7 @@
     "@kmamal/sdl": "^0.11.8",
     "@types/node": "^24.0.4",
     "net": "^1.0.2",
-    "pngjs": "^7.0.0"
+    "pngjs": "^7.0.0",
+    "ts-node": "^10.9.2"
   }
 }
