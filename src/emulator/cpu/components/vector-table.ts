@@ -1,20 +1,20 @@
-import {Memory} from "../memory/Memory";
+import {Memory} from "../../memory/memory.ts"
 
-export const VECTOR_RESET_ADDR = 0x0000
+const VECTOR_RESET_ADDR = 0x0000
 
-export const VECTOR_IRQ0_ADDR = 0x0020
-export const VECTOR_IRQ1_ADDR = 0x0022
+const VECTOR_IRQ0_ADDR = 0x0020
+const VECTOR_IRQ1_ADDR = 0x0022
 
-export const VECTOR_RTC_QUARTER_SECOND_ADDR = 0x002E
-export const VECTOR_RTC_HALF_SECOND_ADDR = 0x0030
-export const VECTOR_RTC_SECOND_ADDR = 0x0032
-export const VECTOR_RTC_MINUTE_ADDR = 0x0034
-export const VECTOR_RTC_HOUR_ADDR = 0x0036
-export const VECTOR_RTC_DAY_ADDR = 0x0038
-export const VECTOR_RTC_WEEK_ADDR = 0x0038
+const VECTOR_RTC_QUARTER_SECOND_ADDR = 0x002E
+const VECTOR_RTC_HALF_SECOND_ADDR = 0x0030
+const VECTOR_RTC_SECOND_ADDR = 0x0032
+const VECTOR_RTC_MINUTE_ADDR = 0x0034
+const VECTOR_RTC_HOUR_ADDR = 0x0036
+const VECTOR_RTC_DAY_ADDR = 0x0038
+const VECTOR_RTC_WEEK_ADDR = 0x0038
 
-export const VECTOR_TIMER_B_ADDR = 0x0042
-export const VECTOR_TIMER_W_ADDR = 0x0046
+const VECTOR_TIMER_B_ADDR = 0x0042
+const VECTOR_TIMER_W_ADDR = 0x0046
 
 export class VectorTable {
     memory: Memory

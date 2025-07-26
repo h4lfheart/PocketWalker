@@ -1,21 +1,29 @@
-
-import {Memory} from "../memory/Memory";
-import {Flags} from "./Flags";
+import {Memory} from "../../memory/memory.ts"
+import {Flags} from "./flags.ts"
 
 export const IENR1_ADDR = 0xFFF3
 export const IENR2_ADDR = 0xFFF4
 export const IRR1_ADDR = 0xFFF6
 export const IRR2_ADDR = 0xFFF7
 
-export const IEN0 = (1 << 0)
 
-export const IRRI0 = (1 << 0)
-
-export const IENRTC = (1 << 7)
-export const IENTB1 = (1 << 2)
-
-export const IRRTB1 = (1 << 2)
-
+export const interruptFlags = {
+    enable1: {
+        RTC: 1 << 7,
+        IRQ1: 1 << 1,
+        IRQ0: 1 << 0
+    },
+    flag1: {
+        IRQ1: 1 << 1,
+        IRQ0: 1 << 0,
+    },
+    enable2: {
+        TIMER_B1: 1 << 2
+    },
+    flag2: {
+        TIMER_B1: 1 << 2
+    }
+}
 
 export class Interrupts {
     memory: Memory
@@ -27,35 +35,35 @@ export class Interrupts {
         this.memory = memory
     }
 
-    get enableRegister1(): number {
+    get enable1(): number {
         return this.memory.readByte(IENR1_ADDR)
     }
 
-    set enableRegister1(value: number) {
+    set enable1(value: number) {
         this.memory.writeByte(IENR1_ADDR, value)
     }
 
-    get enableRegister2(): number {
+    get enable2(): number {
         return this.memory.readByte(IENR2_ADDR)
     }
 
-    set enableRegister2(value: number) {
+    set enable2(value: number) {
         this.memory.writeByte(IENR2_ADDR, value)
     }
 
-    get flagRegister1(): number {
+    get flag1(): number {
         return this.memory.readByte(IRR1_ADDR)
     }
 
-    set flagRegister1(value: number) {
+    set flag1(value: number) {
         this.memory.writeByte(IRR1_ADDR, value)
     }
 
-    get flagRegister2(): number {
+    get flag2(): number {
         return this.memory.readByte(IRR2_ADDR)
     }
 
-    set flagRegister2(value: number) {
+    set flag2(value: number) {
         this.memory.writeByte(IRR2_ADDR, value)
     }
 }

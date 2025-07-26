@@ -1,4 +1,5 @@
-import { Cpu } from "../Cpu"
+import {Cpu} from "../cpu.ts"
+
 
 export function getNegativeFlag(bits: number): number {
     return 1 << (bits - 1)
@@ -43,7 +44,6 @@ export function setSubFlags(cpu: Cpu, valueRd: number, valueRs: number, bits: nu
     const negativeFlag = getNegativeFlag(bits)
     const maxValue = (1 << bits) - 1
     const result = valueRd - valueRs
-    const lowMask = (1 << (bits / 2)) - 1
 
     cpu.flags.Z = (result & maxValue) === 0
     cpu.flags.N = (result & negativeFlag) !== 0
