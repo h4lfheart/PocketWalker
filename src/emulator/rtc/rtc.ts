@@ -1,7 +1,5 @@
-import {Memory} from "../memory/memory.ts";
 import {decimalToHex} from "../../extensions/bit-extensions.ts";
 import {BoardComponent} from "../board/board-component.ts";
-import {Board} from "../board/board.ts";
 
 export const RTC_SECOND_ADDR = 0xF068
 export const RTC_MINUTE_ADDR = 0xF069
