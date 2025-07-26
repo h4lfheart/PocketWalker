@@ -1,10 +1,8 @@
 import {createWorker} from "./extensions/worker-extensions.ts"
 import Path from 'node:path'
 import {WalkerWindow} from "./sdl/walker-window.ts";
-import {inputKey} from "./emulator/ssu/ssu.ts";
 import {WalkerAudio} from "./sdl/walker-audio.ts";
-import sdl from "@kmamal/sdl";
-
+import {inputKey} from "./emulator/ssu/ssu.ts";
 
 const window = new WalkerWindow()
 const audio = new WalkerAudio()

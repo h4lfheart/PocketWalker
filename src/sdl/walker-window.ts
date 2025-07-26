@@ -47,7 +47,8 @@ export class WalkerWindow {
                 y: 0,
                 width: this.window.width,
                 height: this.window.height
-            }
+            },
+            scaling: 'nearest'
         });
 
     }
