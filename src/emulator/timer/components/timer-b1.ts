@@ -1,5 +1,5 @@
 import {Memory} from "../../memory/memory.ts";
-import {BoardComponent} from "../../board/boardComponent.ts";
+import {BoardComponent} from "../../board/board-component.ts";
 import {Board} from "../../board/board.ts";
 import {toUnsignedByte} from "../../../extensions/bit-extensions.ts";
 import {interruptFlags} from "../../cpu/components/interrupts.ts";
@@ -28,7 +28,7 @@ export class TimerB1 extends BoardComponent {
         })
     }
 
-    tick() {
+    override tick() {
         this.counter = toUnsignedByte(this.counter + 1)
 
         if (this.counter == 0) {

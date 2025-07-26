@@ -1,5 +1,5 @@
 import {Board} from "../../board/board.ts";
-import {BoardComponent} from "../../board/boardComponent.ts";
+import {BoardComponent} from "../../board/board-component.ts";
 import {toUnsignedShort} from "../../../extensions/bit-extensions.ts";
 import {parentPort} from "node:worker_threads";
 
@@ -48,8 +48,8 @@ export class TimerW extends BoardComponent {
         this.registerC = 0xFFFF
         this.registerD = 0xFFFF
     }
-    
-    tick() {
+
+    override tick() {
         if (this.mode & TIMER_W_MODE_COUNTING) {
             this.counter = toUnsignedShort(this.counter + 1)
         }

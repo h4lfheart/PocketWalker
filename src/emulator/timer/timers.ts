@@ -1,6 +1,6 @@
 import {Memory} from "../memory/memory.ts";
 import {TIMER_B_COUNTING, TimerB1} from "./components/timer-b1.ts";
-import {BoardComponent} from "../board/boardComponent.ts";
+import {BoardComponent} from "../board/board-component.ts";
 import {Board} from "../board/board.ts";
 import {TIMER_W_MODE_COUNTING, TimerW} from "./components/timer-w.ts";
 
@@ -34,7 +34,7 @@ export class Timers extends BoardComponent {
         this.clockStop2 |= WATCHDOG_STANDBY
     }
 
-    tick() {
+    override tick() {
         if (this.b1.running && this.clockCycles % this.b1.clockRate == 0) {
             this.b1.tick()
         }

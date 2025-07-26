@@ -1,5 +1,5 @@
 import {Board} from "../board/board.ts"
-import {BoardComponent} from "../board/boardComponent.ts"
+import {BoardComponent} from "../board/board-component.ts"
 import {Flags} from "./components/flags.ts"
 import {Registers} from "./components/registers.ts"
 import {Opcodes} from "./components/opcodes.ts"

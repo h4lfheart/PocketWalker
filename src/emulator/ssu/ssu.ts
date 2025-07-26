@@ -1,5 +1,5 @@
 import {Memory} from "../memory/memory.ts"
-import {BoardComponent} from "../board/boardComponent.ts"
+import {BoardComponent} from "../board/board-component.ts"
 import {Board} from "../board/board.ts"
 import {accelerometerState} from "../peripherals/accelerometer/accelerometer.ts"
 import {eepromCommands, eepromFlags, eepromState} from "../peripherals/eeprom/eeprom.ts";
@@ -67,7 +67,7 @@ const clockRates: Map<number, number> = new Map<number, number>([
 export class Ssu extends BoardComponent {
     clockRate: number = 4
 
-    private progress: number = 0
+    progress: number = 0
     
     constructor(board: Board) {
         super(board)
@@ -84,9 +84,23 @@ export class Ssu extends BoardComponent {
         this.board.ram.onWrite(MODE_ADDR, value => {
             this.clockRate = clockRates.get(value & 0b111) ?? 4
         })
+
+        this.board.ram.onWrite(PORT_1_ADDR, value => {
+            if (~value & ssuFlags.port1.EEPROM) {
+                this.board.eeprom.state = eepromState.waiting
+                this.board.eeprom.offset = 0
+            }
+        })
+
+        this.board.ram.onWrite(PORT_9_ADDR, value => {
+            if (~value & ssuFlags.port9.ACCELEROMETER) {
+                this.board.accelerometer.state = accelerometerState.address
+                this.board.accelerometer.offset = 0
+            }
+        })
     }
 
-    tick() {
+    override tick() {
 
         if (~this.enable & ssuFlags.enable.TRANSMIT_ENABLED) {
             this.status |= ssuFlags.status.TRANSMIT_EMPTY
@@ -96,65 +110,11 @@ export class Ssu extends BoardComponent {
             if (~this.status & ssuFlags.status.TRANSMIT_EMPTY) {
 
                 if (~this.port9 & ssuFlags.port9.ACCELEROMETER) {
-                    const accelerometer = this.board.accelerometer
-                    switch (accelerometer.state) {
-                        case accelerometerState.address:
-                            accelerometer.address = this.transmit
-                            accelerometer.offset = 0
-                            accelerometer.state = accelerometerState.data
-                            this.status |= ssuFlags.status.RECEIVE_FULL
-                            break
-                        case accelerometerState.data:
-                            this.receive = this.board.accelerometer.memory.readByte(accelerometer.address + accelerometer.offset)
-                            accelerometer.offset++
-                            this.status |= ssuFlags.status.RECEIVE_FULL
-                            this.status |= ssuFlags.status.TRANSMIT_EMPTY
-                            this.status |= ssuFlags.status.TRANSMIT_END
-
-                            break
-                    }
+                    this.board.accelerometer.transmitAndReceive(this)
                 }
 
                 if (~this.port1 & ssuFlags.port1.EEPROM) {
-                    this.progress++
-                    if (this.progress == 7) {
-                        this.progress = 0
-
-                        const eeprom = this.board.eeprom
-                        switch (eeprom.state) {
-                            case eepromState.waiting:
-                                if (this.transmit == eepromCommands.READ_MEMORY) {
-                                    eeprom.state = eepromState.gettingAddressHigh
-                                } else if (this.transmit == eepromCommands.READ_STATUS) {
-                                    eeprom.state = eepromState.gettingStatus
-                                } else {
-                                    debugger
-                                }
-
-                                break;
-                            case eepromState.gettingStatus:
-                                this.receive = eeprom.status
-                                this.status |= ssuFlags.status.TRANSMIT_END
-                                break;
-                            case eepromState.gettingAddressHigh:
-                                eeprom.highAddress = this.transmit
-                                eeprom.state = eepromState.gettingAddressLow
-                                break;
-                            case eepromState.gettingAddressLow:
-                                eeprom.lowAddress = this.transmit
-                                eeprom.state = eepromState.gettingBytes
-                                break;
-                            case eepromState.gettingBytes:
-                                this.receive = eeprom.memory.readByte(((eeprom.highAddress << 8) | eeprom.lowAddress) + eeprom.offset)
-                                eeprom.offset++
-                                this.status |= ssuFlags.status.TRANSMIT_END
-                                break;
-
-                        }
-
-                        this.status |= ssuFlags.status.RECEIVE_FULL
-                        this.status |= ssuFlags.status.TRANSMIT_EMPTY
-                    }
+                    this.board.eeprom.transmitAndReceive(this)
                 }
 
             }
@@ -162,101 +122,17 @@ export class Ssu extends BoardComponent {
             if (~this.status & ssuFlags.status.TRANSMIT_EMPTY) {
 
                 if (~this.port9 & ssuFlags.port9.ACCELEROMETER) {
-                    const accelerometer = this.board.accelerometer
-                    switch (accelerometer.state) {
-                        case accelerometerState.address:
-                            accelerometer.address = this.transmit
-                            accelerometer.state = accelerometerState.data
-                            break
-                        case accelerometerState.data:
-                            this.board.accelerometer.memory.writeByte(accelerometer.address, this.board.ssu.transmit)
-                            this.status |= ssuFlags.status.TRANSMIT_EMPTY
-                            this.status |= ssuFlags.status.TRANSMIT_END
-
-                            break
-                    }
+                    this.board.accelerometer.transmit(this)
                 }
 
                 if (~this.port1 & ssuFlags.port1.EEPROM) {
-                    this.progress++
-                    if (this.progress == 7) {
-                        this.progress = 0
-
-                        const eeprom = this.board.eeprom
-                        switch (eeprom.state) {
-                            case eepromState.waiting:
-                                if (this.transmit == eepromCommands.WRITE_ENABLE) {
-                                    eeprom.status |= eepromFlags.status.WRITE_UNLOCK
-                                    this.status |= ssuFlags.status.TRANSMIT_END
-                                } else if (this.transmit == eepromCommands.WRITE_MEMORY) {
-                                    eeprom.state = eepromState.gettingAddressHigh
-                                } else {
-                                    debugger
-                                }
-                                break;
-                            case eepromState.gettingAddressHigh:
-                                eeprom.highAddress = this.transmit
-                                eeprom.state = eepromState.gettingAddressLow
-                                break;
-                            case eepromState.gettingAddressLow:
-                                eeprom.lowAddress = this.transmit
-                                eeprom.state = eepromState.gettingBytes
-                                break;
-                            case eepromState.gettingBytes:
-                                eeprom.memory.writeByte((((eeprom.highAddress << 8) | eeprom.lowAddress) + eeprom.offset), this.transmit)
-                                eeprom.offset++
-                                eeprom.offset %= 128
-                                this.status |= ssuFlags.status.TRANSMIT_END
-                                break;
-
-                        }
-
-                        this.status |= ssuFlags.status.TRANSMIT_EMPTY
-                    }
+                    this.board.eeprom.transmit(this)
                 }
 
                 if (this.port1 & ssuFlags.port1.LCD_DATA) {
-                    this.progress++
-                    if (this.progress == 7) {
-                        this.progress = 0
-
-                        const addr = (this.board.lcd.page * LCD_WIDTH * LCD_COLUMN_SIZE) + (this.board.lcd.column * LCD_COLUMN_SIZE) + this.board.lcd.offset
-                        this.board.lcd.memory.writeByte(addr, this.transmit)
-
-                        if (this.board.lcd.offset == 1) {
-                            this.board.lcd.column++
-                        }
-                        this.board.lcd.offset++
-                        this.board.lcd.offset %= 2
-
-                        this.status |= ssuFlags.status.TRANSMIT_EMPTY
-                        this.status |= ssuFlags.status.TRANSMIT_END
-                    }
+                    this.board.lcd.transmit(this, 'data')
                 } else if (~this.port1 & ssuFlags.port1.LCD) {
-                    switch (this.board.lcd.state) {
-                        case lcdState.waiting:
-                            if (LCD_LOW_COLUMN_RANGE.includes(this.transmit)) {
-                                this.board.lcd.column &= 0xF0
-                                this.board.lcd.column |= this.transmit & 0xF
-                                this.board.lcd.offset = 0
-                            } else if (LCD_HIGH_COLUMN_RANGE.includes(this.transmit)) {
-                                this.board.lcd.column &= 0xF
-                                this.board.lcd.column |= (this.transmit & 0b111) << 4
-                                this.board.lcd.offset = 0
-                            } else if (LCD_PAGE_RANGE.includes(this.transmit)) {
-                                this.board.lcd.page = this.transmit & 0xF
-                            } else if (LCD_GETTING_CONTRAST.includes(this.transmit)) {
-                                this.board.lcd.state = lcdState.gettingContrast
-                            }
-                            break;
-                        case lcdState.gettingContrast:
-                            this.board.lcd.contrast = this.transmit
-                            this.board.lcd.state = lcdState.waiting
-                            break;
-                    }
-
-                    this.status |= ssuFlags.status.TRANSMIT_EMPTY
-                    this.status |= ssuFlags.status.TRANSMIT_END
+                    this.board.lcd.transmit(this)
                 }
 
             }
@@ -269,7 +145,6 @@ export class Ssu extends BoardComponent {
         }
 
         this.portB = key
-        this.board.cpu.sleep = false
     }
 
     get enable(): number {

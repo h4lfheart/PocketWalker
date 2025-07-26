@@ -37,18 +37,6 @@ export class Board {
     }
 
     tick(cycles: number) {
-
-        // TODO move to memory handlers instead of checking every tick
-        if (this.ssu.port9 & ssuFlags.port9.ACCELEROMETER) {
-            this.accelerometer.state = accelerometerState.address
-            this.accelerometer.offset = 0
-        }
-
-        if (this.ssu.port1 & ssuFlags.port1.EEPROM) {
-            this.eeprom.state = eepromState.waiting
-            this.eeprom.offset = 0
-        }
-
         if (cycles % this.ssu.clockRate == 0) {
             this.ssu.tick()
         }

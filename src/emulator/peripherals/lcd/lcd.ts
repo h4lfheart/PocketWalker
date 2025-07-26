@@ -1,9 +1,11 @@
 import {Memory} from "../../memory/memory.ts";
 import {range} from "../../../extensions/collection-extensions.ts";
-import {BoardComponent} from "../../board/boardComponent.ts";
+import {BoardComponent} from "../../board/board-component.ts";
 import {Board} from "../../board/board.ts";
 import {parentPort} from "node:worker_threads";
 import {debug} from "node:util";
+import {PeripheralComponent} from "../peripheral-component.ts";
+import {Ssu, ssuFlags} from "../../ssu/ssu.ts";
 
 export const LCD_PAGE_SIZE = 0xFF
 export const LCD_PAGE_COUNT = 21
@@ -33,7 +35,7 @@ export const lcdState = {
     gettingContrast: 1
 }
 
-export class Lcd extends BoardComponent {
+export class Lcd extends PeripheralComponent {
     memory: Memory
     state: number = lcdState.waiting
 
@@ -51,7 +53,7 @@ export class Lcd extends BoardComponent {
         this.memory = Memory.fromSize(128 * 176 / 4)
     }
 
-    tick() {
+    override tick() {
         const buffer = Buffer.alloc(LCD_WIDTH * LCD_HEIGHT * 3)
 
         for (let y = 0; y < LCD_HEIGHT; y++) {
@@ -83,5 +85,51 @@ export class Lcd extends BoardComponent {
             type: 'lcd-data',
             data: buffer
         })
+    }
+
+    transmit(ssu: Ssu, meta?: string) {
+        if (meta == 'data') {
+            ssu.progress++
+            if (ssu.progress == 7) {
+                ssu.progress = 0
+
+                const addr = (this.page * LCD_WIDTH * LCD_COLUMN_SIZE) + (this.column * LCD_COLUMN_SIZE) + this.offset
+                this.memory.writeByte(addr, ssu.transmit)
+
+                if (this.offset == 1) {
+                    this.column++
+                }
+                this.offset++
+                this.offset %= 2
+
+                ssu.status |= ssuFlags.status.TRANSMIT_EMPTY
+                ssu.status |= ssuFlags.status.TRANSMIT_END
+            }
+        } else {
+            switch (this.state) {
+                case lcdState.waiting:
+                    if (LCD_LOW_COLUMN_RANGE.includes(ssu.transmit)) {
+                        this.column &= 0xF0
+                        this.column |= ssu.transmit & 0xF
+                        this.offset = 0
+                    } else if (LCD_HIGH_COLUMN_RANGE.includes(ssu.transmit)) {
+                        this.column &= 0xF
+                        this.column |= (ssu.transmit & 0b111) << 4
+                        this.offset = 0
+                    } else if (LCD_PAGE_RANGE.includes(ssu.transmit)) {
+                        this.page = ssu.transmit & 0xF
+                    } else if (LCD_GETTING_CONTRAST.includes(ssu.transmit)) {
+                        this.state = lcdState.gettingContrast
+                    }
+                    break;
+                case lcdState.gettingContrast:
+                    this.contrast = ssu.transmit
+                    this.state = lcdState.waiting
+                    break;
+            }
+
+            ssu.status |= ssuFlags.status.TRANSMIT_EMPTY
+            ssu.status |= ssuFlags.status.TRANSMIT_END
+        }
     }
 }
