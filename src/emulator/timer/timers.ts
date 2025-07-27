@@ -32,9 +32,16 @@ export class Timers extends BoardComponent {
         this.clockStop1 |= RTC_STANDBY
 
         this.clockStop2 |= WATCHDOG_STANDBY
+
+        this.clockCycles = 0
     }
 
     override tick() {
+        this.clockCycles++
+
+        this.b1.running = Boolean((this.clockStop1 & TIMER_B1_STANDBY) && (this.b1.mode & TIMER_B_COUNTING))
+        this.w.running = Boolean((this.clockStop2 & TIMER_W_STANDBY) && (this.w.mode & TIMER_W_MODE_COUNTING))
+
         if (this.b1.running && this.clockCycles % this.b1.clockRate == 0) {
             this.b1.tick()
         }
@@ -42,9 +49,6 @@ export class Timers extends BoardComponent {
         if (this.w.running && this.clockCycles % this.w.clockRate == 0) {
             this.w.tick()
         }
-
-        this.b1.running = Boolean(this.clockStop1 & TIMER_B1_STANDBY && this.b1.mode & TIMER_B_COUNTING)
-        this.w.running = Boolean(this.clockStop2 & TIMER_W_STANDBY && this.w.mode & TIMER_W_MODE_COUNTING)
     }
 
     get clockStop1(): number {

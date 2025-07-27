@@ -12,7 +12,7 @@ export class PocketWalker {
     cycles: number = 0
     lastPerformanceTime: number = 0
 
-    private eepromPath: string
+    private readonly eepromPath?: string
 
     constructor(romPath: string, eepromPath?: string) {
         this.eepromPath = eepromPath

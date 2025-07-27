@@ -32,11 +32,21 @@ export class Sci3 extends BoardComponent {
 
         this.board.ram.onRead(SCI3_RECEIVE_ADDR, () => {
             this.status &= ~sci3Flags.status.RECEIVE_FULL
+
+            parentPort!.postMessage({
+                type: 'log',
+                data: `[IR] Receive Open at 0x${this.board.cpu.registers.pc.toString(16)}`
+            })
         })
 
         this.board.ram.onWrite(SCI3_TRANSMIT_ADDR, () => {
             this.status &= ~sci3Flags.status.TRANSMIT_EMPTY
             this.status &= ~sci3Flags.status.TRANSMIT_END
+
+            parentPort!.postMessage({
+                type: 'log',
+                data: `[IR] Transmit Full at 0x${this.board.cpu.registers.pc.toString(16)}`
+            })
         })
 
         this.board.ram.onWrite(SCI3_CONTROL_ADDR, value => {
@@ -74,7 +84,7 @@ export class Sci3 extends BoardComponent {
 
                     parentPort!.postMessage({
                         type: 'log',
-                        data: `[TCP] Receive: ${(receiveValue ^ 0xAA).toString(16)}`
+                        data: `[TCP] Receive: ${(receiveValue ^ 0xAA).toString(16)} with command 0x${this.board.ram.readByte(0xf8ce).toString(16)} at offset 0x${this.board.ram.readByte(0xf7ba).toString(16)} and pc 0x${this.board.cpu.registers.pc.toString(16)}`
                     })
                 }
             }

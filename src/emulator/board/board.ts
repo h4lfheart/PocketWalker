@@ -14,7 +14,7 @@ export const CPU_TICKS = 3686400
 export const VISUAL_TICKS = 4
 export const AUDIO_TICKS = 256
 export const CLOCK_TICKS = 32768
-export const SCI3_TICKS = 115200
+export const SCI3_TICKS = 32768 * 2
 
 export class Board {
     ram: Memory

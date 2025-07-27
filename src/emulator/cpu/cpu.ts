@@ -34,24 +34,35 @@ export class Cpu extends BoardComponent {
     step(): number {
         if (this.registers.pc == 0x336) {
             this.registers.pc += 4
-            return 2
+            return 1
         }
 
         if (this.registers.pc == 0x350) {
             this.registers.pc += 4
             this.registers.setRegister8(0b1000, 0x00)
-            return 2
+            return 1
         }
 
         if (this.registers.pc == 0x7700) {
             this.registers.pc += 2
-            return 2
+            return 1
         }
 
         if (this.registers.pc == 0x9C3E) {
             if (this.board.ssu.portB != 0) {
                 this.board.ssu.portB = inputKey.KEY_NONE
             }
+        }
+
+        // set watts
+        // TODO where is this actually stored? is it an eeprom thing? don't want to have it set it like this
+        if (this.registers.pc == 0x9a4e && this.board.ram.readShort(0xF78E) == 0) {
+            this.board.ram.writeShort(0xF78E, 255)
+        }
+
+        if (this.registers.pc == 0x08ee) {
+            this.registers.pc += 2
+            return 1
         }
 
         // todo use real performance timing to avoid needing to add fake cycles during sleep
