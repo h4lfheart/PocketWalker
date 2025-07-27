@@ -1,6 +1,9 @@
 import {Board, CPU_TICKS, VISUAL_TICKS} from "./board/board.ts"
 import {Cpu} from "./cpu/cpu.ts"
 import {readFileSync} from "fs"
+import Path from "node:path";
+import {existsSync, writeFileSync} from "node:fs";
+import {parentPort} from "node:worker_threads";
 
 export class PocketWalker {
     board: Board
@@ -9,13 +12,16 @@ export class PocketWalker {
     cycles: number = 0
     lastPerformanceTime: number = 0
 
+    private eepromPath: string
+
     constructor(romPath: string, eepromPath?: string) {
+        this.eepromPath = eepromPath
 
         const ramBuffer = new Uint8Array(0xFFFF)
         readFileSync(romPath).copy(ramBuffer)
 
         const eepromBuffer = new Uint8Array(0xFFFF)
-        if (eepromPath) {
+        if (eepromPath && existsSync(eepromPath)) {
             readFileSync(eepromPath).copy(eepromBuffer)
         }
 
@@ -23,32 +29,40 @@ export class PocketWalker {
     }
 
     async run() {
-        const desiredTime = 1000 / 8
+        const targetFPS = 256;
+        const frameTime = 1000 / targetFPS;
+        const cyclesPerFrame = Math.trunc(CPU_TICKS / targetFPS);
+
+        let nextFrameTime = performance.now();
+
         while (this.running) {
-            const cycles = this.board.cpu.step()
+            const frameStartCycles = this.cycles;
 
-            for (let cycleIndex = 0; cycleIndex < cycles; cycleIndex++) {
-                this.cycles++
-
-                this.board.tick(this.cycles)
-
-                if (this.cycles % Math.trunc(CPU_TICKS / 8) == 0) {
-                    const currentTime = performance.now()
-                    const elapsed = currentTime - this.lastPerformanceTime
-
-                    if (elapsed < desiredTime) {
-                        await new Promise(resolve => setTimeout(resolve, desiredTime - elapsed))
-                    } else {
-                        await new Promise(resolve => setImmediate(resolve))
-                    }
-
-                    this.lastPerformanceTime = performance.now()
-                }
-
-                if (!this.board.sci3.tcp.connected && this.cycles % CPU_TICKS == 0) {
-                    this.board.sci3.tcp.socket.connect(8081, '0.0.0.0')
+            while (this.cycles - frameStartCycles < cyclesPerFrame) {
+                const cpuCycles = this.board.cpu.step();
+                for (let i = 0; i < cpuCycles; i++) {
+                    this.cycles++;
+                    this.board.tick(this.cycles);
                 }
             }
+
+            nextFrameTime += frameTime;
+            const now = performance.now();
+            const sleepTime = nextFrameTime - now;
+
+            if (sleepTime > 0) {
+                await new Promise(resolve => setTimeout(resolve, sleepTime));
+            }
+        }
+    }
+
+    save() {
+        if (this.eepromPath) {
+            writeFileSync(this.eepromPath, this.board.eeprom.memory.buffer)
+            parentPort!.postMessage({
+                type: 'log',
+                data: `Saved eeprom to ${this.eepromPath}`
+            })
         }
     }
 

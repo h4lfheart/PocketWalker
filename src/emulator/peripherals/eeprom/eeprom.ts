@@ -96,8 +96,6 @@ export class EepRom extends PeripheralComponent {
                         ssu.status |= ssuFlags.status.TRANSMIT_END
                     } else if (ssu.transmit == eepromCommands.WRITE_MEMORY) {
                         this.state = eepromState.gettingAddressHigh
-                    } else {
-                        debugger
                     }
                     break;
                 case eepromState.gettingAddressHigh:

@@ -1,6 +1,5 @@
 import {BoardComponent} from "../board/board-component.ts";
 import {Board} from "../board/board.ts";
-import {Tcp} from "./tcp.ts";
 import {parentPort} from "node:worker_threads";
 
 export const sci3Flags = {
@@ -26,12 +25,10 @@ export const SCI3_STATUS_ADDR = 0xFF9C
 export const SCI3_RECEIVE_ADDR = 0xFF9D
 
 export class Sci3 extends BoardComponent {
-    tcp: Tcp
+    receiveData: number[] = []
 
     constructor(board: Board) {
         super(board);
-
-        this.tcp = new Tcp()
 
         this.board.ram.onRead(SCI3_RECEIVE_ADDR, () => {
             this.status &= ~sci3Flags.status.RECEIVE_FULL
@@ -40,6 +37,13 @@ export class Sci3 extends BoardComponent {
         this.board.ram.onWrite(SCI3_TRANSMIT_ADDR, () => {
             this.status &= ~sci3Flags.status.TRANSMIT_EMPTY
             this.status &= ~sci3Flags.status.TRANSMIT_END
+        })
+
+        this.board.ram.onWrite(SCI3_CONTROL_ADDR, value => {
+            parentPort!.postMessage({
+                type: 'log',
+                data: `[IR] Control: ${value} at 0x${board.cpu.registers.pc.toString(16)}`
+            })
         })
     }
 
@@ -53,26 +57,24 @@ export class Sci3 extends BoardComponent {
                 this.status |= sci3Flags.status.TRANSMIT_EMPTY
                 this.status |= sci3Flags.status.TRANSMIT_END
 
-                this.tcp.transmit(transmitValue)
-
                 parentPort!.postMessage({
-                    type: 'log',
-                    data: `[IR] Transmit: ${transmitValue.toString(16)}`
+                    type: 'tcp-transmit',
+                    data: transmitValue
                 })
             }
         }
 
         if (this.control & sci3Flags.control.RECEIVE_ENABLE) {
             if (~this.status & sci3Flags.status.RECEIVE_FULL) {
-                if (this.tcp.receiveData.length > 0) {
-                    const receiveValue = this.tcp.receiveData.shift()!
+                if (this.receiveData.length > 0) {
+                    const receiveValue = this.receiveData.shift()!
 
                     this.receive = receiveValue
                     this.status |= sci3Flags.status.RECEIVE_FULL
 
                     parentPort!.postMessage({
                         type: 'log',
-                        data: `[IR] Receive: ${receiveValue.toString(16)}`
+                        data: `[TCP] Receive: ${(receiveValue ^ 0xAA).toString(16)}`
                     })
                 }
             }

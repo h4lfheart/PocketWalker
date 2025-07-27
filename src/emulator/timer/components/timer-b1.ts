@@ -57,10 +57,10 @@ export class TimerB1 extends BoardComponent {
     }
 
     get counter(): number {
-        return this.board.ram.readByte(TIMER_B_COUNTER_ADDR)
+        return this.board.ram.readByte(TIMER_B_COUNTER_ADDR, true)
     }
 
     set counter(value: number) {
-        this.board.ram.writeByte(TIMER_B_COUNTER_ADDR, value)
+        this.board.ram.writeByte(TIMER_B_COUNTER_ADDR, value, true)
     }
 }
