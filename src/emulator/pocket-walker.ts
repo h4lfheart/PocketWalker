@@ -10,7 +10,6 @@ export class PocketWalker {
 
     running: boolean = true
     cycles: number = 0
-    lastPerformanceTime: number = 0
 
     private readonly eepromPath?: string
 

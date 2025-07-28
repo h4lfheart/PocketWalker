@@ -4,10 +4,18 @@ import {WalkerWindow} from "./sdl/walker-window.ts";
 import {WalkerAudio} from "./sdl/walker-audio.ts";
 import {inputKey} from "./emulator/ssu/ssu.ts";
 
+
+const isServer = process.argv.includes('-server')
+
 const window = new WalkerWindow()
 const audio = new WalkerAudio()
 
-const emulatorWorker = createWorker(Path.join(import.meta.dirname, './workers/emulator-worker.ts'));
+const emulatorWorker = createWorker(Path.join(import.meta.dirname, './workers/emulator-worker.ts'), {
+    workerData: {
+        romPath: "C:/walker.bin",
+        eepromPath: isServer ? "C:/Users/Max/Desktop/melon_eep.bin" : "C:/Users/Max/Desktop/arceus_eep.rom"
+    }
+});
 emulatorWorker.on('message', ({type, data}) => {
     switch (type) {
         case 'log':
@@ -28,7 +36,8 @@ emulatorWorker.on('message', ({type, data}) => {
     }
 });
 
-const tcpWorker = createWorker(Path.join(import.meta.dirname, './workers/tcp-worker.ts'));
+const tcpWorkerName = process.argv.includes('-server') ? 'tcp-server-worker' : 'tcp-client-worker'
+const tcpWorker = createWorker(Path.join(import.meta.dirname, `./workers/${tcpWorkerName}.ts`));
 tcpWorker.on('message', ({type, data}) => {
     switch (type) {
         case 'log':

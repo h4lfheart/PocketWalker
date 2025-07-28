@@ -1,9 +1,13 @@
 import {Socket} from "node:net";
 import {parentPort} from "node:worker_threads";
 import {setInterval} from "node:timers";
+import * as net from "node:net";
 
 let connected = false
-const socket = new Socket()
+const socket = net.createConnection({
+    port: 8081,
+    host: '0.0.0.0'
+})
 
 socket.on('connect', () => {
     connected = true

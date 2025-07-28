@@ -1,7 +1,9 @@
-import { parentPort } from 'node:worker_threads'
+import {parentPort, workerData} from 'node:worker_threads'
 import {PocketWalker} from "../emulator/pocket-walker.ts"
 
-const walker = new PocketWalker("C:/walker.bin", "C:/Users/Max/Desktop/arceus_eep.rom")
+const {romPath, eepromPath} = workerData
+
+const walker = new PocketWalker(romPath, eepromPath)
 
 parentPort!.on('message', ({type, data}) => {
     switch (type) {
