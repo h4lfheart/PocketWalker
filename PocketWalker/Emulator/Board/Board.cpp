@@ -8,4 +8,9 @@ void Board::Tick(uint64_t cycles)
     {
         ssu->Tick();
     }
+
+    if (cycles % (Cpu::TICKS / Lcd::TICKS) == 0)
+    {
+        lcd->Tick();
+    }
 }

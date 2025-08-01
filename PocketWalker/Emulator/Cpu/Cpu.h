@@ -41,4 +41,6 @@ public:
     Flags* flags;
 
     bool sleeping = false;
+
+    static constexpr uint32_t TICKS = 3686400;
 };

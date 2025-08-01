@@ -23,8 +23,10 @@ public:
     void Transmit(Ssu* ssu) override;
     void Reset() override;
 
-    Memory* memory;
     AccelerometerState state;
     uint16_t address;
     uint16_t offset;
+    
+private:
+    Memory* memory;
 };

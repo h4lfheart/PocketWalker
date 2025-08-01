@@ -242,6 +242,8 @@
     <ClCompile Include="Emulator\Memory\MemoryAccessor.cpp" />
     <ClCompile Include="Emulator\Peripherals\Accelerometer\Accelerometer.cpp" />
     <ClCompile Include="Emulator\Peripherals\Eeprom\Eeprom.cpp" />
+    <ClCompile Include="Emulator\Peripherals\Lcd\Lcd.cpp" />
+    <ClCompile Include="Emulator\Peripherals\Lcd\LcdData.cpp" />
     <ClCompile Include="Emulator\Peripherals\PeripheralComponent.cpp" />
     <ClCompile Include="Emulator\PocketWalker.cpp" />
     <ClCompile Include="Emulator\Ssu\Ssu.cpp" />
@@ -263,13 +265,12 @@
     <ClInclude Include="Emulator\Memory\MemoryAccessor.h" />
     <ClInclude Include="Emulator\Peripherals\Accelerometer\Accelerometer.h" />
     <ClInclude Include="Emulator\Peripherals\Eeprom\Eeprom.h" />
+    <ClInclude Include="Emulator\Peripherals\Lcd\Lcd.h" />
+    <ClInclude Include="Emulator\Peripherals\Lcd\LcdData.h" />
     <ClInclude Include="Emulator\Peripherals\PeripheralComponent.h" />
     <ClInclude Include="Emulator\PocketWalker.h" />
     <ClInclude Include="Emulator\Ssu\Ssu.h" />
     <ClInclude Include="Utilities\ArrayUtilities.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Emulator\Peripherals\Lcd\" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

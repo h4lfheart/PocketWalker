@@ -37,12 +37,12 @@ Instruction* InstructionContainer::Execute(Cpu* cpu)
         instruction->postExecute(cpu);
     }
 
-    std::println("0x{:04X} {}", preExecuteLocation, instruction->name);
+    //std::println("0x{:04X} {}", preExecuteLocation, instruction->name);
 
     return instruction;
 }
 
-void InstructionContainer::Register(const uint8_t first, const uint8_t second, const Instruction& instruction)
+void InstructionContainer::Register(const uint32_t first, const uint32_t second, const Instruction& instruction)
 {
     if (!instructionTable.contains(first)) {
         instructionTable[first] = std::map<uint32_t, Instruction>();
@@ -50,12 +50,12 @@ void InstructionContainer::Register(const uint8_t first, const uint8_t second, c
     instructionTable[first][second] = instruction;
 }
 
-void InstructionContainer::Register(uint8_t first, uint8_t second,InstructionContainer* container)
+void InstructionContainer::Register(uint32_t first, uint32_t second,InstructionContainer* container)
 {
     Register(first, second, container->entryInstruction);
 }
 
-void InstructionContainer::Register(std::vector<uint8_t> first, std::vector<uint8_t> second, const Instruction& instruction)
+void InstructionContainer::Register(std::vector<uint32_t> first, std::vector<uint32_t> second, const Instruction& instruction)
 {
     for (const uint8_t firstIndex : first)
     {

@@ -1,25 +1,6 @@
 #include "Eeprom.h"
 
 #include "../../Ssu/Ssu.h"
-
-namespace EepromFlags
-{
-    enum Commands : uint8_t
-    {
-        WRITE_ENABLE = 0b00000110,
-        WRITE_DISABLE = 0b00000100,
-        READ_STATUS = 0b00000101,
-        WRITE_STATUS = 0b00000001,
-        READ_MEMORY = 0b00000011,
-        WRITE_MEMORY = 0b00000010
-    };
-
-    enum Status : uint8_t
-    {
-        WRITE_UNLOCK = 0b00000010
-    };
-}
-
 void Eeprom::TransmitAndReceive(Ssu* ssu)
 {
     switch (state)
@@ -79,7 +60,7 @@ void Eeprom::Transmit(Ssu* ssu)
                 status |= EepromFlags::Status::WRITE_UNLOCK;
                 ssu->status |= SsuFlags::Status::TRANSMIT_END;
             }
-            else if (ssu->transmit == EepromFlags::Commands::READ_MEMORY)
+            else if (ssu->transmit == EepromFlags::Commands::WRITE_MEMORY)
             {
                 state = GettingHighAddress;
             }

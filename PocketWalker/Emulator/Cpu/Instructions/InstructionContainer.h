@@ -42,9 +42,9 @@ public:
 
     Instruction* Execute(Cpu* cpu);
 
-    void Register(uint8_t first, uint8_t second, const Instruction& instruction);
-    void Register(uint8_t first, uint8_t second, InstructionContainer* container);
-    void Register(std::vector<uint8_t> first, std::vector<uint8_t> second, const Instruction& instruction);
+    void Register(uint32_t first, uint32_t second, const Instruction& instruction);
+    void Register(uint32_t first, uint32_t second, InstructionContainer* container);
+    void Register(std::vector<uint32_t> first, std::vector<uint32_t> second, const Instruction& instruction);
     void Register(NumberMatch first, NumberMatch second, const Instruction& instruction);
 
     Instruction* GetInstruction(uint32_t first, uint32_t second);

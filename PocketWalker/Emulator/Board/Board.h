@@ -5,8 +5,11 @@
 #include "../Memory/Memory.h"
 #include "../Peripherals/Accelerometer/Accelerometer.h"
 #include "../Peripherals/Eeprom/Eeprom.h"
+#include "../Peripherals/Lcd/Lcd.h"
+#include "../Peripherals/Lcd/LcdData.h"
 #include "../Ssu/Ssu.h"
 
+class Lcd;
 class Cpu;
 class Ssu;
 class Memory;
@@ -25,6 +28,12 @@ public:
 
         eeprom = new Eeprom(eepromBuffer);
         ssu->RegisterPeripheral(SsuFlags::Port::PORT_1, Eeprom::PIN, eeprom);
+
+        lcd = new Lcd();
+        ssu->RegisterPeripheral(SsuFlags::Port::PORT_1, Lcd::PIN, lcd);
+
+        lcdData = new LcdData(lcd);
+        ssu->RegisterPeripheral(SsuFlags::Port::PORT_1, LcdData::PIN, lcdData);
     }
  
     void Tick(uint64_t cycles);
@@ -35,4 +44,6 @@ public:
     
     Accelerometer* accelerometer;
     Eeprom* eeprom;
+    Lcd* lcd;
+    LcdData* lcdData;
 };
