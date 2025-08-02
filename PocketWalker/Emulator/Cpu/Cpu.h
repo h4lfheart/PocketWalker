@@ -5,8 +5,10 @@
 #include "Components/Registers.h"
 #include "Components/Flags.h"
 #include "Components/VectorTable.h"
+#include "Components/Interrupts.h"
 #include "Instructions/InstructionTable.h"
 
+class Interrupts;
 class Memory;
 class Board;
 
@@ -21,10 +23,11 @@ class Cpu
 public:
     Cpu(Memory* ram) : ram(ram)
     {
-        opcodes = new Opcode(ram);
         instructions = new InstructionTable();
+        opcodes = new Opcode(ram);
         registers = new Registers(ram);
         vectorTable = new VectorTable(ram);
+        interrupts = new Interrupts(ram);
         flags = new Flags();
 
         registers->pc = vectorTable->reset;
@@ -37,9 +40,11 @@ public:
     Opcode* opcodes;
     InstructionTable* instructions;
     VectorTable* vectorTable;
+    Interrupts* interrupts;
     Registers* registers;
     Flags* flags;
 
+    size_t instructionCount;
     bool sleeping = false;
 
     static constexpr uint32_t TICKS = 3686400;

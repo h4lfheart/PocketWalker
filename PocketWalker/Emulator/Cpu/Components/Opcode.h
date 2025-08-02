@@ -1,9 +1,6 @@
 #pragma once
 #include <cstdint>
 
-#include "../Instructions/Instruction.h"
-
-
 class Memory;
 
 class Opcode

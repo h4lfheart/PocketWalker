@@ -10,7 +10,7 @@ public:
 
     void Run();
 
-    Board board;
+    Board* board;
 
     uint64_t cycles;
     bool running = true;

@@ -158,6 +158,7 @@
     <ClCompile Include="Emulator\Board\Board.cpp" />
     <ClCompile Include="Emulator\Board\Component.cpp" />
     <ClCompile Include="Emulator\Cpu\Components\Flags.cpp" />
+    <ClCompile Include="Emulator\Cpu\Components\Interrupts.cpp" />
     <ClCompile Include="Emulator\Cpu\Components\Opcode.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -247,6 +248,8 @@
     <ClCompile Include="Emulator\Peripherals\PeripheralComponent.cpp" />
     <ClCompile Include="Emulator\PocketWalker.cpp" />
     <ClCompile Include="Emulator\Ssu\Ssu.cpp" />
+    <ClCompile Include="Emulator\Timers\Components\TimerB1.cpp" />
+    <ClCompile Include="Emulator\Timers\Timer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Utilities\ArrayUtilities.cpp" />
   </ItemGroup>
@@ -254,6 +257,7 @@
     <ClInclude Include="Emulator\Board\Board.h" />
     <ClInclude Include="Emulator\Board\Component.h" />
     <ClInclude Include="Emulator\Cpu\Components\Flags.h" />
+    <ClInclude Include="Emulator\Cpu\Components\Interrupts.h" />
     <ClInclude Include="Emulator\Cpu\Components\Opcode.h" />
     <ClInclude Include="Emulator\Cpu\Components\Registers.h" />
     <ClInclude Include="Emulator\Cpu\Components\VectorTable.h" />
@@ -270,6 +274,8 @@
     <ClInclude Include="Emulator\Peripherals\PeripheralComponent.h" />
     <ClInclude Include="Emulator\PocketWalker.h" />
     <ClInclude Include="Emulator\Ssu\Ssu.h" />
+    <ClInclude Include="Emulator\Timers\Components\TimerB1.h" />
+    <ClInclude Include="Emulator\Timers\Timer.h" />
     <ClInclude Include="Utilities\ArrayUtilities.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

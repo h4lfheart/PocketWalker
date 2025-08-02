@@ -73,8 +73,6 @@ void Lcd::Tick()
     }
 
     bufferIndex = bufferIndex ? 0 : 1;
-    
-    __debugbreak();
 }
 
 

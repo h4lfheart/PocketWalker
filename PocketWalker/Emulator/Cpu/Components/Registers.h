@@ -22,6 +22,7 @@ public:
     uint32_t* Register32(const uint8_t control) const;
 
     void PushStack() const;
+    void PushStack(uint16_t address) const;
     uint16_t PopStack() const;
 
     uint16_t pc;

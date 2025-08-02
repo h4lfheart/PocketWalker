@@ -20,6 +20,18 @@ public:
     operator T() const {
         return read();
     }
+
+    MemoryAccessor& operator+=(T value) {
+        T current = read();
+        write(current + value);
+        return *this;
+    }
+    
+    MemoryAccessor& operator-=(T value) {
+        T current = read();
+        write(current - value);
+        return *this;
+    }
     
     MemoryAccessor& operator&=(T value) {
         T current = read();

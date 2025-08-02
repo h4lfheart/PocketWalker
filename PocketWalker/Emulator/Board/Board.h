@@ -8,6 +8,7 @@
 #include "../Peripherals/Lcd/Lcd.h"
 #include "../Peripherals/Lcd/LcdData.h"
 #include "../Ssu/Ssu.h"
+#include "../Timers/Timer.h"
 
 class Lcd;
 class Cpu;
@@ -22,6 +23,7 @@ public:
         ram = new Memory(ramBuffer);
         cpu = new Cpu(ram);
         ssu = new Ssu(ram);
+        timer = new Timer(ram, cpu->interrupts);
 
         accelerometer = new Accelerometer();
         ssu->RegisterPeripheral(SsuFlags::Port::PORT_9, Accelerometer::PIN, accelerometer);
@@ -34,6 +36,7 @@ public:
 
         lcdData = new LcdData(lcd);
         ssu->RegisterPeripheral(SsuFlags::Port::PORT_1, LcdData::PIN, lcdData);
+
     }
  
     void Tick(uint64_t cycles);
@@ -41,6 +44,7 @@ public:
     Memory* ram;
     Cpu* cpu;
     Ssu* ssu;
+    Timer* timer;
     
     Accelerometer* accelerometer;
     Eeprom* eeprom;

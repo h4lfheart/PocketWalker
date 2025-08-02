@@ -17,11 +17,24 @@ size_t Cpu::Step()
         *this->registers->Register8(0b1000) = 0;
         return cycleCount;
     }
+
+    // TODO proper interrupt for accelerometer
+    if (registers->pc == 0x7700) // accelerometer sleep
+    {
+        this->registers->pc += 2;
+        return cycleCount;
+    }
     
     if (!sleeping)
     {
         const Instruction* instruction = instructions->Execute(this);
         cycleCount = instruction->cycles;
+        instructionCount++;
+    }
+
+    if (!flags->interrupt)
+    {
+        interrupts->Update(this);
     }
 
     return cycleCount;

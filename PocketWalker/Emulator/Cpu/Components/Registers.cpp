@@ -1,5 +1,8 @@
 #include "Registers.h"
 
+#include <iomanip>
+#include <iostream>
+
 #include "../../Memory/Memory.h"
 
 uint8_t* Registers::Register8(const uint8_t control) const
@@ -26,6 +29,12 @@ void Registers::PushStack() const
 {
     *sp -= 2;
     ram->WriteShort(*sp, pc);
+}
+
+void Registers::PushStack(uint16_t address) const
+{
+    *sp -= 2;
+    ram->WriteShort(*sp, address);
 }
 
 uint16_t Registers::PopStack() const

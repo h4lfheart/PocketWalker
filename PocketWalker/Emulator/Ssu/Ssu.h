@@ -111,7 +111,6 @@ private:
     void ExecutePeripherals(const std::function<void(PeripheralComponent* peripheral)>& executeFunction, bool invertPortSelect = false, bool isTick = true);
     void ExecutePeripherals(SsuFlags::Port port, const std::function<void(PeripheralComponent* peripheral)>& executeFunction, bool invertPortSelect = false, bool isTick = true);
     
-private:
     Memory* ram;
 
     std::map<SsuFlags::Port, std::map<uint8_t, PeripheralComponent*>> peripherals;

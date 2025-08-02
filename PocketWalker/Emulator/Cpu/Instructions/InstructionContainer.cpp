@@ -37,6 +37,17 @@ Instruction* InstructionContainer::Execute(Cpu* cpu)
         instruction->postExecute(cpu);
     }
 
+    
+    /*size_t debugStart = 4206695;
+    size_t debugLength = 1000;
+
+    if (cpu->instructionCount >= debugStart && cpu->instructionCount < debugStart + debugLength)
+    {
+        std::println("{} - 0x{:04X} - {} - SP: {:04X} - SP Value: {}", cpu->instructionCount, preExecuteLocation, instruction->name, *cpu->registers->sp, cpu->ram->ReadShort(*cpu->registers->sp));
+    }*/
+
+    
+
     //std::println("0x{:04X} {}", preExecuteLocation, instruction->name);
 
     return instruction;
