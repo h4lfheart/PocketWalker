@@ -2,7 +2,9 @@
 #include "../Board/Component.h"
 #include "../Memory/Memory.h"
 #include "Components/TimerB1.h"
+#include "Components/TimerW.h"
 
+class TimerW;
 class Interrupts;
 constexpr uint16_t CLOCK_STOP_1_ADDR = 0xFFFA;
 constexpr uint16_t CLOCK_STOP_2_ADDR = 0xFFFB;
@@ -27,6 +29,7 @@ class Timer : public Component
 public:
     Timer(Memory* ram, Interrupts* interrupts) : ram(ram), interrupts(interrupts),
         b1(new TimerB1(ram, interrupts)),
+        w(new TimerW(ram, interrupts)),
         clockStop1(ram->CreateAccessor<uint8_t>(CLOCK_STOP_1_ADDR)),
         clockStop2(ram->CreateAccessor<uint8_t>(CLOCK_STOP_2_ADDR))
     {
@@ -38,6 +41,7 @@ public:
     size_t clockCycles;
 
     TimerB1* b1;
+    TimerW* w;
 
     MemoryAccessor<uint8_t> clockStop1;
     MemoryAccessor<uint8_t> clockStop2;

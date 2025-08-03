@@ -7,6 +7,11 @@
 #include "../Cpu.h"
 
 
+bool start = false;
+
+size_t debugStart = 0;
+size_t debugLength = 1000;
+
 Instruction* InstructionContainer::Execute(Cpu* cpu)
 {
     const uint32_t firstValue = firstPredicate(cpu->opcodes);
@@ -36,15 +41,24 @@ Instruction* InstructionContainer::Execute(Cpu* cpu)
     {
         instruction->postExecute(cpu);
     }
-
     
-    /*size_t debugStart = 4206695;
-    size_t debugLength = 1000;
-
-    if (cpu->instructionCount >= debugStart && cpu->instructionCount < debugStart + debugLength)
+    if (cpu->registers->pc == 0x1fee && !start)
     {
-        std::println("{} - 0x{:04X} - {} - SP: {:04X} - SP Value: {}", cpu->instructionCount, preExecuteLocation, instruction->name, *cpu->registers->sp, cpu->ram->ReadShort(*cpu->registers->sp));
-    }*/
+        start = true;
+        debugStart = cpu->instructionCount;
+    }
+
+    if (start && cpu->instructionCount >= debugStart && cpu->instructionCount < debugStart + debugLength)
+    {
+        //std::println("{} - 0x{:04X} - {} ", cpu->instructionCount, preExecuteLocation, instruction->name, *cpu->registers->sp, cpu->ram->ReadShort(*cpu->registers->sp));
+
+        /*std::string erString = std::format("{} - 0x{:04X} - ", cpu->instructionCount, cpu->registers->pc);
+        for (int i = 0; i < 8; ++i) {
+            erString += std::format("ER{}: [0x{:08X}], ", i, *cpu->registers->Register32(i));
+        }
+
+        std::println("{}", erString);*/
+    }
 
     
 

@@ -30,9 +30,9 @@ public:
 
     std::function<void(uint8_t*)> onDraw;
 
-    uint8_t column = 0;
-    uint8_t offset = 0;
-    uint8_t page = 0;
+    size_t column = 0;
+    size_t offset = 0;
+    size_t page = 0;
     uint8_t bufferIndex = 0;
     uint8_t contrast = 20;
 

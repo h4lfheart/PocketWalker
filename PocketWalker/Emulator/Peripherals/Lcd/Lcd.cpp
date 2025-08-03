@@ -48,14 +48,14 @@ void Lcd::Tick()
 {
     const auto buffer = new uint8_t[WIDTH * HEIGHT * 3]();
 
-    for (int y = 0; y < HEIGHT; ++y)
+    for (int y = 0; y < HEIGHT; y++)
     {
         const int stripeOffset = y % 8;
-        const int row = y / 8;
+        const int row = floor(y / 8);
         const int rowOffset = row * WIDTH * COLUMN_SIZE;
         const int bufferOffset = bufferIndex * WIDTH * BUFFER_SEPARATION;
 
-        for (int x = 0; x < WIDTH; ++x)
+        for (int x = 0; x < WIDTH; x++)
         {
             const int baseIndex = 2 * x + rowOffset + bufferOffset;
 

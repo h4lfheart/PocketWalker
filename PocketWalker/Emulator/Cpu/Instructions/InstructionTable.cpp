@@ -368,7 +368,7 @@ InstructionTable::InstructionTable() :
     aH_aL.Register(0x5, 0x1, Instruction(
        "DIVXU.B Rs, Rd",
        2,
-       1 + 20,
+       1 + 12,
        [](const Cpu* cpu)
        {
            const uint8_t* rs = cpu->registers->Register8(cpu->opcodes->bH);
@@ -392,10 +392,9 @@ InstructionTable::InstructionTable() :
        [](const Cpu* cpu)
        {
            const uint16_t* rs = cpu->registers->Register16(cpu->opcodes->bH);
-           uint32_t* rd = cpu->registers->Register32(cpu->opcodes->bL);
+           uint32_t* erd = cpu->registers->Register32(cpu->opcodes->bL);
 
-           *rd &= 0xFFFF;
-           *rd *= *rs;
+           *erd = (*erd & 0xFFFF) * (*rs);
            
        }
     ));
@@ -412,7 +411,7 @@ InstructionTable::InstructionTable() :
            const uint32_t quotient = *erd / *rs;
            const uint32_t remainder = *erd % *rs;
 
-           *erd = remainder << 16 | quotient;
+           *erd = (remainder << 16) | quotient;
 
            cpu->flags->zero = quotient == 0;
            cpu->flags->negative = quotient & Flags::NegativeMask(16);
@@ -477,7 +476,7 @@ InstructionTable::InstructionTable() :
         nullptr,
         [](const Cpu* cpu)
         {
-            const uint16_t address = cpu->opcodes->b << 16 | cpu->opcodes->cd;
+            const uint32_t address = cpu->opcodes->b << 16 | cpu->opcodes->cd;
             cpu->registers->pc = address;
         }
     ));
@@ -490,9 +489,9 @@ InstructionTable::InstructionTable() :
         [](const Cpu* cpu)
         {
             cpu->registers->PushStack();
-            const uint32_t* ern = cpu->registers->Register32(cpu->opcodes->bH);
             
-           cpu->registers->pc = *ern & 0xFFFF;
+            const uint32_t* ern = cpu->registers->Register32(cpu->opcodes->bH);
+            cpu->registers->pc = *ern & 0xFFFF;
         }
     ));
     
@@ -504,8 +503,24 @@ InstructionTable::InstructionTable() :
         [](const Cpu* cpu)
         {
             cpu->registers->PushStack();
-            const uint16_t address = cpu->opcodes->b << 16 | cpu->opcodes->cd;
-          cpu->registers->pc = address;
+            
+            const uint32_t address = cpu->opcodes->b << 16 | cpu->opcodes->cd;
+            cpu->registers->pc = address & 0xFFFF;
+        }
+    ));
+
+    aH_aL.Register(0x6, 0x4, Instruction(
+        "OR.W Rs, Rd",
+        2,
+        1,
+        [](const Cpu* cpu)
+        {
+            const uint16_t* rs = cpu->registers->Register16(cpu->opcodes->bH);
+            uint16_t* rd = cpu->registers->Register16(cpu->opcodes->bL);
+
+            *rd |= *rs;
+
+            cpu->flags->Mov(*rd);
         }
     ));
 
@@ -936,7 +951,7 @@ InstructionTable::InstructionTable() :
            const uint8_t imm = cpu->opcodes->bH & 0b111;
            const uint8_t* rd = cpu->registers->Register8(cpu->opcodes->bL);
 
-           cpu->flags->carry = *rd & (1 << imm);
+           cpu->flags->carry =(*rd >> imm) & 1;
        }
     ));
     
@@ -1242,7 +1257,7 @@ InstructionTable::InstructionTable() :
        [](const Cpu* cpu)
        {
            uint8_t* rd = cpu->registers->Register8(cpu->opcodes->bL);
-           cpu->flags->Inc(*rd);
+           cpu->flags->Inc(*rd, 1);
         
            *rd += 1;
        }
@@ -1266,7 +1281,7 @@ InstructionTable::InstructionTable() :
        [](const Cpu* cpu)
        {
            uint16_t* rd = cpu->registers->Register16(cpu->opcodes->bL);
-           cpu->flags->Inc(*rd);
+           cpu->flags->Inc(*rd, 1);
         
            *rd += 1;
        }
@@ -1279,7 +1294,7 @@ InstructionTable::InstructionTable() :
        [](const Cpu* cpu)
        {
            uint32_t* rd = cpu->registers->Register32(cpu->opcodes->bL);
-           cpu->flags->Inc(*rd);
+           cpu->flags->Inc(*rd, 1);
         
            *rd += 1;
        }
@@ -1314,7 +1329,7 @@ InstructionTable::InstructionTable() :
        [](const Cpu* cpu)
        {
            uint16_t* rd = cpu->registers->Register16(cpu->opcodes->bL);
-           cpu->flags->Inc(*rd);
+           cpu->flags->Inc(*rd, 2);
         
            *rd += 2;
        }
@@ -1507,7 +1522,7 @@ InstructionTable::InstructionTable() :
        [](const Cpu* cpu)
        {
            uint8_t* rd = cpu->registers->Register8(cpu->opcodes->bL);
-           cpu->flags->Dec(*rd);
+           cpu->flags->Dec(*rd, 1);
            
            *rd -= 1;
 
@@ -1536,7 +1551,7 @@ InstructionTable::InstructionTable() :
        [](const Cpu* cpu)
        {
            uint16_t* rd = cpu->registers->Register16(cpu->opcodes->bL);
-           cpu->flags->Dec(*rd);
+           cpu->flags->Dec(*rd, 1);
            
            *rd -= 1;
        }
@@ -1790,8 +1805,8 @@ InstructionTable::InstructionTable() :
             const uint16_t* rs = cpu->registers->Register16(cpu->opcodes->dH);
             uint32_t* erd = cpu->registers->Register32(cpu->opcodes->dL);
 
-            const int16_t quotient = static_cast<int16_t>(*erd / *rs);
-            const int16_t remainder = static_cast<int16_t>(*erd % *rs);
+            const int16_t quotient = static_cast<int16_t>(static_cast<int32_t>(*erd) / static_cast<int16_t>(*rs));
+            const int16_t remainder = static_cast<int16_t>(static_cast<int32_t>(*erd) % static_cast<int16_t>(*rs));
 
             *erd = remainder << 16 | quotient;
 
@@ -1878,8 +1893,10 @@ InstructionTable::InstructionTable() :
                
                const uint8_t imm = cpu->opcodes->dH & 0b111;
                const uint16_t address = cpu->opcodes->b | 0xFF00;
+
+               const uint8_t memoryValue = cpu->ram->ReadByte(address);
                
-               cpu->flags->carry = cpu->ram->ReadByte(address) & 1 << imm;
+               cpu->flags->carry = (memoryValue >> imm) & 1;
            }
        )
     );

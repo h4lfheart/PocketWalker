@@ -17,8 +17,6 @@ public:
         
     }
 
-    void Initialize();
-
     void Tick() override;
 
     bool isInitialized;

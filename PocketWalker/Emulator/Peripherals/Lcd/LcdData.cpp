@@ -1,5 +1,7 @@
 #include "LcdData.h"
 
+#include <print>
+
 #include "Lcd.h"
 #include "../../Ssu/Ssu.h"
 

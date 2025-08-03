@@ -1,4 +1,5 @@
 #include "Cpu.h"
+#include <print>
 
 size_t Cpu::Step()
 {
@@ -23,6 +24,29 @@ size_t Cpu::Step()
     {
         this->registers->pc += 2;
         return cycleCount;
+    }
+
+    // remove input
+    if (registers->pc == 0x9C3E)
+    {
+        if (ram->ReadByte(0xFFDE) != 0)
+        {
+            ram->WriteByte(0xFFDE, 0);
+        }
+    }
+
+    // add watts
+    if (registers->pc == 0x9A4E)
+    {
+        if (ram->ReadByte(0xF78E) == 0)
+        {
+            ram->WriteByte(0xF78E, 255);
+        }
+    }
+
+    if (registers->pc == 0x2020)
+    {
+        //__debugbreak();
     }
     
     

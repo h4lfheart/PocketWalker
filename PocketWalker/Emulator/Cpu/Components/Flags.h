@@ -58,10 +58,10 @@ public:
     }
 
     template<typename T>
-    void Inc(T value, size_t bits = sizeof(T) * 8)
+    void Inc(T value, size_t inc, size_t bits = sizeof(T) * 8)
     {
         const uint32_t negativeMask = NegativeMask(bits);
-        const uint32_t result = value + 1;
+        const uint32_t result = value + inc;
         
         negative = result & negativeMask;
         zero = result == zero;
@@ -69,10 +69,10 @@ public:
     }
 
     template<typename T>
-    void Dec(T value, size_t bits = sizeof(T) * 8)
+    void Dec(T value, size_t dec, size_t bits = sizeof(T) * 8)
     {
         const uint32_t negativeMask = NegativeMask(bits);
-        const uint32_t result = value - 1;
+        const uint32_t result = value - dec;
         
         negative = result & negativeMask;
         zero = result == zero;

@@ -2,29 +2,29 @@
 
 #include <ctime>
 
-void Rtc::Initialize()
-{
-    isInitialized = true;
-
-    Tick();
-
-    interrupts->rtcFlag |= InterruptFlags::FLAG_QUARTER_SECOND;
-    interrupts->rtcFlag |= InterruptFlags::FLAG_HALF_SECOND;
-    interrupts->rtcFlag |= InterruptFlags::FLAG_SECOND;
-    interrupts->rtcFlag |= InterruptFlags::FLAG_MINUTE;
-    interrupts->rtcFlag |= InterruptFlags::FLAG_HOUR;
-}
+#include "../../Utilities/BitUtilities.h"
 
 void Rtc::Tick()
 {
+    if (!isInitialized)
+    {
+        interrupts->rtcFlag |= InterruptFlags::FLAG_QUARTER_SECOND;
+        interrupts->rtcFlag |= InterruptFlags::FLAG_HALF_SECOND;
+        interrupts->rtcFlag |= InterruptFlags::FLAG_SECOND;
+        interrupts->rtcFlag |= InterruptFlags::FLAG_MINUTE;
+        interrupts->rtcFlag |= InterruptFlags::FLAG_HOUR;
+        
+        isInitialized = true;
+    }
+    
     const time_t currentTime = std::time(nullptr);
     std::tm localTime;
     localtime_s(&localTime, &currentTime);
 
-    second = localTime.tm_sec;
-    minute = localTime.tm_min;
-    hour = localTime.tm_hour;
-    day = localTime.tm_mday;
+    second = BitUtilities::BinaryEncodedDecimal(localTime.tm_sec);
+    minute = BitUtilities::BinaryEncodedDecimal(localTime.tm_min);
+    hour = BitUtilities::BinaryEncodedDecimal(localTime.tm_hour);
+    day = BitUtilities::BinaryEncodedDecimal(localTime.tm_mday);
 
     quarterCount++;
 

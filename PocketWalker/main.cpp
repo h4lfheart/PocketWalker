@@ -17,18 +17,20 @@ int main(int argc, char* argv[])
 {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 
+    size_t margin = 4;
+    size_t baseWidth = Lcd::WIDTH + margin * 2;
+    size_t baseHeight = Lcd::HEIGHT + margin * 2;
+
     SDL_Window* window = SDL_CreateWindow(
         "Pocket Walker",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        96 * 8, 64 * 8, 0
+        baseWidth * 8, baseHeight * 8, 0
     );
     
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-    // Create a streaming texture where you can directly write pixels
-    SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 96, 64);
+    SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, baseWidth, baseHeight);
 
-    // Lock texture to get pixel buffer
     void *pixels;
     int pitch;
     if (SDL_LockTexture(texture, NULL, &pixels, &pitch) != 0) {
@@ -36,14 +38,11 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    // pixels is a pointer to the pixel data; pitch is the length of a row in bytes
-    // Let's set pixels manually
 
     auto pixel_ptr = static_cast<uint8_t*>(pixels);
-    int width = 96;
-    int height = 64;
+    int width = baseWidth;
+    int height = baseHeight;
 
-    // Clear all pixels to black
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             int dstIndex = (y * width + x) * 3;
@@ -76,18 +75,16 @@ int main(int argc, char* argv[])
             return 1;
         }
 
-        // pixels is a pointer to the pixel data; pitch is the length of a row in bytes
-        // Let's set pixels manually
-
         auto pixel_ptr = static_cast<uint8_t*>(pixels);
         int width = 96;
         int height = 64;
-
-        // Clear all pixels to black
+        
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 int srcIndex = (y * width + x) * 3;
-                int dstIndex = (y * width + x) * 3;
+                int dstX = margin + x;
+                int dstY = margin + y;
+                int dstIndex = (dstY * baseWidth + dstX) * 3;
                 pixel_ptr[dstIndex] = data[srcIndex];
                 pixel_ptr[dstIndex + 1] = data[srcIndex + 1];
                 pixel_ptr[dstIndex + 2] = data[srcIndex + 2];
@@ -119,6 +116,29 @@ int main(int argc, char* argv[])
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT)
                 running = false;
+            if (e.type == SDL_KEYDOWN)
+            {
+                switch(e.key.keysym.sym)
+                {
+                case SDLK_LEFT: {
+                        emulator.board->ram->WriteByte(0xFFDE, 1 << 2);
+                        break;
+                }
+                case SDLK_DOWN: {
+                        if (!emulator.board->cpu->flags->interrupt)
+                        {
+                            emulator.board->cpu->interrupts->flag1 |= InterruptFlags::FLAG_IRQ0;
+                        }
+
+                        emulator.board->ram->WriteByte(0xFFDE, 1 << 0);
+                        break;
+                }
+                case SDLK_RIGHT: {
+                        emulator.board->ram->WriteByte(0xFFDE, 1 << 4);
+                        break;
+                }
+                }
+            }
         }
 
         SDL_RenderClear(renderer);

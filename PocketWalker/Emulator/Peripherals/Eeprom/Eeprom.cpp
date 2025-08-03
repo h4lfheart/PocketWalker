@@ -1,4 +1,5 @@
 #include "Eeprom.h"
+#include <print>
 
 #include "../../Ssu/Ssu.h"
 void Eeprom::TransmitAndReceive(Ssu* ssu)
@@ -37,7 +38,7 @@ void Eeprom::TransmitAndReceive(Ssu* ssu)
         }
     case GettingBytes:
         {
-            ssu->receive = memory->ReadByte((highAddress << 8 | lowAddress) + offset);
+            ssu->receive = memory->ReadByte(((highAddress << 8) | lowAddress) + offset);
             offset++;
             
             ssu->status |= SsuFlags::Status::TRANSMIT_END;
@@ -80,7 +81,7 @@ void Eeprom::Transmit(Ssu* ssu)
         }
     case GettingBytes:
         {
-            memory->WriteByte((highAddress << 8 | lowAddress) + offset, ssu->transmit);
+            memory->WriteByte(((highAddress << 8) | lowAddress) + offset, ssu->transmit);
             offset++;
             offset %= 128;
             
