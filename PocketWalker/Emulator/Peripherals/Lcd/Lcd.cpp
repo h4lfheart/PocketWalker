@@ -1,5 +1,8 @@
 #include "Lcd.h"
 
+#include <print>
+
+#include "LcdData.h"
 #include "../../Ssu/Ssu.h"
 
 void Lcd::Transmit(Ssu* ssu)
@@ -7,19 +10,19 @@ void Lcd::Transmit(Ssu* ssu)
     switch (state) {
     case Waiting:
         {
-            if (ssu->transmit > 0x0 && ssu->transmit <= 0xF) // low column
+            if (ssu->transmit >= 0x0 && ssu->transmit <= 0xF) // low column
             {
                 column &= 0xF0;
                 column |= ssu->transmit & 0xF;
                 offset = 0;
             }
-            else if (ssu->transmit > 0x10 && ssu->transmit <= 0x17) // high column
+            else if (ssu->transmit >= 0x10 && ssu->transmit <= 0x17) // high column
             {
                 column &= 0xF;
-                column |= ssu->transmit & 0b111 << 4;
+                column |= (ssu->transmit & 0b111) << 4;
                 offset = 0;
             }
-            else if (ssu->transmit > 0xB0 && ssu->transmit <= 0xBf) // page
+            else if (ssu->transmit >= 0xB0 && ssu->transmit <= 0xBF) // page
             {
                 page = ssu->transmit & 0xF;
             }
@@ -73,6 +76,13 @@ void Lcd::Tick()
     }
 
     bufferIndex = bufferIndex ? 0 : 1;
+
+    onDraw(buffer);
+}
+
+bool Lcd::CanExecute(Ssu* ssu)
+{
+    return !(ssu->GetPort(SsuFlags::Port::PORT_1) & LcdData::PIN);
 }
 
 

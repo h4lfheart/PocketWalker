@@ -14,6 +14,11 @@ public:
 
     virtual void Reset() { }
 
+    virtual bool CanExecute(Ssu* ssu)
+    {
+        return true;
+    }
+
     virtual bool IsData()
     {
         return false;
@@ -23,8 +28,6 @@ public:
     {
         return false;
     }
-
-    size_t progress;
 
     static constexpr uint8_t PIN = 1 << 0;
 };

@@ -47,8 +47,13 @@ void Ssu::RegisterPeripheral(SsuFlags::Port port, uint8_t pin, PeripheralCompone
     peripherals[port][pin] = component;
 }
 
+uint8_t Ssu::GetPort(uint16_t address)
+{
+    return ram->ReadByte(address);
+}
+
 void Ssu::ExecutePeripherals(const std::function<void(PeripheralComponent* peripheral)>& executeFunction,
-    bool invertPortSelect, bool isTick)
+                             bool invertPortSelect, bool isTick)
 {
     for (const auto& port : peripherals | std::views::keys)
     {
@@ -61,20 +66,20 @@ void Ssu::ExecutePeripherals(const SsuFlags::Port port, const std::function<void
 {
     for (const auto& pins = peripherals[port]; auto [pin, peripheral] : pins)
     {
-        const uint8_t currentPortValue = ram->ReadByte(port);
+        const uint8_t currentPortValue = GetPort(port);
             
         uint8_t comparePortValue = peripheral->IsData() ? currentPortValue : ~currentPortValue;
         if (invertPortSelect) comparePortValue = ~comparePortValue;
             
-        if (comparePortValue & pin)
+        if (comparePortValue & pin && peripheral->CanExecute(this))
         {
             if (peripheral->IsProgressive() && isTick)
             {
-                peripheral->progress++;
+                progress++;
 
-                if (peripheral->progress == 7)
+                if (progress == 7)
                 {
-                    peripheral->progress = 0;
+                    progress = 0;
                     executeFunction(peripheral);
                 }
             }

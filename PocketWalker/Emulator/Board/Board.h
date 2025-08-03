@@ -7,6 +7,7 @@
 #include "../Peripherals/Eeprom/Eeprom.h"
 #include "../Peripherals/Lcd/Lcd.h"
 #include "../Peripherals/Lcd/LcdData.h"
+#include "../Rtc/Rtc.h"
 #include "../Ssu/Ssu.h"
 #include "../Timers/Timer.h"
 
@@ -24,6 +25,7 @@ public:
         cpu = new Cpu(ram);
         ssu = new Ssu(ram);
         timer = new Timer(ram, cpu->interrupts);
+        rtc = new Rtc(ram, cpu->interrupts);
 
         accelerometer = new Accelerometer();
         ssu->RegisterPeripheral(SsuFlags::Port::PORT_9, Accelerometer::PIN, accelerometer);
@@ -45,6 +47,7 @@ public:
     Cpu* cpu;
     Ssu* ssu;
     Timer* timer;
+    Rtc* rtc;
     
     Accelerometer* accelerometer;
     Eeprom* eeprom;

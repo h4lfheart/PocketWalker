@@ -106,14 +106,18 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)external\SDL\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <AdditionalLibraryDirectories>$(OutDir);$(ProjectDir)external\SDL\VisualC\SDL\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib; %(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -247,11 +251,11 @@
     <ClCompile Include="Emulator\Peripherals\Lcd\LcdData.cpp" />
     <ClCompile Include="Emulator\Peripherals\PeripheralComponent.cpp" />
     <ClCompile Include="Emulator\PocketWalker.cpp" />
+    <ClCompile Include="Emulator\Rtc\Rtc.cpp" />
     <ClCompile Include="Emulator\Ssu\Ssu.cpp" />
     <ClCompile Include="Emulator\Timers\Components\TimerB1.cpp" />
     <ClCompile Include="Emulator\Timers\Timer.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Utilities\ArrayUtilities.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Emulator\Board\Board.h" />
@@ -273,10 +277,12 @@
     <ClInclude Include="Emulator\Peripherals\Lcd\LcdData.h" />
     <ClInclude Include="Emulator\Peripherals\PeripheralComponent.h" />
     <ClInclude Include="Emulator\PocketWalker.h" />
+    <ClInclude Include="Emulator\Rtc\Rtc.h" />
     <ClInclude Include="Emulator\Ssu\Ssu.h" />
     <ClInclude Include="Emulator\Timers\Components\TimerB1.h" />
     <ClInclude Include="Emulator\Timers\Timer.h" />
     <ClInclude Include="Utilities\ArrayUtilities.h" />
+    <ClInclude Include="Utilities\BitUtilities.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

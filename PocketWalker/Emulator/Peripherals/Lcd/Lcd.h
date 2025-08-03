@@ -16,6 +16,7 @@ public:
     
     void Transmit(Ssu* ssu) override;
     void Tick() override;
+    bool CanExecute(Ssu* ssu) override;
 
     enum LcdState : uint8_t
     {
@@ -27,11 +28,13 @@ public:
     
     LcdState state;
 
-    uint8_t column;
-    uint8_t offset;
-    uint8_t page;
-    uint8_t bufferIndex;
-    uint8_t contrast;
+    std::function<void(uint8_t*)> onDraw;
+
+    uint8_t column = 0;
+    uint8_t offset = 0;
+    uint8_t page = 0;
+    uint8_t bufferIndex = 0;
+    uint8_t contrast = 20;
 
     static constexpr uint32_t TICKS = 4;
     

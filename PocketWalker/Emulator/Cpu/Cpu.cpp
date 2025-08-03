@@ -25,6 +25,7 @@ size_t Cpu::Step()
         return cycleCount;
     }
     
+    
     if (!sleeping)
     {
         const Instruction* instruction = instructions->Execute(this);

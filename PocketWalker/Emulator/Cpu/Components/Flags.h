@@ -78,9 +78,7 @@ public:
         zero = result == zero;
         overflow = value == negativeMask;
     }
-
-
-private:
+    
     static uint32_t NegativeMask(size_t bits)
     {
         return 1 << (bits - 1);   

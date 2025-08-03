@@ -230,7 +230,7 @@ InstructionTable::InstructionTable() :
            cpu->ram->WriteByte(address, *rs);
            cpu->flags->Mov(*rs);
        }
-   ));
+    ));
 
     aH_aL.Register(0x4, 0x0, Instruction(
         "BRA d:8",
@@ -240,6 +240,18 @@ InstructionTable::InstructionTable() :
         {
             const int8_t disp = static_cast<int8_t>(cpu->opcodes->b);
             cpu->registers->pc += disp;
+        }
+    ));
+
+    aH_aL.Register(0x4, 0x2, Instruction(
+        "BHI d:8",
+        2,
+        2,
+        [](const Cpu* cpu)
+        {
+            const int8_t disp = static_cast<int8_t>(cpu->opcodes->b);
+            if (!(cpu->flags->carry || cpu->flags->zero))
+                cpu->registers->pc += disp;
         }
     ));
 
@@ -303,6 +315,30 @@ InstructionTable::InstructionTable() :
        }
     ));
     
+    aH_aL.Register(0x4, 0xA, Instruction(
+       "BPL d:8",
+       2,
+       2,
+       [](const Cpu* cpu)
+       {
+           const int8_t disp = static_cast<int8_t>(cpu->opcodes->b);
+           if (!cpu->flags->negative)
+               cpu->registers->pc += disp;
+       }
+    ));
+    
+    aH_aL.Register(0x4, 0xB, Instruction(
+       "BMI d:8",
+       2,
+       2,
+       [](const Cpu* cpu)
+       {
+           const int8_t disp = static_cast<int8_t>(cpu->opcodes->b);
+           if (cpu->flags->negative)
+               cpu->registers->pc += disp;
+       }
+    ));
+    
     aH_aL.Register(0x4, 0xD, Instruction(
        "BLT d:8",
        2,
@@ -325,6 +361,26 @@ InstructionTable::InstructionTable() :
            uint16_t* rd = cpu->registers->Register16(cpu->opcodes->bL);
 
            *rd = (*rd & 0xFF) * *rs;
+           
+       }
+    ));
+    
+    aH_aL.Register(0x5, 0x1, Instruction(
+       "DIVXU.B Rs, Rd",
+       2,
+       1 + 20,
+       [](const Cpu* cpu)
+       {
+           const uint8_t* rs = cpu->registers->Register8(cpu->opcodes->bH);
+           uint16_t* rd = cpu->registers->Register16(cpu->opcodes->bL);
+
+           const uint16_t quotient = *rd / *rs;
+           const uint16_t remainder = *rd % *rs;
+
+           *rd = remainder << 8 | quotient;
+
+           cpu->flags->zero = quotient == 0;
+           cpu->flags->negative = quotient & Flags::NegativeMask(8);
            
        }
     ));
@@ -359,7 +415,7 @@ InstructionTable::InstructionTable() :
            *erd = remainder << 16 | quotient;
 
            cpu->flags->zero = quotient == 0;
-           cpu->flags->negative = quotient & 0x8000;
+           cpu->flags->negative = quotient & Flags::NegativeMask(16);
            
        }
     ));
@@ -450,6 +506,21 @@ InstructionTable::InstructionTable() :
             cpu->registers->PushStack();
             const uint16_t address = cpu->opcodes->b << 16 | cpu->opcodes->cd;
           cpu->registers->pc = address;
+        }
+    ));
+
+    aH_aL.Register(0x6, 0x5, Instruction(
+        "XOR.W Rs, Rd",
+        2,
+        1,
+        [](const Cpu* cpu)
+        {
+            const uint16_t* rs = cpu->registers->Register16(cpu->opcodes->bH);
+            uint16_t* rd = cpu->registers->Register16(cpu->opcodes->bL);
+
+            *rd ^= *rs;
+
+            cpu->flags->Mov(*rd);
         }
     ));
     
@@ -912,6 +983,21 @@ InstructionTable::InstructionTable() :
        }
     ));
 
+    aH_aL.Register({0xD}, {0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF}, Instruction(
+       "XOR.B #xx:8, Rd",
+       2,
+       1,
+       [](const Cpu* cpu)
+       {
+           const uint8_t imm = cpu->opcodes->b;
+           uint8_t* rd = cpu->registers->Register8(cpu->opcodes->aL);
+
+           *rd ^= imm;
+
+           cpu->flags->Mov(*rd);
+       }
+    ));
+
     aH_aL.Register({0xE}, {0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF}, Instruction(
         "AND.B #xx:8, Rd",
         2,
@@ -1146,7 +1232,6 @@ InstructionTable::InstructionTable() :
         [](Cpu* cpu)
         {
             cpu->sleeping = true;
-            std::println("Sleeping at 0x{:04X}", cpu->registers->pc);
         }
     ));
 
@@ -1187,6 +1272,19 @@ InstructionTable::InstructionTable() :
        }
     ));
 
+    aHaL_bH.Register(0xB, 0x7, Instruction(
+       "INC.L #1, Rd",
+       2,
+       1,
+       [](const Cpu* cpu)
+       {
+           uint32_t* rd = cpu->registers->Register32(cpu->opcodes->bL);
+           cpu->flags->Inc(*rd);
+        
+           *rd += 1;
+       }
+    ));
+
     aHaL_bH.Register(0xB, 0x8, Instruction(
        "ADDS #2, ERd",
        2,
@@ -1206,6 +1304,19 @@ InstructionTable::InstructionTable() :
        {
            uint32_t* erd = cpu->registers->Register32(cpu->opcodes->bL);
            *erd += 4;
+       }
+    ));
+
+    aHaL_bH.Register(0xB, 0xD, Instruction(
+       "INC.W #2, Rd",
+       2,
+       1,
+       [](const Cpu* cpu)
+       {
+           uint16_t* rd = cpu->registers->Register16(cpu->opcodes->bL);
+           cpu->flags->Inc(*rd);
+        
+           *rd += 2;
        }
     ));
     
@@ -1231,7 +1342,35 @@ InstructionTable::InstructionTable() :
        [](const Cpu* cpu)
        {
            uint8_t* rd = cpu->registers->Register8(cpu->opcodes->bL);
-           cpu->flags->carry = *rd & 0x80;
+           cpu->flags->carry = *rd & Flags::NegativeMask(8);
+           *rd <<= 1;
+           cpu->flags->Mov(*rd);
+
+       }
+    ));
+    
+    aHaL_bH.Register(0x10, 0x1, Instruction(
+       "SHLL.W Rd",
+       2,
+       1,
+       [](const Cpu* cpu)
+       {
+           uint16_t* rd = cpu->registers->Register16(cpu->opcodes->bL);
+           cpu->flags->carry = *rd & Flags::NegativeMask(16);
+           *rd <<= 1;
+           cpu->flags->Mov(*rd);
+
+       }
+    ));
+    
+    aHaL_bH.Register(0x10, 0x3, Instruction(
+       "SHLL.L Rd",
+       2,
+       1,
+       [](const Cpu* cpu)
+       {
+           uint32_t* rd = cpu->registers->Register32(cpu->opcodes->bL);
+           cpu->flags->carry = *rd & Flags::NegativeMask(32);
            *rd <<= 1;
            cpu->flags->Mov(*rd);
 
@@ -1437,6 +1576,18 @@ InstructionTable::InstructionTable() :
         }
     ));
 
+    aHaL_bH.Register(0x58, 0x3, Instruction(
+        "BLS d:16",
+        4,
+        2 + 2,
+        [](const Cpu* cpu)
+        {
+            const int16_t disp = static_cast<int16_t>(cpu->opcodes->cd);
+            if (cpu->flags->carry || cpu->flags->zero)
+                cpu->registers->pc += disp;
+        }
+    ));
+
     aHaL_bH.Register(0x58, 0x4, Instruction(
         "BCC d:16",
         4,
@@ -1445,6 +1596,18 @@ InstructionTable::InstructionTable() :
         {
             const int16_t disp = static_cast<int16_t>(cpu->opcodes->cd);
             if (!cpu->flags->carry)
+                cpu->registers->pc += disp;
+        }
+));
+
+    aHaL_bH.Register(0x58, 0x5, Instruction(
+        "BCS d:16",
+        4,
+        2 + 2,
+        [](const Cpu* cpu)
+        {
+            const int16_t disp = static_cast<int16_t>(cpu->opcodes->cd);
+            if (cpu->flags->carry)
                 cpu->registers->pc += disp;
         }
     ));
@@ -1542,6 +1705,21 @@ InstructionTable::InstructionTable() :
         }
     ));
 
+    aHaL_bH.Register(0x79, 0x4, Instruction(
+        "OR.W #xx:16, Rd",
+        4,
+        2,
+        [](const Cpu* cpu)
+        {
+            const uint16_t imm = cpu->opcodes->cd;
+            uint16_t* rd = cpu->registers->Register16(cpu->opcodes->bL);
+
+            *rd |= imm;
+            
+            cpu->flags->Mov(*rd);
+        }
+    ));
+
     aHaL_bH.Register(0x79, 0x6, Instruction(
         "AND.W #xx:16, Rd",
         4,
@@ -1585,6 +1763,22 @@ InstructionTable::InstructionTable() :
 
            *erd += imm;
        }
+    ));
+
+    aHaLbHbLcH_cL.Register(0x1C05, 0x2, Instruction(
+        "MULXS.W Rs, ERd",
+        4,
+        2 + 20,
+        [](const Cpu* cpu)
+        {
+            uint16_t* rs = cpu->registers->Register16(cpu->opcodes->dH);
+            uint32_t* erd = cpu->registers->Register32(cpu->opcodes->dL);
+
+            *erd = (*erd & 0xFFFF) * *rs;
+
+            cpu->flags->zero = *erd == 0;
+            cpu->flags->negative = *erd & Flags::NegativeMask(32);
+        }
     ));
 
     aHaLbHbLcH_cL.Register(0x1D05, 0x3, Instruction(

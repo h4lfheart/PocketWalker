@@ -12,6 +12,8 @@ constexpr uint16_t IENR2_ADDR = 0xFFF4;
 constexpr uint16_t IRR1_ADDR = 0xFFF6;
 constexpr uint16_t IRR2_ADDR = 0xFFF7;
 
+constexpr uint16_t RTC_ADDR = 0xF067;
+
 namespace InterruptFlags
 {
     enum Enable1 : uint8_t
@@ -36,6 +38,15 @@ namespace InterruptFlags
     {
         FLAG_TIMER_B1 = 1 << 2
     };
+
+    enum Rtc : uint8_t
+    {
+        FLAG_HOUR = 1 << 4,
+        FLAG_MINUTE = 1 << 3,
+        FLAG_SECOND = 1 << 2,
+        FLAG_HALF_SECOND = 1 << 1,
+        FLAG_QUARTER_SECOND = 1 << 0
+    };
 }
 
 
@@ -46,7 +57,8 @@ public:
         enable1(ram->CreateAccessor<uint8_t>(IENR1_ADDR)),
         enable2(ram->CreateAccessor<uint8_t>(IENR2_ADDR)),
         flag1(ram->CreateAccessor<uint8_t>(IRR1_ADDR)),
-        flag2(ram->CreateAccessor<uint8_t>(IRR2_ADDR))
+        flag2(ram->CreateAccessor<uint8_t>(IRR2_ADDR)),
+        rtcFlag(ram->CreateAccessor<uint8_t>(RTC_ADDR))
     {
         
     }
@@ -61,6 +73,7 @@ public:
     MemoryAccessor<uint8_t> enable2;
     MemoryAccessor<uint8_t> flag1;
     MemoryAccessor<uint8_t> flag2;
+    MemoryAccessor<uint8_t> rtcFlag;
 
 private:
     Memory* ram;

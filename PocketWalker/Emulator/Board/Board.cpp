@@ -1,6 +1,8 @@
 
 #include "Board.h"
 
+#include "../Rtc/Rtc.h"
+
 
 void Board::Tick(uint64_t cycles)
 {
@@ -17,5 +19,10 @@ void Board::Tick(uint64_t cycles)
     if (cycles % (Cpu::TICKS / Timer::TICKS) == 0)
     {
         timer->Tick();
+    }
+
+    if (cycles % (Cpu::TICKS / Rtc::TICKS) == 0)
+    {
+        rtc->Tick();
     }
 }

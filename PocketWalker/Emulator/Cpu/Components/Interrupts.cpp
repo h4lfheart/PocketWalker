@@ -12,6 +12,29 @@ void Interrupts::Update(Cpu* cpu)
     {
         Interrupt(cpu, cpu->vectorTable->irq1);
     }
+    else if (enable1 & InterruptFlags::ENABLE_RTC)
+    {
+        if (rtcFlag & InterruptFlags::FLAG_QUARTER_SECOND)
+        {
+            Interrupt(cpu, cpu->vectorTable->quarterSecond);
+        }
+        else if (rtcFlag & InterruptFlags::FLAG_HALF_SECOND)
+        {
+            Interrupt(cpu, cpu->vectorTable->halfSecond);
+        }
+        else if (rtcFlag & InterruptFlags::FLAG_SECOND)
+        {
+            Interrupt(cpu, cpu->vectorTable->second);
+        }
+        else if (rtcFlag & InterruptFlags::FLAG_MINUTE)
+        {
+            Interrupt(cpu, cpu->vectorTable->minute);
+        }
+        else if (rtcFlag & InterruptFlags::FLAG_HOUR)
+        {
+            Interrupt(cpu, cpu->vectorTable->hour);
+        }
+    }
     else if (enable2 & InterruptFlags::ENABLE_TIMER_B1 && flag2 & InterruptFlags::FLAG_TIMER_B1)
     {
         Interrupt(cpu, cpu->vectorTable->timerB1);

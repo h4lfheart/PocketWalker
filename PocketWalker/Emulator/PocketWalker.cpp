@@ -5,15 +5,12 @@ PocketWalker::PocketWalker(uint8_t* ramBuffer, uint8_t* eepromBuffer): board(new
     
 }
 
-void PocketWalker::Run()
+void PocketWalker::Step()
 {
-    while (this->running)
+    const uint8_t cpuCycles = this->board->cpu->Step();
+    for (auto i = 0; i < cpuCycles; i++)
     {
-        const uint8_t cpuCycles = this->board->cpu->Step();
-        for (auto i = 0; i < cpuCycles; i++)
-        {
-            this->cycles++;
-            this->board->Tick(this->cycles);
-        }
+        this->cycles++;
+        this->board->Tick(this->cycles);
     }
 }

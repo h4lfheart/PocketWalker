@@ -99,7 +99,10 @@ public:
 
     void RegisterPeripheral(SsuFlags::Port port, uint8_t pin, PeripheralComponent* component);
 
+    uint8_t GetPort(uint16_t address);
+
     size_t clockRate = 4;
+    uint8_t progress;
     
     MemoryAccessor<uint8_t> mode;
     MemoryAccessor<uint8_t> enable;
