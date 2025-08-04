@@ -2,8 +2,11 @@
 #include <fstream>
 #include <ios>
 #include <print>
+#include <cmath>
+#include <atomic>
 
 #define SDL_MAIN_HANDLED
+#include <algorithm>
 #include <thread>
 
 #include "../external/SDL/include/SDL.h"
@@ -12,6 +15,92 @@
 
 const std::string romPath = "C:/walker.bin";
 const std::string eepromPath = "C:/Users/Max/Desktop/eep.rom";
+
+const int AUDIO_RENDER_FREQUENCY = 256;
+const int SAMPLE_RATE = 44100;
+const int BASE_AMPLITUDE = 32768 / 2;
+const int TARGET_LATENCY = 10;
+const int MIN_FREQUENCY = 100;
+const int MAX_FREQUENCY = 20000;
+
+class WalkerAudio {
+private:
+    SDL_AudioDeviceID audioDevice;
+    float currentPhase = 0.0f;
+    float lastFreq = 0.0f;
+    
+public:
+    WalkerAudio() {
+        SDL_AudioSpec desiredSpec, obtainedSpec;
+        SDL_zero(desiredSpec);
+        desiredSpec.freq = SAMPLE_RATE;
+        desiredSpec.format = AUDIO_S16SYS;
+        desiredSpec.channels = 1;
+        desiredSpec.samples = 1024;
+        desiredSpec.callback = nullptr;
+        
+        audioDevice = SDL_OpenAudioDevice(nullptr, 0, &desiredSpec, &obtainedSpec, 0);
+        if (audioDevice == 0) {
+            printf("Failed to open audio device: %s\n", SDL_GetError());
+            return;
+        }
+        
+        SDL_PauseAudioDevice(audioDevice, 0); // Start playback
+    }
+    
+    ~WalkerAudio() {
+        if (audioDevice != 0) {
+            SDL_CloseAudioDevice(audioDevice);
+        }
+    }
+    
+    void render(float frequency, float volumeMultiplier = 1.0f, float speed = 1.0f) {
+        if (frequency != lastFreq) {
+            lastFreq = frequency;
+            currentPhase = 0.0f;
+        }
+        
+        int sampleCount = static_cast<int>(std::ceil(SAMPLE_RATE / (AUDIO_RENDER_FREQUENCY * speed)));
+        
+        Uint32 queuedBytes = SDL_GetQueuedAudioSize(audioDevice);
+        float latency = (queuedBytes / 2.0f) / (SAMPLE_RATE / 1000.0f);
+        
+        if (latency > TARGET_LATENCY) {
+            sampleCount = std::max(1, sampleCount - 1);
+        } else if (latency < TARGET_LATENCY / 2.0f) {
+            sampleCount += 1;
+        }
+        
+        std::vector<int16_t> audioBuffer(sampleCount);
+        float targetAmplitude = BASE_AMPLITUDE * volumeMultiplier;
+        
+        if (frequency >= MIN_FREQUENCY && frequency <= MAX_FREQUENCY) {
+            const float samplesPerCycle = SAMPLE_RATE / frequency;
+            const float nyquistFreq = SAMPLE_RATE / 2.0f;
+            const int maxHarmonic = static_cast<int>(std::floor(nyquistFreq / frequency));
+            
+            for (int i = 0; i < sampleCount; i++) {
+                const float time = (currentPhase + i) / SAMPLE_RATE;
+                float sample = 0.0f;
+                
+                for (int h = 1; h <= maxHarmonic; h += 2) {
+                    sample += std::sin(2.0f * M_PI * frequency * h * time) / h;
+                }
+                
+                sample = (sample * 4.0f / M_PI) * targetAmplitude;
+                audioBuffer[i] = static_cast<int16_t>(std::clamp(sample, -32768.0f, 32767.0f));
+            }
+            
+            currentPhase += sampleCount;
+            currentPhase = std::fmod(currentPhase, samplesPerCycle);
+        } else {
+            std::fill(audioBuffer.begin(), audioBuffer.end(), 0);
+        }
+        
+        // Queue the audio data
+        SDL_QueueAudio(audioDevice, audioBuffer.data(), audioBuffer.size() * sizeof(int16_t));
+    }
+};
 
 int main(int argc, char* argv[])
 {
@@ -37,7 +126,6 @@ int main(int argc, char* argv[])
         printf("SDL_LockTexture error: %s\n", SDL_GetError());
         return 1;
     }
-
 
     auto pixel_ptr = static_cast<uint8_t*>(pixels);
     int width = baseWidth;
@@ -65,6 +153,7 @@ int main(int argc, char* argv[])
     eepromFile.read(reinterpret_cast<char*>(eepromBuffer.data()), eepromBuffer.size());
     
     PocketWalker emulator(romBuffer.data(), eepromBuffer.data());
+    WalkerAudio audio; // Create audio instance
 
     emulator.board->lcd->onDraw = [&](uint8_t* data)
     {
@@ -105,6 +194,11 @@ int main(int argc, char* argv[])
             constexpr auto frameTimeDuration = std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::duration<double, std::milli>(FRAME_TIME_MS)
             );
+
+            emulator.board->renderAudio = [&](float frequency)
+            {
+                audio.render(frequency, 0.3f); // 0.3f volume multiplier
+            };
             
             while (running)
             {
@@ -113,6 +207,7 @@ int main(int argc, char* argv[])
                 while (emulator.cycles - frameStartCycles < CYCLES_PER_FRAME) {
                     emulator.Step();
                 }
+               
                 
                 nextFrameTime += frameTimeDuration;
                 const auto now = std::chrono::high_resolution_clock::now();
@@ -145,8 +240,6 @@ int main(int argc, char* argv[])
                         break;
                 }
                 case SDLK_DOWN: {
-                        //emulator.board->cpu->interrupts->flag1 |= InterruptFlags::FLAG_IRQ0;
-
                         emulator.board->ram->WriteByte(0xFFDE, 1 << 0);
                         break;
                 }
@@ -162,7 +255,7 @@ int main(int argc, char* argv[])
         SDL_RenderCopy(renderer, texture, NULL, NULL);
         SDL_RenderPresent(renderer);
     }
-
+    
     SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);

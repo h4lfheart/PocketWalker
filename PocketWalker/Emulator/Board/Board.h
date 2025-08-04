@@ -43,6 +43,8 @@ public:
  
     void Tick(uint64_t cycles);
 
+    std::function<void(float)> renderAudio;
+
     Memory* ram;
     Cpu* cpu;
     Ssu* ssu;

@@ -27,4 +27,9 @@ void Board::Tick(uint64_t cycles)
     {
         rtc->Tick();
     }
+
+    if (cycles % (Cpu::TICKS / 256) == 0)
+    {
+        renderAudio(timer->w->isCounting ? 31500.0f / timer->w->registerA : 0);
+    }
 }
