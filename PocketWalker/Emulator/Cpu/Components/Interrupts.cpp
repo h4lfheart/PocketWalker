@@ -12,32 +12,33 @@ void Interrupts::Update(Cpu* cpu)
     {
         Interrupt(cpu, cpu->vectorTable->irq1);
     }
-    else if (enable1 & InterruptFlags::ENABLE_RTC)
+    else if (enable1 & InterruptFlags::ENABLE_RTC && rtcFlag & InterruptFlags::FLAG_QUARTER_SECOND)
     {
-        if (rtcFlag & InterruptFlags::FLAG_QUARTER_SECOND)
-        {
-            Interrupt(cpu, cpu->vectorTable->quarterSecond);
-        }
-        else if (rtcFlag & InterruptFlags::FLAG_HALF_SECOND)
-        {
-            Interrupt(cpu, cpu->vectorTable->halfSecond);
-        }
-        else if (rtcFlag & InterruptFlags::FLAG_SECOND)
-        {
-            Interrupt(cpu, cpu->vectorTable->second);
-        }
-        else if (rtcFlag & InterruptFlags::FLAG_MINUTE)
-        {
-            Interrupt(cpu, cpu->vectorTable->minute);
-        }
-        else if (rtcFlag & InterruptFlags::FLAG_HOUR)
-        {
-            Interrupt(cpu, cpu->vectorTable->hour);
-        }
+        Interrupt(cpu, cpu->vectorTable->quarterSecond);
+    }
+    else if (enable1 & InterruptFlags::ENABLE_RTC && rtcFlag & InterruptFlags::FLAG_HALF_SECOND)
+    {
+        Interrupt(cpu, cpu->vectorTable->halfSecond);
+    }
+    else if (enable1 & InterruptFlags::ENABLE_RTC && rtcFlag & InterruptFlags::FLAG_SECOND)
+    {
+        Interrupt(cpu, cpu->vectorTable->second);
+    }
+    else if (enable1 & InterruptFlags::ENABLE_RTC && rtcFlag & InterruptFlags::FLAG_MINUTE)
+    {
+        Interrupt(cpu, cpu->vectorTable->minute);
+    }
+    else if (enable1 & InterruptFlags::ENABLE_RTC && rtcFlag & InterruptFlags::FLAG_HOUR)
+    {
+        Interrupt(cpu, cpu->vectorTable->hour);
     }
     else if (enable2 & InterruptFlags::ENABLE_TIMER_B1 && flag2 & InterruptFlags::FLAG_TIMER_B1)
     {
         Interrupt(cpu, cpu->vectorTable->timerB1);
+    }
+    else if (enableTimerW & InterruptFlags::ENABLE_TIMER_W_REGISTER_A && flagTimerW & InterruptFlags::FLAG_TIMER_W_REGISTER_A)
+    {
+        Interrupt(cpu, cpu->vectorTable->timerW);
     }
 }
 

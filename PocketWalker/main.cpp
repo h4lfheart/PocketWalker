@@ -98,9 +98,29 @@ int main(int argc, char* argv[])
     {
         try
         {
+            constexpr int TARGET_FPS = 4;
+            constexpr double FRAME_TIME_MS = 1000.0 / TARGET_FPS;
+            constexpr int CYCLES_PER_FRAME = Cpu::TICKS / TARGET_FPS;
+            auto nextFrameTime = std::chrono::high_resolution_clock::now();
+            constexpr auto frameTimeDuration = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::duration<double, std::milli>(FRAME_TIME_MS)
+            );
+            
             while (running)
             {
-                emulator.Step();
+                const int frameStartCycles = emulator.cycles;
+                
+                while (emulator.cycles - frameStartCycles < CYCLES_PER_FRAME) {
+                    emulator.Step();
+                }
+                
+                nextFrameTime += frameTimeDuration;
+                const auto now = std::chrono::high_resolution_clock::now();
+                const auto sleepTime = nextFrameTime - now;
+                
+                if (sleepTime > std::chrono::nanoseconds(0)) {
+                    std::this_thread::sleep_for(sleepTime);
+                }
             }
         }
         catch (const std::exception& e)
@@ -125,10 +145,7 @@ int main(int argc, char* argv[])
                         break;
                 }
                 case SDLK_DOWN: {
-                        if (!emulator.board->cpu->flags->interrupt)
-                        {
-                            emulator.board->cpu->interrupts->flag1 |= InterruptFlags::FLAG_IRQ0;
-                        }
+                        //emulator.board->cpu->interrupts->flag1 |= InterruptFlags::FLAG_IRQ0;
 
                         emulator.board->ram->WriteByte(0xFFDE, 1 << 0);
                         break;

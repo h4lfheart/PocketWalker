@@ -202,6 +202,21 @@ InstructionTable::InstructionTable() :
             cpu->flags->Sub(*rd, *rs);
         }
     ));
+
+    aH_aL.Register(0x1, 0xE, Instruction(
+        "SUBX Rs, Rd",
+        2,
+        1,
+        [](const Cpu* cpu)
+        {
+            const uint8_t* rs = cpu->registers->Register8(cpu->opcodes->bH);
+            uint8_t* rd = cpu->registers->Register8(cpu->opcodes->bL);
+
+            *rd -= *rs + cpu->flags->carry;
+
+            cpu->flags->Sub(*rd, static_cast<uint8_t>(*rs + cpu->flags->carry));
+        }
+    ));
     
     aH_aL.Register({0x2}, {0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF}, Instruction(
        "MOV.B @aa:8, Rd",
@@ -339,6 +354,18 @@ InstructionTable::InstructionTable() :
        }
     ));
     
+    aH_aL.Register(0x4, 0xC, Instruction(
+       "BGE d:8",
+       2,
+       2,
+       [](const Cpu* cpu)
+       {
+           const int8_t disp = static_cast<int8_t>(cpu->opcodes->b);
+           if (cpu->flags->negative == cpu->flags->overflow)
+               cpu->registers->pc += disp;
+       }
+    ));
+    
     aH_aL.Register(0x4, 0xD, Instruction(
        "BLT d:8",
        2,
@@ -347,6 +374,30 @@ InstructionTable::InstructionTable() :
        {
            const int8_t disp = static_cast<int8_t>(cpu->opcodes->b);
            if (cpu->flags->negative != cpu->flags->overflow)
+               cpu->registers->pc += disp;
+       }
+    ));
+    
+    aH_aL.Register(0x4, 0xE, Instruction(
+       "BGT d:8",
+       2,
+       2,
+       [](const Cpu* cpu)
+       {
+           const int8_t disp = static_cast<int8_t>(cpu->opcodes->b);
+           if (!(cpu->flags->zero || (cpu->flags->negative != cpu->flags->overflow)))
+               cpu->registers->pc += disp;
+       }
+    ));
+    
+    aH_aL.Register(0x4, 0xF, Instruction(
+       "BLE d:8",
+       2,
+       2,
+       [](const Cpu* cpu)
+       {
+           const int8_t disp = static_cast<int8_t>(cpu->opcodes->b);
+           if (cpu->flags->zero || (cpu->flags->negative != cpu->flags->overflow))
                cpu->registers->pc += disp;
        }
     ));
@@ -523,6 +574,19 @@ InstructionTable::InstructionTable() :
             cpu->flags->Mov(*rd);
         }
     ));
+    
+    aH_aL.Register(0x6, 0x0, Instruction(
+       "BSET Rn, Rd",
+       2,
+       1,
+       [](const Cpu* cpu)
+       {
+           uint8_t* rn = cpu->registers->Register8(cpu->opcodes->bH);
+           uint8_t* rd = cpu->registers->Register8(cpu->opcodes->bL);
+
+           *rd |= 1 << *rn;
+       }
+    ));
 
     aH_aL.Register(0x6, 0x5, Instruction(
         "XOR.W Rs, Rd",
@@ -538,6 +602,43 @@ InstructionTable::InstructionTable() :
             cpu->flags->Mov(*rd);
         }
     ));
+
+    aH_aL.Register(0x6, 0x6, Instruction(
+        "AND.W Rs, Rd",
+        2,
+        1,
+        [](const Cpu* cpu)
+        {
+            const uint16_t* rs = cpu->registers->Register16(cpu->opcodes->bH);
+            uint16_t* rd = cpu->registers->Register16(cpu->opcodes->bL);
+
+            *rd &= *rs;
+
+            cpu->flags->Mov(*rd);
+        }
+    ));
+
+    aH_aL.Register(0x6, 0x7, Instruction(
+        "BST #xx:3, Rd",
+        2,
+        1,
+        [](const Cpu* cpu)
+        {
+            const uint8_t imm = cpu->opcodes->bH & 0b111;
+            uint8_t* rd = cpu->registers->Register8(cpu->opcodes->bL);
+
+            const bool isInverted = cpu->opcodes->dH & 0b1000;
+            if (isInverted ? !cpu->flags->carry : cpu->flags->carry)
+            {
+                *rd |= (1 << imm);
+            }
+            else
+            {
+                *rd &= ~(1 << imm);
+            }
+        }
+    ));
+    
     
     aH_aL.Register(0x6, 0x8, new InstructionContainer(
         "MOV.B @ERs, Rd / MOV.B Rs, @ERd",
@@ -1420,6 +1521,20 @@ InstructionTable::InstructionTable() :
        }
     ));
     
+    aHaL_bH.Register(0x11, 0x3, Instruction(
+       "SHLR.L ERd",
+       2,
+       1,
+       [](const Cpu* cpu)
+       {
+           uint32_t* rd = cpu->registers->Register32(cpu->opcodes->bL);
+           cpu->flags->carry = *rd & 1;
+           *rd >>= 1;
+           cpu->flags->Mov(*rd);
+
+       }
+    ));
+    
     aHaL_bH.Register(0x11, 0x9, Instruction(
        "SHAR.W Rd",
        2,
@@ -1437,16 +1552,47 @@ InstructionTable::InstructionTable() :
        }
     ));
     
-    aHaL_bH.Register(0x17, 0x5, Instruction(
-        "EXTU.W ERd",
+    aHaL_bH.Register(0x12, 0x8, Instruction(
+       "ROTL.B Rd",
+       2,
+       1,
+       [](const Cpu* cpu)
+       {
+           uint8_t* rd = cpu->registers->Register8(cpu->opcodes->bL);
+
+           const uint8_t msb = (*rd >> 7) & 1;
+           *rd = (*rd << 1) | msb;
+           
+           cpu->flags->carry = msb;
+           cpu->flags->Mov(*rd);
+
+       }
+    ));
+    
+    aHaL_bH.Register(0x17, 0x0, Instruction(
+        "NOT.B Rd",
         2,
         1,
         [](const Cpu* cpu)
         {
-            uint16_t* erd = cpu->registers->Register16(cpu->opcodes->bL);
-            *erd &= 0xFF;
+            uint8_t* rd = cpu->registers->Register8(cpu->opcodes->bL);
+            *rd = ~*rd;
 
-            cpu->flags->Mov(*erd);
+            cpu->flags->Mov(*rd);
+
+        }
+    ));
+    
+    aHaL_bH.Register(0x17, 0x5, Instruction(
+        "EXTU.W Rd",
+        2,
+        1,
+        [](const Cpu* cpu)
+        {
+            uint16_t* rd = cpu->registers->Register16(cpu->opcodes->bL);
+            *rd &= 0xFF;
+
+            cpu->flags->Mov(*rd);
 
         }
     ));
@@ -1465,6 +1611,23 @@ InstructionTable::InstructionTable() :
         }
     ));
 
+    aHaL_bH.Register(0x17, 0x8, Instruction(
+        "NEG.B",
+        2,
+        1,
+        [](const Cpu* cpu)
+        {
+            uint8_t* rd = cpu->registers->Register8(cpu->opcodes->bL);
+            if (*rd != Flags::NegativeMask(8))
+            {
+                cpu->flags->Sub(static_cast<uint8_t>(0), *rd);
+            
+                *rd = -*rd;
+            }
+            
+        }
+    ));
+
     aHaL_bH.Register(0x17, 0x9, Instruction(
         "NEG.W Rd",
         2,
@@ -1472,7 +1635,7 @@ InstructionTable::InstructionTable() :
         [](const Cpu* cpu)
         {
             uint16_t* rd = cpu->registers->Register16(cpu->opcodes->bL);
-            if (*rd != 0x8000)
+            if (*rd != Flags::NegativeMask(16))
             {
                 cpu->flags->Sub(static_cast<uint16_t>(0), *rd);
             
@@ -1579,6 +1742,19 @@ InstructionTable::InstructionTable() :
        }
     ));
 
+    aHaL_bH.Register({0x1F}, {0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF}, Instruction(
+       "CMP.L ERs, ERd",
+       2,
+       1,
+       [](const Cpu* cpu)
+       {
+           uint32_t* ers = cpu->registers->Register32(cpu->opcodes->bH);
+           uint32_t* erd = cpu->registers->Register32(cpu->opcodes->bL);
+
+           cpu->flags->Sub(*erd, *ers);
+       }
+    ));
+
     aHaL_bH.Register(0x58, 0x2, Instruction(
         "BHI d:16",
         4,
@@ -1647,6 +1823,18 @@ InstructionTable::InstructionTable() :
         {
             const int16_t disp = static_cast<int16_t>(cpu->opcodes->cd);
             if (cpu->flags->zero)
+                cpu->registers->pc += disp;
+        }
+    ));
+
+    aHaL_bH.Register(0x58, 0xC, Instruction(
+        "BGE d:16",
+        4,
+        2 + 2,
+        [](const Cpu* cpu)
+        {
+            const int16_t disp = static_cast<int16_t>(cpu->opcodes->cd);
+            if (cpu->flags->negative == cpu->flags->overflow)
                 cpu->registers->pc += disp;
         }
     ));
@@ -1777,6 +1965,19 @@ InstructionTable::InstructionTable() :
            cpu->flags->Add(*erd, imm);
 
            *erd += imm;
+       }
+    ));
+
+    aHaL_bH.Register(0x7A, 0x2, Instruction(
+       "CMP.L #xx:32, ERd",
+       6,
+       3,
+       [](const Cpu* cpu)
+       {
+           const uint32_t imm = cpu->opcodes->cd << 16 | cpu->opcodes->ef;
+           uint32_t* erd = cpu->registers->Register32(cpu->opcodes->bL);
+           
+           cpu->flags->Sub(*erd, imm);
        }
     ));
 

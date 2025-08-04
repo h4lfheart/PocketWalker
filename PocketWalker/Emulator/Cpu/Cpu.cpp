@@ -38,9 +38,9 @@ size_t Cpu::Step()
     // add watts
     if (registers->pc == 0x9A4E)
     {
-        if (ram->ReadByte(0xF78E) == 0)
+        if (ram->ReadShort(0xF78E) == 0)
         {
-            ram->WriteByte(0xF78E, 255);
+            ram->WriteShort(0xF78E, 255);
         }
     }
 
