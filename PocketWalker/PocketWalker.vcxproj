@@ -163,6 +163,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Emulator\Adc\Adc.cpp" />
     <ClCompile Include="Emulator\Board\Board.cpp" />
     <ClCompile Include="Emulator\Board\Component.cpp" />
     <ClCompile Include="Emulator\Cpu\Components\Flags.cpp" />
@@ -192,6 +193,7 @@
     <ClCompile Include="Tcp\TcpSocket.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Emulator\Adc\Adc.h" />
     <ClInclude Include="Emulator\Board\Board.h" />
     <ClInclude Include="Emulator\Board\Component.h" />
     <ClInclude Include="Emulator\Cpu\Components\Flags.h" />

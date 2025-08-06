@@ -249,13 +249,6 @@ int main(int argc, char* argv[])
 
         while (emulatorRunning) {
             if (!socket.isConnected()) {
-                if (serverMode) {
-                    // For server mode, reconnect means restarting the server
-                    std::println("[TCP] Attempting to restart server...");
-                } else {
-                    // For client mode, reconnect means trying to connect again
-                    std::println("[TCP] Attempting to reconnect to server...");
-                }
                 socket.reconnect();
             }
             

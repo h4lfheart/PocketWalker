@@ -8,10 +8,12 @@
 #include "../Peripherals/Lcd/Lcd.h"
 #include "../Peripherals/Lcd/LcdData.h"
 #include "../Rtc/Rtc.h"
+#include "../Adc/Adc.h"
 #include "../Sci3/Sci3.h"
 #include "../Ssu/Ssu.h"
 #include "../Timers/Timer.h"
 
+class Adc;
 class Lcd;
 class Cpu;
 class Ssu;
@@ -27,6 +29,7 @@ public:
         cpu = new Cpu(ram);
         ssu = new Ssu(ram);
         sci3 = new Sci3(ram);
+        adc = new Adc(ram);
         timer = new Timer(ram, cpu->interrupts);
         rtc = new Rtc(ram, cpu->interrupts);
 
@@ -54,6 +57,7 @@ public:
     Sci3* sci3;
     Timer* timer;
     Rtc* rtc;
+    Adc* adc;
     
     Accelerometer* accelerometer;
     Eeprom* eeprom;

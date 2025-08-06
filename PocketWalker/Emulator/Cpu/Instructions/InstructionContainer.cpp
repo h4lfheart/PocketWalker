@@ -37,6 +37,8 @@ Instruction* InstructionContainer::Execute(Cpu* cpu)
         instruction->postExecute(cpu);
     }
 
+    //std::println("0x{:04X} {}", preExecuteLocation, instruction->name);
+    
     return instruction;
 }
 
