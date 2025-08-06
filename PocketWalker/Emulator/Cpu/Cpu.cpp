@@ -25,6 +25,12 @@ size_t Cpu::Step()
         this->registers->pc += 2;
         return cycleCount;
     }
+    
+    if (registers->pc == 0x8EE) // hacky fix for ir sending
+    {
+        this->registers->pc += 2;
+        return cycleCount;
+    }
 
     // remove input
     if (registers->pc == 0x9C3E)
@@ -40,15 +46,9 @@ size_t Cpu::Step()
     {
         if (ram->ReadShort(0xF78E) == 0)
         {
-            ram->WriteShort(0xF78E, 255);
+            ram->WriteShort(0xF78E, 0xFFFF);
         }
     }
-
-    if (registers->pc == 0x2020)
-    {
-        //__debugbreak();
-    }
-    
     
     if (!sleeping)
     {

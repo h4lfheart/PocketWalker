@@ -3,14 +3,9 @@
 #include <format>
 #include <stdexcept>
 #include <print>
+#include <queue>
 
 #include "../Cpu.h"
-
-
-bool start = false;
-
-size_t debugStart = 0;
-size_t debugLength = 1000;
 
 Instruction* InstructionContainer::Execute(Cpu* cpu)
 {
@@ -41,28 +36,6 @@ Instruction* InstructionContainer::Execute(Cpu* cpu)
     {
         instruction->postExecute(cpu);
     }
-    
-    if (cpu->registers->pc == 0x1fee && !start)
-    {
-        start = true;
-        debugStart = cpu->instructionCount;
-    }
-
-    if (start && cpu->instructionCount >= debugStart && cpu->instructionCount < debugStart + debugLength)
-    {
-        //std::println("{} - 0x{:04X} - {} ", cpu->instructionCount, preExecuteLocation, instruction->name, *cpu->registers->sp, cpu->ram->ReadShort(*cpu->registers->sp));
-
-        /*std::string erString = std::format("{} - 0x{:04X} - ", cpu->instructionCount, cpu->registers->pc);
-        for (int i = 0; i < 8; ++i) {
-            erString += std::format("ER{}: [0x{:08X}], ", i, *cpu->registers->Register32(i));
-        }
-
-        std::println("{}", erString);*/
-    }
-
-    
-
-    //std::println("0x{:04X} {}", preExecuteLocation, instruction->name);
 
     return instruction;
 }

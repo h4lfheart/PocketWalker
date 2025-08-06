@@ -57,6 +57,6 @@ public:
     uint16_t offset;
 
     static constexpr uint8_t PIN = 1 << 2;
-private:
+    
     Memory* memory;
 };

@@ -8,7 +8,7 @@ class PocketWalker
 public:
     PocketWalker(uint8_t* ramBuffer, uint8_t* eepromBuffer);
 
-    void Step();
+    uint8_t Step();
 
     Board* board;
     uint64_t cycles;

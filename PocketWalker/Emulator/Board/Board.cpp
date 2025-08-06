@@ -17,6 +17,11 @@ void Board::Tick(uint64_t cycles)
         timer->Tick();
     }
 
+    if (cycles % (Cpu::TICKS / Sci3::TICKS) == 0)
+    {
+        sci3->Tick();
+    }
+
     if (cycles % (Cpu::TICKS / Lcd::TICKS) == 0)
     {
         lcd->Tick();

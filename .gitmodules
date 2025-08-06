@@ -2,3 +2,6 @@
 	path = external/SDL
 	url = https://github.com/libsdl-org/SDL.git
 	branch = release-2.32.x
+[submodule "external/sockpp"]
+	path = external/sockpp
+	url = https://github.com/fpagliughi/sockpp

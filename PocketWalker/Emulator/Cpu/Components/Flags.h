@@ -64,7 +64,7 @@ public:
         const uint32_t result = value + inc;
         
         negative = result & negativeMask;
-        zero = result == zero;
+        zero = result == 0;
         overflow = value == (negativeMask >> 1) - 1;
     }
 
@@ -75,7 +75,7 @@ public:
         const uint32_t result = value - dec;
         
         negative = result & negativeMask;
-        zero = result == zero;
+        zero = result == 0;
         overflow = value == negativeMask;
     }
     

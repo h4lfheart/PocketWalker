@@ -8,6 +8,7 @@
 #include "../Peripherals/Lcd/Lcd.h"
 #include "../Peripherals/Lcd/LcdData.h"
 #include "../Rtc/Rtc.h"
+#include "../Sci3/Sci3.h"
 #include "../Ssu/Ssu.h"
 #include "../Timers/Timer.h"
 
@@ -22,8 +23,10 @@ public:
     Board(uint8_t* ramBuffer, uint8_t* eepromBuffer)
     {
         ram = new Memory(ramBuffer);
+        ram->name = "Ram";
         cpu = new Cpu(ram);
         ssu = new Ssu(ram);
+        sci3 = new Sci3(ram);
         timer = new Timer(ram, cpu->interrupts);
         rtc = new Rtc(ram, cpu->interrupts);
 
@@ -48,6 +51,7 @@ public:
     Memory* ram;
     Cpu* cpu;
     Ssu* ssu;
+    Sci3* sci3;
     Timer* timer;
     Rtc* rtc;
     

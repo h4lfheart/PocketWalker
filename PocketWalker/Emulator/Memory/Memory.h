@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <functional>
+#include <string>
 
 #include "MemoryAccessor.h"
 
@@ -42,9 +43,10 @@ public:
     void WriteShort(uint16_t address, uint16_t value) const;
     void WriteInt(uint16_t address, uint32_t value) const;
 
-private:
+    std::string name = "Memory";
     uint8_t* buffer;
 
+private:
     std::unordered_map<uint16_t, MemoryHandler> readHandlers;
     std::unordered_map<uint16_t, MemoryHandler> writeHandlers;
 };

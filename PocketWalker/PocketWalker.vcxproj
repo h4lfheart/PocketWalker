@@ -183,11 +183,13 @@
     <ClCompile Include="Emulator\Peripherals\PeripheralComponent.cpp" />
     <ClCompile Include="Emulator\PocketWalker.cpp" />
     <ClCompile Include="Emulator\Rtc\Rtc.cpp" />
+    <ClCompile Include="Emulator\Sci3\Sci3.cpp" />
     <ClCompile Include="Emulator\Ssu\Ssu.cpp" />
     <ClCompile Include="Emulator\Timers\Components\TimerB1.cpp" />
     <ClCompile Include="Emulator\Timers\Components\TimerW.cpp" />
     <ClCompile Include="Emulator\Timers\Timer.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Tcp\TcpSocket.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Emulator\Board\Board.h" />
@@ -210,10 +212,12 @@
     <ClInclude Include="Emulator\Peripherals\PeripheralComponent.h" />
     <ClInclude Include="Emulator\PocketWalker.h" />
     <ClInclude Include="Emulator\Rtc\Rtc.h" />
+    <ClInclude Include="Emulator\Sci3\Sci3.h" />
     <ClInclude Include="Emulator\Ssu\Ssu.h" />
     <ClInclude Include="Emulator\Timers\Components\TimerB1.h" />
     <ClInclude Include="Emulator\Timers\Components\TimerW.h" />
     <ClInclude Include="Emulator\Timers\Timer.h" />
+    <ClInclude Include="Tcp\TcpSocket.h" />
     <ClInclude Include="Utilities\ArrayUtilities.h" />
     <ClInclude Include="Utilities\BitUtilities.h" />
   </ItemGroup>

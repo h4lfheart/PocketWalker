@@ -1,5 +1,7 @@
 #include "Memory.h"
 
+#include <print>
+
 uint8_t Memory::ReadByte(uint16_t address) const
 {
     address &= 0xFFFF;
@@ -34,7 +36,6 @@ uint32_t Memory::ReadInt(uint16_t address) const
 
 void Memory::WriteByte(uint16_t address, const uint8_t value) const
 {
-    address &= 0xFFFF;
     this->buffer[address] = value;
 
     if (writeHandlers.contains(address))
@@ -43,7 +44,6 @@ void Memory::WriteByte(uint16_t address, const uint8_t value) const
 
 void Memory::WriteShort(uint16_t address, uint16_t value) const
 {
-    address &= 0xFFFF;
     this->buffer[address] = value >> 8 & 0xFF;
     this->buffer[address + 1] = value & 0xFF;
     
@@ -53,7 +53,10 @@ void Memory::WriteShort(uint16_t address, uint16_t value) const
 
 void Memory::WriteInt(uint16_t address, uint32_t value) const
 {
-    address &= 0xFFFF;
+    if (address <= 0xbf74 && name == "Ram")
+    {
+        //__debugbreak();
+    }
     this->buffer[address] = value >> 24 & 0xFF;
     this->buffer[address + 1] = value >> 16 & 0xFF;
     this->buffer[address + 2] = value >> 8 & 0xFF;

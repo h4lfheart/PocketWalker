@@ -51,7 +51,7 @@ InstructionTable::InstructionTable() :
     ));
 
     aH_aL.Register(0x0, 0x7, Instruction(
-        "LCD.B #xx:8, Rd",
+        "LDC.B #xx:8, Rd",
         2,
         1,
         [](const Cpu* cpu)
@@ -98,7 +98,7 @@ InstructionTable::InstructionTable() :
         {
             const uint16_t* rs = cpu->registers->Register16(cpu->opcodes->bH);
             uint16_t* rd = cpu->registers->Register16(cpu->opcodes->bL);
-
+            
             *rd = *rs;
             cpu->flags->Mov(*rd);
         }
@@ -212,9 +212,9 @@ InstructionTable::InstructionTable() :
             const uint8_t* rs = cpu->registers->Register8(cpu->opcodes->bH);
             uint8_t* rd = cpu->registers->Register8(cpu->opcodes->bL);
 
-            *rd -= *rs + cpu->flags->carry;
-
             cpu->flags->Sub(*rd, static_cast<uint8_t>(*rs + cpu->flags->carry));
+            
+            *rd -= *rs + cpu->flags->carry;
         }
     ));
     
@@ -428,7 +428,7 @@ InstructionTable::InstructionTable() :
            const uint16_t quotient = *rd / *rs;
            const uint16_t remainder = *rd % *rs;
 
-           *rd = remainder << 8 | quotient;
+           *rd = (remainder << 8) | quotient;
 
            cpu->flags->zero = quotient == 0;
            cpu->flags->negative = quotient & Flags::NegativeMask(8);
@@ -472,7 +472,7 @@ InstructionTable::InstructionTable() :
 
     aH_aL.Register(0x5, 0x4, Instruction(
         "RTS",
-        0,
+        2,
         2 + 1 + 2,
         nullptr,
         [](const Cpu* cpu)
@@ -488,7 +488,7 @@ InstructionTable::InstructionTable() :
         nullptr,
         [](const Cpu* cpu)
         {
-            cpu->registers->PushStack(cpu->registers->pc);
+            cpu->registers->PushStack();
             
             const int8_t disp = static_cast<int8_t>(cpu->opcodes->b);
             cpu->registers->pc += disp;
@@ -510,7 +510,7 @@ InstructionTable::InstructionTable() :
     
     aH_aL.Register(0x5, 0x9, Instruction(
         "JMP @ERn",
-        4,
+        2,
         2 + 2,
         nullptr,
         [](const Cpu* cpu)
@@ -527,7 +527,7 @@ InstructionTable::InstructionTable() :
         nullptr,
         [](const Cpu* cpu)
         {
-            const uint32_t address = cpu->opcodes->b << 16 | cpu->opcodes->cd;
+            const uint32_t address = (cpu->opcodes->b << 16) | cpu->opcodes->cd;
             cpu->registers->pc = address;
         }
     ));
@@ -555,8 +555,8 @@ InstructionTable::InstructionTable() :
         {
             cpu->registers->PushStack();
             
-            const uint32_t address = cpu->opcodes->b << 16 | cpu->opcodes->cd;
-            cpu->registers->pc = address & 0xFFFF;
+            const uint32_t address = (cpu->opcodes->b << 16) | cpu->opcodes->cd;
+            cpu->registers->pc = address;
         }
     ));
 
@@ -627,8 +627,15 @@ InstructionTable::InstructionTable() :
             const uint8_t imm = cpu->opcodes->bH & 0b111;
             uint8_t* rd = cpu->registers->Register8(cpu->opcodes->bL);
 
-            const bool isInverted = cpu->opcodes->dH & 0b1000;
-            if (isInverted ? !cpu->flags->carry : cpu->flags->carry)
+            bool isOne = cpu->flags->carry;
+            
+            const bool isInverted = cpu->opcodes->bH & 0b1000;
+            if (isInverted)
+            {
+                isOne = !isOne;
+            }
+            
+            if (isOne)
             {
                 *rd |= (1 << imm);
             }
@@ -741,7 +748,7 @@ InstructionTable::InstructionTable() :
                [](const Cpu* cpu)
                {
                    uint8_t* rd = cpu->registers->Register8(cpu->opcodes->bL);
-                   const uint16_t address = cpu->opcodes->cd << 16 | cpu->opcodes->ef;
+                   const uint32_t address = (cpu->opcodes->cd << 16) | cpu->opcodes->ef;
                     
                    *rd = cpu->ram->ReadByte(address);
 
@@ -771,7 +778,7 @@ InstructionTable::InstructionTable() :
                [](const Cpu* cpu)
                {
                    const uint8_t* rs = cpu->registers->Register8(cpu->opcodes->bL);
-                   const uint16_t address = cpu->opcodes->cd << 16 | cpu->opcodes->ef;
+                   const uint32_t address = (cpu->opcodes->cd << 16) | cpu->opcodes->ef;
                     cpu->ram->WriteByte(address, *rs);
                    
                    cpu->flags->Mov(*rs);
@@ -808,7 +815,7 @@ InstructionTable::InstructionTable() :
                [](const Cpu* cpu)
                {
                    uint16_t* rd = cpu->registers->Register16(cpu->opcodes->bL);
-                   const uint32_t address = cpu->opcodes->cd << 16 | cpu->opcodes->ef;
+                   const uint32_t address = (cpu->opcodes->cd << 16) | cpu->opcodes->ef;
 
                    *rd = cpu->ram->ReadShort(address);
 
@@ -1213,7 +1220,7 @@ InstructionTable::InstructionTable() :
                       3 + 2,
                       [](const Cpu* cpu)
                       {
-                          const uint16_t address = cpu->opcodes->ef << 16 | cpu->opcodes->gh;
+                          const uint32_t address = (cpu->opcodes->ef << 16) | cpu->opcodes->gh;
                           uint32_t* erd = cpu->registers->Register32(cpu->opcodes->dL);
                           
                           *erd = cpu->ram->ReadInt(address);
@@ -1244,7 +1251,7 @@ InstructionTable::InstructionTable() :
                         [](const Cpu* cpu)
                         {
                             const uint32_t* ers = cpu->registers->Register32(cpu->opcodes->dL);
-                            const uint16_t address = cpu->opcodes->ef << 16 | cpu->opcodes->gh;
+                            const uint32_t address = (cpu->opcodes->ef << 16) | cpu->opcodes->gh;
 
                             cpu->ram->WriteInt(address, *ers);
 
@@ -1364,6 +1371,21 @@ InstructionTable::InstructionTable() :
        }
     ));
 
+    aHaL_bH.Register({0xA}, {0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF}, Instruction(
+       "ADD.L ERs, ERd",
+       2,
+       1,
+       [](const Cpu* cpu)
+       {
+           const uint32_t* ers = cpu->registers->Register32(cpu->opcodes->bH);
+           uint32_t* erd = cpu->registers->Register32(cpu->opcodes->bL);
+            
+           cpu->flags->Add(*erd, *ers);
+
+           *erd += *ers;
+       }
+    ));
+
     aHaL_bH.Register(0xB, 0x0, Instruction(
        "ADDS #1, ERd",
        2,
@@ -1480,7 +1502,7 @@ InstructionTable::InstructionTable() :
     ));
     
     aHaL_bH.Register(0x10, 0x3, Instruction(
-       "SHLL.L Rd",
+       "SHLL.L ERd",
        2,
        1,
        [](const Cpu* cpu)
@@ -1545,7 +1567,7 @@ InstructionTable::InstructionTable() :
            
            cpu->flags->carry = *rd & 1;
            
-           *rd = *rd >> 1 | (*rd & 0x8000);
+           *rd = (*rd >> 1) | (*rd & 0x8000);
            
            cpu->flags->Mov(*rd);
 
@@ -1561,6 +1583,23 @@ InstructionTable::InstructionTable() :
            uint8_t* rd = cpu->registers->Register8(cpu->opcodes->bL);
 
            const uint8_t msb = (*rd >> 7) & 1;
+           *rd = (*rd << 1) | msb;
+           
+           cpu->flags->carry = msb;
+           cpu->flags->Mov(*rd);
+
+       }
+    ));
+    
+    aHaL_bH.Register(0x12, 0x9, Instruction(
+       "ROTL.W Rd",
+       2,
+       1,
+       [](const Cpu* cpu)
+       {
+           uint16_t* rd = cpu->registers->Register16(cpu->opcodes->bL);
+
+           const uint8_t msb = (*rd >> 15) & 1;
            *rd = (*rd << 1) | msb;
            
            cpu->flags->carry = msb;
@@ -1618,10 +1657,10 @@ InstructionTable::InstructionTable() :
         [](const Cpu* cpu)
         {
             uint8_t* rd = cpu->registers->Register8(cpu->opcodes->bL);
+            cpu->flags->Sub(static_cast<uint8_t>(0), *rd);
+            
             if (*rd != Flags::NegativeMask(8))
             {
-                cpu->flags->Sub(static_cast<uint8_t>(0), *rd);
-            
                 *rd = -*rd;
             }
             
@@ -1635,10 +1674,10 @@ InstructionTable::InstructionTable() :
         [](const Cpu* cpu)
         {
             uint16_t* rd = cpu->registers->Register16(cpu->opcodes->bL);
+            cpu->flags->Sub(static_cast<uint16_t>(0), *rd);
+            
             if (*rd != Flags::NegativeMask(16))
             {
-                cpu->flags->Sub(static_cast<uint16_t>(0), *rd);
-            
                 *rd = -*rd;
             }
             
@@ -2009,10 +2048,26 @@ InstructionTable::InstructionTable() :
             const int16_t quotient = static_cast<int16_t>(static_cast<int32_t>(*erd) / static_cast<int16_t>(*rs));
             const int16_t remainder = static_cast<int16_t>(static_cast<int32_t>(*erd) % static_cast<int16_t>(*rs));
 
-            *erd = remainder << 16 | quotient;
+            *erd = (remainder << 16) | quotient;
 
             cpu->flags->zero = quotient == 0;
             cpu->flags->negative = quotient < 0;
+            
+        }
+    ));
+    
+    aHaLbHbLcH_cL.Register(0x1F06, 0x5, Instruction(
+        "XOR.L ERs, ERd",
+        4,
+        2,
+        [](const Cpu* cpu)
+        {
+            uint32_t* ers = cpu->registers->Register32(cpu->opcodes->dH);
+            uint32_t* erd = cpu->registers->Register32(cpu->opcodes->dL);
+
+            *erd = *ers ^ *erd;
+
+            cpu->flags->Mov(*erd);
             
         }
     ));
