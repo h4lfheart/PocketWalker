@@ -23,11 +23,11 @@ int main(int argc, char* argv[])
 {
     argparse::ArgumentParser arguments("Pocket Walker");
 
-    arguments.add_argument("--rom")
+    arguments.add_argument("rom")
         .help("The path for your PokeWalker rom file.")
         .required();
     
-    arguments.add_argument("--eeprom")
+    arguments.add_argument("eeprom")
         .help("The path for your PokeWalker eeprom file.")
         .default_value("");
 
@@ -55,12 +55,12 @@ int main(int argc, char* argv[])
     
     bool serverMode = arguments.is_used("--server");
     
-    std::string romPath = arguments.get<std::string>("--rom");
+    std::string romPath = arguments.get<std::string>("rom");
     std::array<uint8_t, 0xFFFF> romBuffer = {};
     std::ifstream romFile(romPath, std::ios::binary);
     romFile.read(reinterpret_cast<char*>(romBuffer.data()), romBuffer.size());
 
-    auto eepromPath = arguments.get<std::string>("--eeprom");
+    auto eepromPath = arguments.get<std::string>("eeprom");
     std::array<uint8_t, 0xFFFF> eepromBuffer = {};
     if (!eepromPath.empty() && std::filesystem::exists(eepromPath))
     {
@@ -162,12 +162,10 @@ int main(int argc, char* argv[])
         };
 
         if (serverMode) {
-            std::println("[TCP] Starting server on port 8081...");
             if (!socket.startServer(8081)) {
                 std::println("[TCP] Failed to start server");
             }
         } else {
-            std::println("[TCP] Connecting to server at 127.0.0.1:8081...");
             socket.connect("127.0.0.1", 8081);
         }
 
