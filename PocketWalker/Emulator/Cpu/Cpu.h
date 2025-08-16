@@ -16,7 +16,13 @@ class Opcode;
 class Registers;
 class Flags;
 
-using PCHandler = std::function<void>;
+enum PCHandlerResult : uint8_t
+{
+    Continue,
+    SkipInstruction
+};
+
+using PCHandler = std::function<PCHandlerResult(Cpu*)>;
 
 class Cpu
 {
@@ -34,6 +40,7 @@ public:
     }
 
     size_t Step();
+    void OnAddress(uint16_t address, const PCHandler& handler);
 
     Memory* ram;
     
@@ -48,4 +55,7 @@ public:
     bool sleeping = false;
 
     static constexpr uint32_t TICKS = 3686400;
+
+private:
+    std::map<uint16_t, PCHandler> addressHandlers;
 };

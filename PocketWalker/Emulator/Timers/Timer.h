@@ -13,6 +13,8 @@ namespace TimerFlags
 {
     enum ClockStop1 : uint8_t
     {
+        STANDBY_SCI3 = 1 << 6,
+        STANDBY_ADC = 1 << 5,
         STANDBY_TIMER_B1 = 1 << 2,
         STANDBY_RTC = 1 << 0
     };

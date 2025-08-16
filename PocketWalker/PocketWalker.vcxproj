@@ -190,6 +190,9 @@
     <ClCompile Include="Emulator\Timers\Components\TimerW.cpp" />
     <ClCompile Include="Emulator\Timers\Timer.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Sdl\SdlSystem.cpp" />
+    <ClCompile Include="Sdl\SdlAudio.cpp" />
+    <ClCompile Include="Sdl\SdlWindow.cpp" />
     <ClCompile Include="Tcp\TcpSocket.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -219,9 +222,15 @@
     <ClInclude Include="Emulator\Timers\Components\TimerB1.h" />
     <ClInclude Include="Emulator\Timers\Components\TimerW.h" />
     <ClInclude Include="Emulator\Timers\Timer.h" />
+    <ClInclude Include="Sdl\SdlSystem.h" />
+    <ClInclude Include="Sdl\SdlAudio.h" />
+    <ClInclude Include="Sdl\SdlWindow.h" />
     <ClInclude Include="Tcp\TcpSocket.h" />
     <ClInclude Include="Utilities\ArrayUtilities.h" />
     <ClInclude Include="Utilities\BitUtilities.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Emulator\Peripherals\Input\" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

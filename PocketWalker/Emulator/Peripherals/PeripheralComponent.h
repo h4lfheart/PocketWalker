@@ -28,6 +28,4 @@ public:
     {
         return false;
     }
-
-    static constexpr uint8_t PIN = 1 << 0;
 };

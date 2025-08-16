@@ -1607,6 +1607,24 @@ InstructionTable::InstructionTable() :
 
        }
     ));
+
+    
+    aHaL_bH.Register(0x13, 0x8, Instruction(
+       "ROTR.B Rd",
+       2,
+       1,
+       [](const Cpu* cpu)
+       {
+           uint8_t* rd = cpu->registers->Register8(cpu->opcodes->bL);
+
+           const uint8_t lsb = *rd & 1;
+           *rd = (*rd >> 1) | (lsb << 7);
+           
+           cpu->flags->carry = lsb;
+           cpu->flags->Mov(*rd);
+
+       }
+    ));
     
     aHaL_bH.Register(0x17, 0x0, Instruction(
         "NOT.B Rd",
@@ -1886,6 +1904,18 @@ InstructionTable::InstructionTable() :
         {
             const int16_t disp = static_cast<int16_t>(cpu->opcodes->cd);
             if (cpu->flags->negative != cpu->flags->overflow)
+                cpu->registers->pc += disp;
+        }
+    ));
+
+    aHaL_bH.Register(0x58, 0xE, Instruction(
+        "BGT d:16",
+        4,
+        2 + 2,
+        [](const Cpu* cpu)
+        {
+            const int16_t disp = static_cast<int16_t>(cpu->opcodes->cd);
+            if (!(cpu->flags->zero || (cpu->flags->negative != cpu->flags->overflow)))
                 cpu->registers->pc += disp;
         }
     ));

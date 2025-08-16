@@ -45,12 +45,12 @@ private:
     static constexpr uint16_t COUNTER_ADDR = 0xF0D1;
 
     static constexpr std::array clockRates = {
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
+        8192,
+        2048,
+        256,
+        64,
+        16,
+        4,
         1024,
         256
     };

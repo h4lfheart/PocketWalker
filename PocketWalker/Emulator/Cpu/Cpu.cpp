@@ -4,37 +4,19 @@
 size_t Cpu::Step()
 {
     size_t cycleCount = 1;
-
-    // TODO pc handlers
-    if (registers->pc == 0x336) // factory tests
+    
+    if (registers->pc == 0x0000)
     {
-        this->registers->pc += 4;
-        return cycleCount;
+        throw std::runtime_error("Program finished execution.");
     }
 
-    // TODO proper interrupt for accelerometer
-    if (registers->pc == 0x7700) // accelerometer sleep
+    PCHandlerResult handlerResult = Continue;
+    if (addressHandlers.contains(registers->pc))
     {
-        this->registers->pc += 2;
-        return cycleCount;
+        handlerResult = addressHandlers[registers->pc](this);
     }
     
-    if (registers->pc == 0x8EE) // hacky fix for ir sending
-    {
-        this->registers->pc += 2;
-        return cycleCount;
-    }
-
-    // remove input
-    if (registers->pc == 0x9C3E)
-    {
-        if (ram->ReadByte(0xFFDE) != 0)
-        {
-            ram->WriteByte(0xFFDE, 0);
-        }
-    }
-    
-    if (!sleeping)
+    if (!sleeping && handlerResult != SkipInstruction)
     {
         const Instruction* instruction = instructions->Execute(this);
         cycleCount = instruction->cycles;
@@ -47,4 +29,9 @@ size_t Cpu::Step()
     }
 
     return cycleCount;
+}
+
+void Cpu::OnAddress(const uint16_t address, const PCHandler& handler)
+{
+    addressHandlers[address] = handler;
 }

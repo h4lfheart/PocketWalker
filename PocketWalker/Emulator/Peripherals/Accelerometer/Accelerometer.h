@@ -26,6 +26,8 @@ public:
     AccelerometerState state;
     uint16_t address;
     uint16_t offset;
+
+    static constexpr uint8_t PIN = 1 << 0;
     
 private:
     Memory* memory;

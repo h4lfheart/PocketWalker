@@ -50,20 +50,20 @@ void Lcd::Tick()
 
     for (int y = 0; y < HEIGHT; y++)
     {
-        const int stripeOffset = y % 8;
+        const int bitOffset = y % 8;
         const int row = floor(y / 8);
         const int rowOffset = row * WIDTH * COLUMN_SIZE;
         const int bufferOffset = bufferIndex * WIDTH * BUFFER_SEPARATION;
 
         for (int x = 0; x < WIDTH; x++)
         {
-            const int baseIndex = 2 * x + rowOffset + bufferOffset;
+            const int baseIndex = COLUMN_SIZE * x + rowOffset + bufferOffset;
 
             const uint8_t firstByte = memory->ReadByte(baseIndex);
             const uint8_t secondByte = memory->ReadByte(baseIndex + 1);
 
-            const uint8_t firstBit = (firstByte >> stripeOffset) & 1;
-            const uint8_t secondBit = (secondByte >> stripeOffset) & 1;
+            const uint8_t firstBit = (firstByte >> bitOffset) & 1;
+            const uint8_t secondBit = (secondByte >> bitOffset) & 1;
 
             const uint8_t paletteIndex = (firstBit << 1) | secondBit;
             const uint32_t color = PALETTE[paletteIndex];

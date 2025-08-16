@@ -2,6 +2,6 @@
 	path = external/SDL
 	url = https://github.com/libsdl-org/SDL.git
 	branch = release-2.32.x
-[submodule "external/sockpp"]
-	path = external/sockpp
-	url = https://github.com/fpagliughi/sockpp
+[submodule "external/argparse"]
+	path = external/argparse
+	url = https://github.com/p-ranav/argparse

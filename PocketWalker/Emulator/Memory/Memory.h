@@ -35,6 +35,7 @@ public:
         return MemoryAccessor<T>(this, address);
     }
 
+    std::string ReadString(uint16_t address, size_t size);
     uint8_t ReadByte(uint16_t address) const;
     uint16_t ReadShort(uint16_t address) const;
     uint32_t ReadInt(uint16_t address) const;

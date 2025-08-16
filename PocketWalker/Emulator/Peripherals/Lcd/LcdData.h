@@ -18,11 +18,6 @@ public:
         return true;
     }
 
-    bool IsProgressive() override
-    {
-        return true;
-    }
-
     static constexpr uint8_t PIN = 1 << 1;
 
 private:

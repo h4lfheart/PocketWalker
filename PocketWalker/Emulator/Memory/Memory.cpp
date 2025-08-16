@@ -2,6 +2,17 @@
 
 #include <print>
 
+std::string Memory::ReadString(uint16_t address, size_t size)
+{
+    const auto data = new char[size];
+    for (auto offset = 0; offset < size; offset++)
+    {
+        data[offset] = ReadByte(address + offset);
+    }
+    
+    return data;
+}
+
 uint8_t Memory::ReadByte(uint16_t address) const
 {
     address &= 0xFFFF;
