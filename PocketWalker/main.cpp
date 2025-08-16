@@ -41,6 +41,9 @@ int main(int argc, char* argv[])
     catch (const std::exception& err) {
         std::cerr << err.what() << std::endl;
         std::cerr << arguments;
+
+        std::println("Press any key to exit...");
+        std::cin.get();
         return 1;
     }
     
@@ -208,17 +211,19 @@ int main(int argc, char* argv[])
 
         sdl.window->Render();
     }
-    
-    sdl.Stop();
-    
-    tcpThread.join();
 
+    
     if (!eepromPath.empty())
     {
         std::ofstream eepromFileOut(eepromPath, std::ios::binary);
         eepromFileOut.write(reinterpret_cast<const char*>(emulator.board->eeprom->memory->buffer), eepromBuffer.size());
         eepromFileOut.close();
     }
+    
+    sdl.Stop();
+    
+    tcpThread.join();
+
     
     return 0;
 }
