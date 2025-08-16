@@ -24,8 +24,8 @@ public:
     VectorTable(Memory* ram) : ram(ram)
     {
         reset = ram->ReadShort(VECTOR_RESET);
-        irq0 = ram->ReadShort(VECTOR_RESET);
-        irq1 = ram->ReadShort(VECTOR_RESET);
+        irq0 = ram->ReadShort(VECTOR_IRQ0);
+        irq1 = ram->ReadShort(VECTOR_IRQ1);
         timerB1 = ram->ReadShort(VECTOR_TIMER_B1);
         timerW = ram->ReadShort(VECTOR_TIMER_W);
 

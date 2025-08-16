@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
         });
 
         // cleanup input
-        emulator.board->cpu->OnAddress(0x9C3E, [](Cpu* cpu)
+        /*emulator.board->cpu->OnAddress(0x9C3E, [](Cpu* cpu)
         {
             if (cpu->ram->ReadByte(0xFFDE) != 0)
             {
@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
             }
             
             return Continue;
-        });
+        });*/
 
         // factory tests
         emulator.board->cpu->OnAddress(0x336, [](Cpu* cpu)
@@ -191,16 +191,46 @@ int main(int argc, char* argv[])
                 switch(e.key.keysym.sym)
                 {
                 case SDLK_LEFT: {
-                        emulator.board->ram->WriteByte(0xFFDE, 1 << 2);
+                        emulator.board->ram->WriteByte(0xFFDE, emulator.board->ram->ReadByte(0xFFDE) | (1 << 2));
                         break;
                 }
                 case SDLK_DOWN: {
-                        emulator.board->ram->WriteByte(0xFFDE, 1 << 0);
-                        emulator.board->cpu->interrupts->enable1 |= InterruptFlags::Enable1::ENABLE_IRQ0;
+                        if (!emulator.board->cpu->flags->interrupt)
+                            emulator.board->cpu->interrupts->flag1 |= InterruptFlags::Flag1::FLAG_IRQ0;
+                        
+                        emulator.board->ram->WriteByte(0xFFDE, emulator.board->ram->ReadByte(0xFFDE) | (1 << 0));
                         break;
                 }
                 case SDLK_RIGHT: {
-                        emulator.board->ram->WriteByte(0xFFDE, 1 << 4);
+                        emulator.board->ram->WriteByte(0xFFDE, emulator.board->ram->ReadByte(0xFFDE) | (1 << 4));
+                        break;
+                }
+                    // hacky custom route impl
+                case SDLK_HOME:
+                    {
+                        emulator.board->ram->WriteByte(0xf7b1, 0x11);
+                        emulator.board->ram->WriteByte(0xf7d0, 1);
+                        emulator.board->ram->WriteByte(0xf7ce, 0);
+                        emulator.board->ram->WriteByte(0xf7cf, 0);
+                        emulator.board->ram->WriteByte(0xf797, emulator.board->ram->ReadByte(0xf797) | 1);
+                    }
+                }
+            }
+
+            if (e.type == SDL_KEYUP)
+            {
+                switch(e.key.keysym.sym)
+                {
+                case SDLK_LEFT: {
+                        emulator.board->ram->WriteByte(0xFFDE, emulator.board->ram->ReadByte(0xFFDE) & ~(1 << 2));
+                        break;
+                }
+                case SDLK_DOWN: {
+                        emulator.board->ram->WriteByte(0xFFDE, emulator.board->ram->ReadByte(0xFFDE) & ~(1 << 0));
+                        break;
+                }
+                case SDLK_RIGHT: {
+                        emulator.board->ram->WriteByte(0xFFDE, emulator.board->ram->ReadByte(0xFFDE) & ~(1 << 4));
                         break;
                 }
                 }

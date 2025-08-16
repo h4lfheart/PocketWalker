@@ -21,7 +21,8 @@ public:
     enum LcdState : uint8_t
     {
         Waiting,
-        GettingContrast
+        Contrast,
+        PageOffset
     };
     
     Memory* memory;
@@ -33,8 +34,9 @@ public:
     size_t column = 0;
     size_t offset = 0;
     size_t page = 0;
-    uint8_t bufferIndex = 0;
     uint8_t contrast = 20;
+    uint8_t pageOffset;
+    bool powerSaveMode;
 
     static constexpr uint32_t TICKS = 4;
     
@@ -43,7 +45,6 @@ public:
     static constexpr uint8_t WIDTH = 96;
     static constexpr uint8_t HEIGHT = 64;
     static constexpr uint8_t COLUMN_SIZE = 2;
-    static constexpr uint8_t BUFFER_SEPARATION = 16;
     
     static constexpr std::array<uint32_t, 4> PALETTE = {0xCCCCCC, 0x999999, 0x666666, 0x333333};
 };
