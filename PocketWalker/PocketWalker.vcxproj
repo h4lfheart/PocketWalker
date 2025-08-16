@@ -89,7 +89,7 @@
     <ResourceCompile Include="AppIcon.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="AppIcon.ico" />
+    <Image Include="PocketWalker.ico" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -237,10 +237,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Emulator\Peripherals\Input\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="AppIcon.rc" />
-    <Content Include="PocketWalker.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
