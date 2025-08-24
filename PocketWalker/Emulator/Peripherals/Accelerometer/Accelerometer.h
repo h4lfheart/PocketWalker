@@ -8,7 +8,8 @@ class Memory;
 enum AccelerometerState
 {
     GettingAddress,
-    GettingData
+    ReadingData,
+    WritingData,
 };
 
 class Accelerometer : public PeripheralComponent
@@ -29,6 +30,6 @@ public:
 
     static constexpr uint8_t PIN = 1 << 0;
     
-private:
+//private:
     Memory* memory;
 };

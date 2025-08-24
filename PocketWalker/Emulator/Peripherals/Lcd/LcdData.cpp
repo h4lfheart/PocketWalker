@@ -7,7 +7,7 @@
 
 void LcdData::Transmit(Ssu* ssu)
 {
-    const uint16_t address = (lcd->page * Lcd::WIDTH * Lcd::COLUMN_SIZE) + (lcd->column * Lcd::COLUMN_SIZE) + lcd->offset;
+    const uint16_t address = (lcd->page * Lcd::TOTAL_COLUMNS * Lcd::COLUMN_SIZE) + (lcd->column * Lcd::COLUMN_SIZE) + lcd->offset;
     lcd->memory->WriteByte(address, ssu->transmit);
 
     if (lcd->offset == 1)

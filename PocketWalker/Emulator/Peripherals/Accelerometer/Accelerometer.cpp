@@ -6,17 +6,26 @@ void Accelerometer::TransmitAndReceive(Ssu* ssu)
     {
     case GettingAddress:
         {
-            address = ssu->transmit;
+            address = ssu->transmit & 0x7F;
             offset = 0;
-            state = GettingData;
+            state = (ssu->transmit >> 7) ? ReadingData : WritingData;
 
             ssu->status |= SsuFlags::Status::RECEIVE_FULL;
             break;
         }
-    case GettingData:
+    case ReadingData:
         {
-            ssu->receive = memory->ReadByte(address);
+            ssu->receive = memory->ReadByte(address + offset);
             offset++;
+
+            ssu->status |= SsuFlags::Status::RECEIVE_FULL;
+            ssu->status |= SsuFlags::Status::TRANSMIT_EMPTY;
+            ssu->status |= SsuFlags::Status::TRANSMIT_END;
+            break;
+        }
+    case WritingData:
+        {
+            memory->WriteByte(address, ssu->transmit);
 
             ssu->status |= SsuFlags::Status::RECEIVE_FULL;
             ssu->status |= SsuFlags::Status::TRANSMIT_EMPTY;
@@ -33,10 +42,10 @@ void Accelerometer::Transmit(Ssu* ssu)
     case GettingAddress:
         {
             address = ssu->transmit;
-            state = GettingData;
+            state = WritingData;
             break;
         }
-    case GettingData:
+    case WritingData:
         {
             memory->WriteByte(address, ssu->transmit);
 

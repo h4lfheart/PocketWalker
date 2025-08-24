@@ -213,6 +213,7 @@ int main(int argc, char* argv[])
                         emulator.board->ram->WriteByte(0xf7ce, 0);
                         emulator.board->ram->WriteByte(0xf7cf, 0);
                         emulator.board->ram->WriteByte(0xf797, emulator.board->ram->ReadByte(0xf797) | 1);
+                        break;
                     }
                 }
             }

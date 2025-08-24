@@ -46,5 +46,7 @@ public:
     static constexpr uint8_t HEIGHT = 64;
     static constexpr uint8_t COLUMN_SIZE = 2;
     
+    static constexpr uint8_t TOTAL_COLUMNS = 0xFF;
+    
     static constexpr std::array<uint32_t, 4> PALETTE = {0xCCCCCC, 0x999999, 0x666666, 0x333333};
 };

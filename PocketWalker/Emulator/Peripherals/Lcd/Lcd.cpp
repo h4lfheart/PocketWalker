@@ -79,7 +79,7 @@ void Lcd::Tick()
         {
             const int bitOffset = y % 8;
             const int pixelPage = y / 8 + pageOffset;
-            const int pixelPageOffset = pixelPage * WIDTH * COLUMN_SIZE;
+            const int pixelPageOffset = pixelPage * TOTAL_COLUMNS * COLUMN_SIZE;
 
             for (uint8_t x = 0; x < WIDTH; x++)
             {

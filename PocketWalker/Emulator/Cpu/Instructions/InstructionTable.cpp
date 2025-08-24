@@ -1567,7 +1567,24 @@ InstructionTable::InstructionTable() :
            
            cpu->flags->carry = *rd & 1;
            
-           *rd = (*rd >> 1) | (*rd & 0x8000);
+           *rd = (*rd >> 1) | (*rd & Flags::NegativeMask(16));
+           
+           cpu->flags->Mov(*rd);
+
+       }
+    ));
+    
+    aHaL_bH.Register(0x11, 0xB, Instruction(
+       "SHAR.L Rd",
+       2,
+       1,
+       [](const Cpu* cpu)
+       {
+           uint32_t* rd = cpu->registers->Register32(cpu->opcodes->bL);
+           
+           cpu->flags->carry = *rd & 1;
+           
+           *rd = (*rd >> 1) | (*rd & Flags::NegativeMask(32));
            
            cpu->flags->Mov(*rd);
 
@@ -2050,6 +2067,21 @@ InstructionTable::InstructionTable() :
        }
     ));
 
+    aHaL_bH.Register(0x7A, 0x6, Instruction(
+       "AND.L #xx:32, ERd",
+       6,
+       3,
+       [](const Cpu* cpu)
+       {
+           const uint32_t imm = cpu->opcodes->cd << 16 | cpu->opcodes->ef;
+           uint32_t* erd = cpu->registers->Register32(cpu->opcodes->bL);
+           
+           *erd &= imm;
+
+           cpu->flags->Mov(*erd);
+       }
+    ));
+
     aHaLbHbLcH_cL.Register(0x1C05, 0x2, Instruction(
         "MULXS.W Rs, ERd",
         4,
@@ -2103,6 +2135,29 @@ InstructionTable::InstructionTable() :
     ));
     
     aHaLbHbLcH_cL.Register(
+      [](const uint32_t value) { return (value >> 12 & 0xFF) == 0x7C && (value & 0xFF) == 0x07;},
+      [](const uint32_t value) { return value == 0x7;},
+      Instruction(
+          "BLD #xx:3, @ERd",
+          4,
+          2 + 2,
+          [](const Cpu* cpu)
+          {
+              if (cpu->opcodes->dH & 0b1000)
+              {
+                  throw std::runtime_error(std::format("Unimplemented BILD instruction at 0x{:04X}", cpu->registers->pc));
+              }
+
+              const uint32_t* erd = cpu->registers->Register32(cpu->opcodes->bH);
+              const uint8_t memoryValue = cpu->ram->ReadByte(*erd);
+              const uint8_t imm = cpu->opcodes->dH & 0b111;
+              
+              cpu->flags->carry = (memoryValue >> imm) & 1;
+          }
+      )
+    );
+    
+    aHaLbHbLcH_cL.Register(
       [](const uint32_t value) { return (value >> 12 & 0xFF) == 0x7D && (value & 0xF) == 0x6;},
       [](const uint32_t value) { return value == 0x7;},
       Instruction(
@@ -2128,23 +2183,6 @@ InstructionTable::InstructionTable() :
           }
       )
     );
-    
-    aHaLbHbLcH_cL.Register(
-      [](const uint32_t value) { return (value >> 12 & 0xFF) == 0x7D && (value & 0xF) == 0x7;},
-      [](const uint32_t value) { return value == 0x2;},
-      Instruction(
-          "BCLR #xx:3, @ERd",
-          4,
-          2 + 2,
-          [](const Cpu* cpu)
-          {
-              const uint8_t imm = cpu->opcodes->dH & 0b111;
-              const uint32_t* erd = cpu->registers->Register32(cpu->opcodes->bH);
-                
-              cpu->ram->WriteByte(*erd, cpu->ram->ReadByte(*erd) & ~(1 << imm));
-          }
-      )
-    );
 
     aHaLbHbLcH_cL.Register(
        [](const uint32_t value) { return (value >> 12 & 0xFF) == 0x7D && (value & 0xF) == 0x7;},
@@ -2161,6 +2199,40 @@ InstructionTable::InstructionTable() :
                cpu->ram->WriteByte(*erd, cpu->ram->ReadByte(*erd) | 1 << imm);
            }
        )
+    );
+
+    aHaLbHbLcH_cL.Register(
+       [](const uint32_t value) { return (value >> 12 & 0xFF) == 0x7D && (value & 0xF) == 0x7;},
+       [](const uint32_t value) { return value == 0x1;},
+       Instruction(
+           "BNOT #xx:3 @ERd",
+           4,
+           2 + 2,
+           [](const Cpu* cpu)
+           {
+               const uint8_t imm = cpu->opcodes->dH & 0b111;
+               const uint32_t* erd = cpu->registers->Register32(cpu->opcodes->bH);
+               
+               cpu->ram->WriteByte(*erd, cpu->ram->ReadByte(*erd) ^ (1 << imm));
+           }
+       )
+    );
+    
+    aHaLbHbLcH_cL.Register(
+      [](const uint32_t value) { return (value >> 12 & 0xFF) == 0x7D && (value & 0xF) == 0x7;},
+      [](const uint32_t value) { return value == 0x2;},
+      Instruction(
+          "BCLR #xx:3, @ERd",
+          4,
+          2 + 2,
+          [](const Cpu* cpu)
+          {
+              const uint8_t imm = cpu->opcodes->dH & 0b111;
+              const uint32_t* erd = cpu->registers->Register32(cpu->opcodes->bH);
+                
+              cpu->ram->WriteByte(*erd, cpu->ram->ReadByte(*erd) & ~(1 << imm));
+          }
+      )
     );
 
     aHaLbHbLcH_cL.Register(
