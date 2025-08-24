@@ -38,7 +38,7 @@ void Ssu::Tick()
     }
 }
 
-void Ssu::RegisterPeripheral(SsuFlags::Port port, uint8_t pin, PeripheralComponent* component)
+void Ssu::RegisterIOPeripheral(Port port, uint8_t pin, PeripheralComponent* component)
 {
     if (!peripherals.contains(port)) {
         peripherals[port] = std::map<uint8_t, PeripheralComponent*>();
@@ -61,7 +61,7 @@ void Ssu::ExecutePeripherals(const std::function<void(PeripheralComponent* perip
     }
 }
 
-void Ssu::ExecutePeripherals(const SsuFlags::Port port, const std::function<void(PeripheralComponent* peripheral)>& executeFunction,
+void Ssu::ExecutePeripherals(const Port port, const std::function<void(PeripheralComponent* peripheral)>& executeFunction,
     bool invertPortSelect, bool isTick)
 {
     for (const auto& pins = peripherals[port]; auto [pin, peripheral] : pins)

@@ -185,6 +185,7 @@
     <ClCompile Include="Emulator\Memory\MemoryAccessor.cpp" />
     <ClCompile Include="Emulator\Peripherals\Accelerometer\Accelerometer.cpp" />
     <ClCompile Include="Emulator\Peripherals\Eeprom\Eeprom.cpp" />
+    <ClCompile Include="Emulator\Peripherals\Input\Buttons.cpp" />
     <ClCompile Include="Emulator\Peripherals\Lcd\Lcd.cpp" />
     <ClCompile Include="Emulator\Peripherals\Lcd\LcdData.cpp" />
     <ClCompile Include="Emulator\Peripherals\PeripheralComponent.cpp" />
@@ -218,6 +219,7 @@
     <ClInclude Include="Emulator\Memory\MemoryAccessor.h" />
     <ClInclude Include="Emulator\Peripherals\Accelerometer\Accelerometer.h" />
     <ClInclude Include="Emulator\Peripherals\Eeprom\Eeprom.h" />
+    <ClInclude Include="Emulator\Peripherals\Input\Buttons.h" />
     <ClInclude Include="Emulator\Peripherals\Lcd\Lcd.h" />
     <ClInclude Include="Emulator\Peripherals\Lcd\LcdData.h" />
     <ClInclude Include="Emulator\Peripherals\PeripheralComponent.h" />
@@ -234,9 +236,6 @@
     <ClInclude Include="Tcp\TcpSocket.h" />
     <ClInclude Include="Utilities\ArrayUtilities.h" />
     <ClInclude Include="Utilities\BitUtilities.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Emulator\Peripherals\Input\" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

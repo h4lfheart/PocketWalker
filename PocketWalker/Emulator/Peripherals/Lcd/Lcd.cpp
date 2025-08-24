@@ -65,7 +65,7 @@ void Lcd::Transmit(Ssu* ssu)
 
 bool Lcd::CanExecute(Ssu* ssu)
 {
-    return !(ssu->GetPort(SsuFlags::Port::PORT_1) & LcdData::PIN);
+    return !(ssu->GetPort(Ssu::Port::PORT_1) & LcdData::PIN);
 }
 
 void Lcd::Tick()

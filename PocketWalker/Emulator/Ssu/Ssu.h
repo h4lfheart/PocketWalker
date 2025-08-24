@@ -3,6 +3,7 @@
 #include <map>
 
 #include "../Board/Component.h"
+#include "../Cpu/Components/Interrupts.h"
 #include "../Memory/Memory.h"
 #include "../Memory/MemoryAccessor.h"
 #include "../Peripherals/PeripheralComponent.h"
@@ -31,15 +32,13 @@ namespace SsuFlags
         RECEIVE_FULL = 1 << 1
     };
 
-    enum Port : uint16_t
+    enum PortB : uint8_t
     {
-        PORT_1 = 0xFFD4,
-        PORT_3 = 0xFFD6,
-        PORT_8 = 0xFFDB,
-        PORT_9 = 0xFFDC,
-        PORT_B = 0xFFDE,
+        IRQ0 = 1 << 0,
+        IRQ1 = 1 << 1
     };
 }
+
 
 constexpr std::array clockRates = {
     256,
@@ -55,12 +54,26 @@ constexpr std::array clockRates = {
 class Ssu : public Component
 {
 public:
-    Ssu(Memory* ram) : ram(ram),
+    enum Port : uint16_t
+    {
+        PORT_1 = 0xFFD4,
+        PORT_3 = 0xFFD6,
+        PORT_8 = 0xFFDB,
+        PORT_9 = 0xFFDC,
+        PORT_B = 0xFFDE,
+    };
+    
+    Ssu(Memory* ram, Interrupts* interrupts, Flags* flags) : ram(ram), interrupts(interrupts), flags(flags),
         mode(ram->CreateAccessor<uint8_t>(MODE_ADDR)),
         enable(ram->CreateAccessor<uint8_t>(ENABLE_ADDR)),
         status(ram->CreateAccessor<uint8_t>(STATUS_ADDR)),
         transmit(ram->CreateAccessor<uint8_t>(TRANSMIT_ADDR)),
-        receive(ram->CreateAccessor<uint8_t>(RECEIVE_ADDR))
+        receive(ram->CreateAccessor<uint8_t>(RECEIVE_ADDR)),
+        port1(ram->CreateAccessor<uint8_t>(PORT_1)),
+        port3(ram->CreateAccessor<uint8_t>(PORT_3)),
+        port8(ram->CreateAccessor<uint8_t>(PORT_8)),
+        port9(ram->CreateAccessor<uint8_t>(PORT_9)),
+        portB(ram->CreateAccessor<uint8_t>(PORT_B))
     {
         ram->OnRead(RECEIVE_ADDR, [this](uint32_t)
         {
@@ -78,26 +91,37 @@ public:
             clockRate = clockRates[mode & 0b111];
         });
         
-        ram->OnWrite(SsuFlags::Port::PORT_1, [this](uint32_t)
+        ram->OnWrite(PORT_1, [this](uint32_t)
         {
-            ExecutePeripherals(SsuFlags::Port::PORT_1, [](PeripheralComponent* peripheral)
+            ExecutePeripherals(PORT_1, [](PeripheralComponent* peripheral)
             {
                 peripheral->Reset();
             }, true, false);
         });
         
-        ram->OnWrite(SsuFlags::Port::PORT_9, [this](uint32_t)
+        ram->OnWrite(PORT_9, [this](uint32_t)
         {
-            ExecutePeripherals(SsuFlags::Port::PORT_9, [](PeripheralComponent* peripheral)
+            ExecutePeripherals(PORT_9, [](PeripheralComponent* peripheral)
             {
                 peripheral->Reset();
             }, true, false);
+        });
+        
+        ram->OnWrite(PORT_B, [this](uint32_t port)
+        {
+            if (port & SsuFlags::PortB::IRQ0)
+            {
+                if (!this->flags->interrupt)
+                {
+                    this->interrupts->flag1 |= InterruptFlags::Flag1::FLAG_IRQ0;
+                }
+            }
         });
     }
 
     void Tick() override;
 
-    void RegisterPeripheral(SsuFlags::Port port, uint8_t pin, PeripheralComponent* component);
+    void RegisterIOPeripheral(Port port, uint8_t pin, PeripheralComponent* component);
 
     uint8_t GetPort(uint16_t address);
 
@@ -109,12 +133,20 @@ public:
     MemoryAccessor<uint8_t> status;
     MemoryAccessor<uint8_t> transmit;
     MemoryAccessor<uint8_t> receive;
+    
+    MemoryAccessor<uint8_t> port1;
+    MemoryAccessor<uint8_t> port3;
+    MemoryAccessor<uint8_t> port8;
+    MemoryAccessor<uint8_t> port9;
+    MemoryAccessor<uint8_t> portB;
 
 private:
     void ExecutePeripherals(const std::function<void(PeripheralComponent* peripheral)>& executeFunction, bool invertPortSelect = false, bool isTick = true);
-    void ExecutePeripherals(SsuFlags::Port port, const std::function<void(PeripheralComponent* peripheral)>& executeFunction, bool invertPortSelect = false, bool isTick = true);
+    void ExecutePeripherals(Port port, const std::function<void(PeripheralComponent* peripheral)>& executeFunction, bool invertPortSelect = false, bool isTick = true);
     
     Memory* ram;
+    Flags* flags;
+    Interrupts* interrupts;
 
-    std::map<SsuFlags::Port, std::map<uint8_t, PeripheralComponent*>> peripherals;
+    std::map<Port, std::map<uint8_t, PeripheralComponent*>> peripherals;
 };

@@ -187,22 +187,18 @@ int main(int argc, char* argv[])
                 emulator.Stop();
             if (e.type == SDL_KEYDOWN)
             {
-                // TODO proper input peripheral
                 switch(e.key.keysym.sym)
                 {
-                case SDLK_LEFT: {
-                        emulator.board->ram->WriteByte(0xFFDE, emulator.board->ram->ReadByte(0xFFDE) | (1 << 2));
+                case SDLK_DOWN: {
+                        emulator.board->buttons->Press(Buttons::Center);
                         break;
                 }
-                case SDLK_DOWN: {
-                        if (!emulator.board->cpu->flags->interrupt)
-                            emulator.board->cpu->interrupts->flag1 |= InterruptFlags::Flag1::FLAG_IRQ0;
-                        
-                        emulator.board->ram->WriteByte(0xFFDE, emulator.board->ram->ReadByte(0xFFDE) | (1 << 0));
+                case SDLK_LEFT: {
+                        emulator.board->buttons->Press(Buttons::Left);
                         break;
                 }
                 case SDLK_RIGHT: {
-                        emulator.board->ram->WriteByte(0xFFDE, emulator.board->ram->ReadByte(0xFFDE) | (1 << 4));
+                        emulator.board->buttons->Press(Buttons::Right);
                         break;
                 }
                     // hacky custom route impl
@@ -222,16 +218,16 @@ int main(int argc, char* argv[])
             {
                 switch(e.key.keysym.sym)
                 {
-                case SDLK_LEFT: {
-                        emulator.board->ram->WriteByte(0xFFDE, emulator.board->ram->ReadByte(0xFFDE) & ~(1 << 2));
+                case SDLK_DOWN: {
+                        emulator.board->buttons->Release(Buttons::Center);
                         break;
                 }
-                case SDLK_DOWN: {
-                        emulator.board->ram->WriteByte(0xFFDE, emulator.board->ram->ReadByte(0xFFDE) & ~(1 << 0));
+                case SDLK_LEFT: {
+                        emulator.board->buttons->Release(Buttons::Left);
                         break;
                 }
                 case SDLK_RIGHT: {
-                        emulator.board->ram->WriteByte(0xFFDE, emulator.board->ram->ReadByte(0xFFDE) & ~(1 << 4));
+                        emulator.board->buttons->Release(Buttons::Right);
                         break;
                 }
                 }
@@ -252,7 +248,6 @@ int main(int argc, char* argv[])
     sdl.Stop();
     
     tcpThread.join();
-
     
     return 0;
 }
