@@ -5,7 +5,7 @@
 
 class Ssu;
 
-class PeripheralComponent : public Component
+class IOComponent : public Component
 {
 public:
     virtual void TransmitAndReceive(Ssu* ssu) { }

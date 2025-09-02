@@ -1,12 +1,12 @@
 #pragma once
 #include <array>
 
-#include "../PeripheralComponent.h"
-#include "../../Memory/Memory.h"
+#include "../../../H8/IO/IOComponent.h"
+#include "../../../H8/Memory/Memory.h"
 
 class Memory;
 
-class Lcd : public PeripheralComponent
+class Lcd : public IOComponent
 {
 public:
     Lcd()
@@ -17,6 +17,16 @@ public:
     void Transmit(Ssu* ssu) override;
     void Tick() override;
     bool CanExecute(Ssu* ssu) override;
+
+    bool DoesTick() override
+    {
+        return true;
+    }
+
+    size_t TickRate() override
+    {
+        return 4;
+    }
 
     enum LcdState : uint8_t
     {
@@ -38,15 +48,11 @@ public:
     uint8_t pageOffset;
     bool powerSaveMode;
 
-    static constexpr uint32_t TICKS = 4;
-    
-    static constexpr uint8_t PIN = 1 << 0;
-
     static constexpr uint8_t WIDTH = 96;
     static constexpr uint8_t HEIGHT = 64;
     static constexpr uint8_t COLUMN_SIZE = 2;
     
-    static constexpr uint8_t TOTAL_COLUMNS = 0xFF;
+    static constexpr uint8_t TOTAL_COLUMNS = 96;
     
     static constexpr std::array<uint32_t, 4> PALETTE = {0xCCCCCC, 0x999999, 0x666666, 0x333333};
 };

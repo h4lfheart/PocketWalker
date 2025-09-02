@@ -1,20 +1,18 @@
 #pragma once
-#include "../PeripheralComponent.h"
-#include "../../Memory/Memory.h"
-#include "../../Ssu/Ssu.h"
+#include "../../../H8/IO/IOComponent.h"
+#include "../../../H8/Memory/Memory.h"
 
-class Memory;
-
-enum AccelerometerState
-{
-    GettingAddress,
-    ReadingData,
-    WritingData,
-};
-
-class Accelerometer : public PeripheralComponent
+class Accelerometer : public IOComponent
 {
 public:
+    enum AccelerometerState
+    {
+        GettingAddress,
+        ReadingData,
+        WritingData,
+    };
+
+    
     Accelerometer()
     {
         memory = new Memory(0x7F);
@@ -27,8 +25,6 @@ public:
     AccelerometerState state;
     uint16_t address;
     uint16_t offset;
-
-    static constexpr uint8_t PIN = 1 << 0;
     
 //private:
     Memory* memory;

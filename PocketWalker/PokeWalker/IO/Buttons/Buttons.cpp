@@ -1,13 +1,13 @@
 #include "Buttons.h"
 
-#include "../../Ssu/Ssu.h"
+#include "../../../H8/Ssu/Ssu.h"
 
 void Buttons::Press(Button button)
 {
-    ssu->portB |= button;
+    portB |= button;
 }
 
 void Buttons::Release(Button button)
 {
-    ssu->portB &= ~button;
+    portB &= ~button;
 }

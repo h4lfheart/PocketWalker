@@ -1,9 +1,6 @@
 #pragma once
-#include "../PeripheralComponent.h"
-#include "../../Memory/Memory.h"
-
-class Memory;
-
+#include "../../../H8/Memory/Memory.h"
+#include "../../../H8/IO/IOComponent.h"
 
 namespace EepromFlags
 {
@@ -33,7 +30,7 @@ enum EepromState
     GettingBytes
 };
 
-class Eeprom : public PeripheralComponent
+class Eeprom : public IOComponent
 {
 public:
     Eeprom(uint8_t* eeprom_buffer)
@@ -55,8 +52,6 @@ public:
     uint8_t highAddress;
     uint8_t lowAddress;
     uint16_t offset;
-
-    static constexpr uint8_t PIN = 1 << 2;
     
     Memory* memory;
 };

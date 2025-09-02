@@ -13,7 +13,8 @@
 #include "../external/SDL/include/SDL.h"
 #include "../external/argparse/include/argparse/argparse.hpp"
 
-#include "Emulator/PocketWalker.h"
+#include "H8/H8300H.h"
+#include "PokeWalker/PokeWalker.h"
 #include "Sdl/SdlSystem.h"
 #include "Tcp/TcpSocket.h"
 #include "Sdl/SdlAudio.h"
@@ -47,12 +48,6 @@ int main(int argc, char* argv[])
         return 1;
     }
     
-    SdlSystem sdl;
-    if (!sdl.Initialize())
-    {
-        return 1;
-    }
-    
     bool serverMode = arguments.is_used("--server");
     
     std::string romPath = arguments.get<std::string>("rom");
@@ -69,55 +64,14 @@ int main(int argc, char* argv[])
         eepromFile.close();
     }
     
-    PocketWalker emulator(romBuffer.data(), eepromBuffer.data());
-    if (emulator.IsPokewalkerRom())
+    SdlSystem sdl;
+    if (!sdl.Initialize())
     {
-        // add watts
-        emulator.board->cpu->OnAddress(0x9A4E, [](Cpu* cpu)
-        {
-            if (cpu->ram->ReadShort(0xF78E) == 0)
-            {
-                cpu->ram->WriteShort(0xF78E, 1000);
-            }
-
-            return Continue;
-        });
-
-        // cleanup input
-        /*emulator.board->cpu->OnAddress(0x9C3E, [](Cpu* cpu)
-        {
-            if (cpu->ram->ReadByte(0xFFDE) != 0)
-            {
-                cpu->ram->WriteByte(0xFFDE, 0);
-            }
-            
-            return Continue;
-        });*/
-
-        // factory tests
-        emulator.board->cpu->OnAddress(0x336, [](Cpu* cpu)
-        {
-            cpu->registers->pc += 4;
-            
-            return SkipInstruction; 
-        });
-
-        // accelerometer sleep TODO proper interrupt?
-        emulator.board->cpu->OnAddress(0x7700, [](Cpu* cpu)
-        {
-            cpu->registers->pc += 2;
-            
-            return SkipInstruction; 
-        });
-
-        // hacky ir fix
-        emulator.board->cpu->OnAddress(0x8EE, [](Cpu* cpu)
-        {
-            cpu->registers->pc += 2;
-            
-            return SkipInstruction; 
-        });
+        return 1;
     }
+    
+    
+    PokeWalker emulator(romBuffer.data(), eepromBuffer.data());
 
     emulator.OnDraw([&sdl](uint8_t* buffer)
     {
@@ -190,27 +144,16 @@ int main(int argc, char* argv[])
                 switch(e.key.keysym.sym)
                 {
                 case SDLK_DOWN: {
-                        emulator.board->buttons->Press(Buttons::Center);
+                        emulator.PressButton(Buttons::Center);
                         break;
                 }
                 case SDLK_LEFT: {
-                        emulator.board->buttons->Press(Buttons::Left);
+                        emulator.PressButton(Buttons::Left);
                         break;
                 }
                 case SDLK_RIGHT: {
-                        emulator.board->buttons->Press(Buttons::Right);
+                        emulator.PressButton(Buttons::Right);
                         break;
-                }
-                    // hacky custom route impl
-                case SDLK_HOME:
-                    {
-                        emulator.board->ram->WriteByte(0xf7b1, 0x11);
-                        emulator.board->ram->WriteByte(0xf7d0, 1);
-                        emulator.board->ram->WriteByte(0xf7ce, 0);
-                        emulator.board->ram->WriteByte(0xf7cf, 0);
-                        emulator.board->ram->WriteByte(0xf797, emulator.board->ram->ReadByte(0xf797) | 1);
-                        break;
-                    }
                 }
             }
 
@@ -219,15 +162,15 @@ int main(int argc, char* argv[])
                 switch(e.key.keysym.sym)
                 {
                 case SDLK_DOWN: {
-                        emulator.board->buttons->Release(Buttons::Center);
+                        emulator.ReleaseButton(Buttons::Center);
                         break;
                 }
                 case SDLK_LEFT: {
-                        emulator.board->buttons->Release(Buttons::Left);
+                        emulator.ReleaseButton(Buttons::Left);
                         break;
                 }
                 case SDLK_RIGHT: {
-                        emulator.board->buttons->Release(Buttons::Right);
+                        emulator.ReleaseButton(Buttons::Right);
                         break;
                 }
                 }
@@ -241,7 +184,7 @@ int main(int argc, char* argv[])
     if (!eepromPath.empty())
     {
         std::ofstream eepromFileOut(eepromPath, std::ios::binary);
-        eepromFileOut.write(reinterpret_cast<const char*>(emulator.board->eeprom->memory->buffer), eepromBuffer.size());
+        eepromFileOut.write(reinterpret_cast<const char*>(emulator.eeprom->memory->buffer), eepromBuffer.size());
         eepromFileOut.close();
     }
     

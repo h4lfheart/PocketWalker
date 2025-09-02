@@ -3,7 +3,7 @@
 #include <ranges>
 #include <stdexcept>
 
-#include "../Peripherals/PeripheralComponent.h"
+#include "../IO/IOComponent.h"
 
 void Ssu::Tick()
 {
@@ -16,7 +16,7 @@ void Ssu::Tick()
     {
         if (~status & SsuFlags::Status::TRANSMIT_EMPTY)
         {
-            ExecutePeripherals([this](PeripheralComponent* peripheral)
+            ExecutePeripherals([this](IOComponent* peripheral)
             {
                 peripheral->TransmitAndReceive(this);
             });
@@ -26,7 +26,7 @@ void Ssu::Tick()
     {
         if (~status & SsuFlags::Status::TRANSMIT_EMPTY)
         {
-            ExecutePeripherals([this](PeripheralComponent* peripheral)
+            ExecutePeripherals([this](IOComponent* peripheral)
             {
                 peripheral->Transmit(this);
             });
@@ -38,10 +38,10 @@ void Ssu::Tick()
     }
 }
 
-void Ssu::RegisterIOPeripheral(Port port, uint8_t pin, PeripheralComponent* component)
+void Ssu::RegisterIOPeripheral(Port port, uint8_t pin, IOComponent* component)
 {
     if (!peripherals.contains(port)) {
-        peripherals[port] = std::map<uint8_t, PeripheralComponent*>();
+        peripherals[port] = std::map<uint8_t, IOComponent*>();
     }
     
     peripherals[port][pin] = component;
@@ -52,7 +52,7 @@ uint8_t Ssu::GetPort(uint16_t address)
     return ram->ReadByte(address);
 }
 
-void Ssu::ExecutePeripherals(const std::function<void(PeripheralComponent* peripheral)>& executeFunction,
+void Ssu::ExecutePeripherals(const std::function<void(IOComponent* peripheral)>& executeFunction,
                              bool invertPortSelect, bool isTick)
 {
     for (const auto& port : peripherals | std::views::keys)
@@ -61,7 +61,7 @@ void Ssu::ExecutePeripherals(const std::function<void(PeripheralComponent* perip
     }
 }
 
-void Ssu::ExecutePeripherals(const Port port, const std::function<void(PeripheralComponent* peripheral)>& executeFunction,
+void Ssu::ExecutePeripherals(const Port port, const std::function<void(IOComponent* peripheral)>& executeFunction,
     bool invertPortSelect, bool isTick)
 {
     for (const auto& pins = peripherals[port]; auto [pin, peripheral] : pins)

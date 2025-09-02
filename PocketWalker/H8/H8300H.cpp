@@ -1,42 +1,29 @@
-#include "PocketWalker.h"
+#include "H8300H.h"
 
 #include <thread>
 
-PocketWalker::PocketWalker(uint8_t* ramBuffer, uint8_t* eepromBuffer): board(new Board(ramBuffer, eepromBuffer))
+#include "IO/IOComponent.h"
+
+H8300H::H8300H(uint8_t* ramBuffer): board(new Board(ramBuffer))
 {
     
 }
 
-void PocketWalker::Start()
+void H8300H::Start()
 {
     isRunning = true;
     
-    emulatorThread = std::thread(&PocketWalker::EmulatorLoop, this);
+    emulatorThread = std::thread(&H8300H::EmulatorLoop, this);
 }
 
-void PocketWalker::Stop()
+void H8300H::Stop()
 {
     isRunning = false;
 
     emulatorThread.join();
 }
 
-bool PocketWalker::IsPokewalkerRom() const
-{
-    return board->ram->ReadString(0xBF98, 9).contains("nintendo");
-}
-
-void PocketWalker::OnDraw(std::function<void(uint8_t*)> handler) const
-{
-    board->lcd->onDraw = handler;
-}
-
-void PocketWalker::OnAudio(std::function<void(float)> handler) const
-{
-    board->renderAudio = handler;
-}
-
-void PocketWalker::EmulatorLoop()
+void H8300H::EmulatorLoop()
 {
     try
     {
@@ -64,13 +51,22 @@ void PocketWalker::EmulatorLoop()
     }
 }
 
-uint8_t PocketWalker::Step()
+uint8_t H8300H::Step()
 {
     const uint8_t cpuCycles = board->cpu->Step();
     for (auto i = 0; i < cpuCycles; i++)
     {
         elapsedCycles++;
+        
         board->Tick(elapsedCycles);
+        
+        for (auto component : ioComponents)
+        {
+            if (component->DoesTick() && elapsedCycles % (Cpu::TICKS / component->TickRate()) == 0)
+            {
+                component->Tick();
+            }
+        }
     }
 
     return cpuCycles;

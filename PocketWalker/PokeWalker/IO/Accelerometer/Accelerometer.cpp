@@ -1,5 +1,7 @@
 #include "Accelerometer.h"
 
+#include "../../../H8/Ssu/Ssu.h"
+
 void Accelerometer::TransmitAndReceive(Ssu* ssu)
 {
     switch (state)

@@ -3,7 +3,7 @@
 #include <print>
 
 #include "LcdData.h"
-#include "../../Ssu/Ssu.h"
+#include "../../../H8/Ssu/Ssu.h"
 
 void Lcd::Transmit(Ssu* ssu)
 {
@@ -65,7 +65,8 @@ void Lcd::Transmit(Ssu* ssu)
 
 bool Lcd::CanExecute(Ssu* ssu)
 {
-    return !(ssu->GetPort(Ssu::Port::PORT_1) & LcdData::PIN);
+    // TODO create larger component for handling multiple pins
+    return !(ssu->GetPort(Ssu::Port::PORT_1) & Ssu::PIN_1);
 }
 
 void Lcd::Tick()

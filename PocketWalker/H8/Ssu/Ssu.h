@@ -6,10 +6,10 @@
 #include "../Cpu/Components/Interrupts.h"
 #include "../Memory/Memory.h"
 #include "../Memory/MemoryAccessor.h"
-#include "../Peripherals/PeripheralComponent.h"
+#include "../IO/IOComponent.h"
 
 class Memory;
-class PeripheralComponent;
+class IOComponent;
 
 constexpr uint16_t MODE_ADDR = 0xF0E2;
 constexpr uint16_t ENABLE_ADDR = 0xF0E3;
@@ -63,6 +63,16 @@ public:
         PORT_B = 0xFFDE,
     };
     
+    enum Pin : uint8_t
+    {
+        PIN_0 = 1 << 0,
+        PIN_1 = 1 << 1,
+        PIN_2 = 1 << 2,
+        PIN_3 = 1 << 3,
+        PIN_4 = 1 << 4,
+        PIN_5 = 1 << 5,
+    };
+    
     Ssu(Memory* ram, Interrupts* interrupts, Flags* flags) : ram(ram), interrupts(interrupts), flags(flags),
         mode(ram->CreateAccessor<uint8_t>(MODE_ADDR)),
         enable(ram->CreateAccessor<uint8_t>(ENABLE_ADDR)),
@@ -93,7 +103,7 @@ public:
         
         ram->OnWrite(PORT_1, [this](uint32_t)
         {
-            ExecutePeripherals(PORT_1, [](PeripheralComponent* peripheral)
+            ExecutePeripherals(PORT_1, [](IOComponent* peripheral)
             {
                 peripheral->Reset();
             }, true, false);
@@ -101,7 +111,7 @@ public:
         
         ram->OnWrite(PORT_9, [this](uint32_t)
         {
-            ExecutePeripherals(PORT_9, [](PeripheralComponent* peripheral)
+            ExecutePeripherals(PORT_9, [](IOComponent* peripheral)
             {
                 peripheral->Reset();
             }, true, false);
@@ -121,7 +131,7 @@ public:
 
     void Tick() override;
 
-    void RegisterIOPeripheral(Port port, uint8_t pin, PeripheralComponent* component);
+    void RegisterIOPeripheral(Port port, uint8_t pin, IOComponent* component);
 
     uint8_t GetPort(uint16_t address);
 
@@ -141,12 +151,12 @@ public:
     MemoryAccessor<uint8_t> portB;
 
 private:
-    void ExecutePeripherals(const std::function<void(PeripheralComponent* peripheral)>& executeFunction, bool invertPortSelect = false, bool isTick = true);
-    void ExecutePeripherals(Port port, const std::function<void(PeripheralComponent* peripheral)>& executeFunction, bool invertPortSelect = false, bool isTick = true);
+    void ExecutePeripherals(const std::function<void(IOComponent* peripheral)>& executeFunction, bool invertPortSelect = false, bool isTick = true);
+    void ExecutePeripherals(Port port, const std::function<void(IOComponent* peripheral)>& executeFunction, bool invertPortSelect = false, bool isTick = true);
     
     Memory* ram;
     Flags* flags;
     Interrupts* interrupts;
 
-    std::map<Port, std::map<uint8_t, PeripheralComponent*>> peripherals;
+    std::map<Port, std::map<uint8_t, IOComponent*>> peripherals;
 };

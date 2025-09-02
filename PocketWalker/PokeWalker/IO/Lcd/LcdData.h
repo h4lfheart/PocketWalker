@@ -1,9 +1,9 @@
 #pragma once
-#include "../PeripheralComponent.h"
+#include "../../../H8/IO/IOComponent.h"
 
 class Lcd;
 
-class LcdData : public PeripheralComponent
+class LcdData : public IOComponent
 {
 public:
     LcdData(Lcd* lcd) : lcd(lcd)
@@ -17,8 +17,6 @@ public:
     {
         return true;
     }
-
-    static constexpr uint8_t PIN = 1 << 1;
 
 private:
     Lcd* lcd;

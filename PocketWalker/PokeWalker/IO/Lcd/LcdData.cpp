@@ -2,8 +2,8 @@
 
 #include <print>
 
-#include "Lcd.h"
-#include "../../Ssu/Ssu.h"
+#include "../../../PokeWalker/IO/Lcd/Lcd.h"
+#include "../../../H8/Ssu/Ssu.h"
 
 void LcdData::Transmit(Ssu* ssu)
 {

@@ -1,7 +1,8 @@
 #pragma once
-#include "../PeripheralComponent.h"
+#include "../../../H8/IO/IOComponent.h"
+#include "../../../H8/Memory/MemoryAccessor.h"
 
-class Buttons : PeripheralComponent
+class Buttons : IOComponent
 {
 public:
     enum Button : uint8_t
@@ -11,7 +12,7 @@ public:
         Right = 1 << 4
     };
     
-    Buttons(Ssu* ssu) : ssu(ssu)
+    Buttons(MemoryAccessor<uint8_t> portB) : portB(portB)
     {
         
     }
@@ -20,5 +21,5 @@ public:
     void Release(Button button);
     
 private:
-    Ssu* ssu;
+    MemoryAccessor<uint8_t> portB;
 };
