@@ -2,12 +2,12 @@
 
 #include "../../../H8/Ssu/Ssu.h"
 
-void Buttons::Press(Button button)
+void Buttons::Press(const Button button)
 {
     portB |= button;
 }
 
-void Buttons::Release(Button button)
+void Buttons::Release(const Button button)
 {
     portB &= ~button;
 }

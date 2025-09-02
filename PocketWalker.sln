@@ -1,8 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PocketWalker", "PocketWalker\PocketWalker.vcxproj", "{37B758A9-464F-46D7-9C2D-BE2B5A46242A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PocketWalker.Desktop", "PocketWalker.Desktop\PocketWalker.Desktop.vcxproj", "{37B758A9-464F-46D7-9C2D-BE2B5A46242A}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SDL", "external\SDL\VisualC\SDL\SDL.vcxproj", "{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PocketWalker", "PocketWalker\PocketWalker.vcxproj", "{49E3C2D6-45EA-45F3-92F6-003957F42D1A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,5 +30,13 @@ Global
 		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Release|Win32.Build.0 = Release|Win32
 		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Release|x64.ActiveCfg = Release|x64
 		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Release|x64.Build.0 = Release|x64
+		{49E3C2D6-45EA-45F3-92F6-003957F42D1A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{49E3C2D6-45EA-45F3-92F6-003957F42D1A}.Debug|Win32.Build.0 = Debug|Win32
+		{49E3C2D6-45EA-45F3-92F6-003957F42D1A}.Debug|x64.ActiveCfg = Debug|x64
+		{49E3C2D6-45EA-45F3-92F6-003957F42D1A}.Debug|x64.Build.0 = Debug|x64
+		{49E3C2D6-45EA-45F3-92F6-003957F42D1A}.Release|Win32.ActiveCfg = Release|Win32
+		{49E3C2D6-45EA-45F3-92F6-003957F42D1A}.Release|Win32.Build.0 = Release|Win32
+		{49E3C2D6-45EA-45F3-92F6-003957F42D1A}.Release|x64.ActiveCfg = Release|x64
+		{49E3C2D6-45EA-45F3-92F6-003957F42D1A}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 EndGlobal

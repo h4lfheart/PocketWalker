@@ -13,8 +13,8 @@
 #include "../external/SDL/include/SDL.h"
 #include "../external/argparse/include/argparse/argparse.hpp"
 
-#include "H8/H8300H.h"
-#include "PokeWalker/PokeWalker.h"
+#include "../PocketWalker/PokeWalker/PokeWalker.h"
+
 #include "Sdl/SdlSystem.h"
 #include "Tcp/TcpSocket.h"
 #include "Sdl/SdlAudio.h"
@@ -105,6 +105,7 @@ int main(int argc, char* argv[])
             });
         }
 
+        // TODO add proper handlers for these, no board access!!
         socket.setOnData([&](const std::vector<uint8_t>& data) {
             pokeWalker.board->sci3->Receive(data);
         });
@@ -138,6 +139,7 @@ int main(int argc, char* argv[])
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT)
                 pokeWalker.Stop();
+            
             if (e.type == SDL_KEYDOWN)
             {
                 switch(e.key.keysym.sym)
@@ -154,8 +156,9 @@ int main(int argc, char* argv[])
                         pokeWalker.PressButton(Buttons::Right);
                         break;
                 }
+                }
             }
-
+            
             if (e.type == SDL_KEYUP)
             {
                 switch(e.key.keysym.sym)
@@ -175,11 +178,10 @@ int main(int argc, char* argv[])
                 }
             }
         }
-
+        
         sdl.window->Render();
     }
 
-    
     if (!eepromPath.empty())
     {
         std::ofstream eepromFileOut(eepromPath, std::ios::binary);

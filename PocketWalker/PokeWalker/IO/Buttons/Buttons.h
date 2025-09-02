@@ -2,7 +2,7 @@
 #include "../../../H8/IO/IOComponent.h"
 #include "../../../H8/Memory/MemoryAccessor.h"
 
-class Buttons : IOComponent
+class Buttons : public IOComponent
 {
 public:
     enum Button : uint8_t

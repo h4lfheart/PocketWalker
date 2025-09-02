@@ -42,14 +42,14 @@ void PokeWalker::OnAudio(std::function<void(float)> handler) const
     beeper->renderAudio = handler;
 }
 
-void PokeWalker::PressButton(Buttons::Button button) const
+void PokeWalker::PressButton(const Buttons::Button button) const
 {
     buttons->Press(button);
 }
 
-void PokeWalker::ReleaseButton(Buttons::Button button) const
+void PokeWalker::ReleaseButton(const Buttons::Button button) const
 {
-    buttons->Press(button);
+    buttons->Release(button);
 }
 
 void PokeWalker::SetEepromBuffer(uint8_t* buffer)

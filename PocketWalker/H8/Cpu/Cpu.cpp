@@ -18,6 +18,8 @@ size_t Cpu::Step()
     
     if (!sleeping && handlerResult != SkipInstruction)
     {
+        if (instructionCount % 10000 == 0)
+            std::println("instr 0x{:04X}", registers->pc);
         const Instruction* instruction = instructions->Execute(this);
         cycleCount = instruction->cycles;
         instructionCount++;
