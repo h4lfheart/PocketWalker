@@ -70,20 +70,19 @@ int main(int argc, char* argv[])
         return 1;
     }
     
-    
-    PokeWalker emulator(romBuffer.data(), eepromBuffer.data());
+    PokeWalker pokeWalker(romBuffer.data(), eepromBuffer.data());
 
-    emulator.OnDraw([&sdl](uint8_t* buffer)
+    pokeWalker.OnDraw([&sdl](uint8_t* buffer)
     {
         sdl.window->Render(buffer);
     });
 
-    emulator.OnAudio([&sdl](float frequency)
+    pokeWalker.OnAudio([&sdl](float frequency)
     {
         sdl.audio->Render(frequency);
     });
     
-    emulator.Start();
+    pokeWalker.Start();
     
     std::thread tcpThread([&]
     {
@@ -107,10 +106,10 @@ int main(int argc, char* argv[])
         }
 
         socket.setOnData([&](const std::vector<uint8_t>& data) {
-            emulator.board->sci3->Receive(data);
+            pokeWalker.board->sci3->Receive(data);
         });
 
-        emulator.board->sci3->sendData = [&](uint8_t byte)
+        pokeWalker.board->sci3->sendData = [&](uint8_t byte)
         {
             socket.send({byte});
         };
@@ -123,7 +122,7 @@ int main(int argc, char* argv[])
             socket.connect("127.0.0.1", 8081);
         }
 
-        while (emulator.isRunning) {
+        while (pokeWalker.isRunning) {
             if (!socket.isConnected()) {
                 socket.reconnect();
             }
@@ -135,24 +134,24 @@ int main(int argc, char* argv[])
     });
     
     SDL_Event e;
-    while (emulator.isRunning) {
+    while (pokeWalker.isRunning) {
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT)
-                emulator.Stop();
+                pokeWalker.Stop();
             if (e.type == SDL_KEYDOWN)
             {
                 switch(e.key.keysym.sym)
                 {
                 case SDLK_DOWN: {
-                        emulator.PressButton(Buttons::Center);
+                        pokeWalker.PressButton(Buttons::Center);
                         break;
                 }
                 case SDLK_LEFT: {
-                        emulator.PressButton(Buttons::Left);
+                        pokeWalker.PressButton(Buttons::Left);
                         break;
                 }
                 case SDLK_RIGHT: {
-                        emulator.PressButton(Buttons::Right);
+                        pokeWalker.PressButton(Buttons::Right);
                         break;
                 }
             }
@@ -162,15 +161,15 @@ int main(int argc, char* argv[])
                 switch(e.key.keysym.sym)
                 {
                 case SDLK_DOWN: {
-                        emulator.ReleaseButton(Buttons::Center);
+                        pokeWalker.ReleaseButton(Buttons::Center);
                         break;
                 }
                 case SDLK_LEFT: {
-                        emulator.ReleaseButton(Buttons::Left);
+                        pokeWalker.ReleaseButton(Buttons::Left);
                         break;
                 }
                 case SDLK_RIGHT: {
-                        emulator.ReleaseButton(Buttons::Right);
+                        pokeWalker.ReleaseButton(Buttons::Right);
                         break;
                 }
                 }
@@ -184,7 +183,7 @@ int main(int argc, char* argv[])
     if (!eepromPath.empty())
     {
         std::ofstream eepromFileOut(eepromPath, std::ios::binary);
-        eepromFileOut.write(reinterpret_cast<const char*>(emulator.eeprom->memory->buffer), eepromBuffer.size());
+        eepromFileOut.write(reinterpret_cast<const char*>(pokeWalker.GetEepromBuffer()), eepromBuffer.size());
         eepromFileOut.close();
     }
     

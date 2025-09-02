@@ -14,6 +14,9 @@ public:
     void OnAudio(std::function<void(float frequency)> handler) const;
     void PressButton(Buttons::Button button) const;
     void ReleaseButton(Buttons::Button button) const;
+    void SetEepromBuffer(uint8_t* buffer);
+
+    uint8_t* GetEepromBuffer();
 
 private:
     void SetupAddressHandlers();

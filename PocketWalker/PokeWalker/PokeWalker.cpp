@@ -52,6 +52,16 @@ void PokeWalker::ReleaseButton(Buttons::Button button) const
     buttons->Press(button);
 }
 
+void PokeWalker::SetEepromBuffer(uint8_t* buffer)
+{
+    eeprom->memory->buffer = buffer;
+}
+
+uint8_t* PokeWalker::GetEepromBuffer()
+{
+    return eeprom->memory->buffer;
+}
+
 void PokeWalker::SetupAddressHandlers()
 {
     // add watts
