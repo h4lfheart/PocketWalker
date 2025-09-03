@@ -3,6 +3,7 @@
 #include <queue>
 #include <print>
 
+#include "../../Utilities/EventHandler.h"
 #include "../Board/Component.h"
 #include "../Memory/Memory.h"
 #include "../Memory/MemoryAccessor.h"
@@ -50,11 +51,11 @@ public:
 
     void Tick() override;
 
-    void Receive(std::vector<uint8_t> bytes);
+    void Receive(uint8_t byte);
 
     std::queue<uint8_t> receiveBuffer;
 
-    std::function<void(uint8_t)> sendData;
+    EventHandler<uint8_t> OnTransmitData;
 
     MemoryAccessor<uint8_t> control;
     MemoryAccessor<uint8_t> status;

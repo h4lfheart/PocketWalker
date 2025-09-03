@@ -13,7 +13,6 @@ public:
     void Stop();
     
     bool isRunning;
-    Board* board;
 
 protected:
     
@@ -24,6 +23,7 @@ protected:
         board->ssu->RegisterIOPeripheral(port, pin, component);
     }
 
+    Board* board;
 
 private:
     void EmulatorLoop();

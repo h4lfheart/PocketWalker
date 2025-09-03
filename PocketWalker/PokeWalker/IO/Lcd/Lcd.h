@@ -3,6 +3,7 @@
 
 #include "../../../H8/IO/IOComponent.h"
 #include "../../../H8/Memory/Memory.h"
+#include "../../../Utilities/EventHandler.h"
 
 class Memory;
 
@@ -39,7 +40,7 @@ public:
     
     LcdState state;
 
-    std::function<void(uint8_t*)> onDraw;
+    EventHandler<uint8_t*> OnDraw;
 
     size_t column = 0;
     size_t offset = 0;

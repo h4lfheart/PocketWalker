@@ -107,7 +107,7 @@ void Lcd::Tick()
         std::memset(buffer, PALETTE[0], bufferSize);
     }
 
-    onDraw(buffer);
+    OnDraw(buffer);
 }
 
 

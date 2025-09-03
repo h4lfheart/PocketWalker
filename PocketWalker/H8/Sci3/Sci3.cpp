@@ -11,7 +11,7 @@ void Sci3::Tick()
     {
         if (~status & Sci3Flags::STATUS_TRANSMIT_EMPTY)
         {
-            sendData(transmit);
+            OnTransmitData(transmit);
 
             status |= Sci3Flags::STATUS_TRANSMIT_EMPTY;
             status |= Sci3Flags::STATUS_TRANSMIT_END;
@@ -25,7 +25,7 @@ void Sci3::Tick()
         {
             if (!receiveBuffer.empty())
             {
-                uint8_t receiveValue = receiveBuffer.front();
+                const uint8_t receiveValue = receiveBuffer.front();
                 receiveBuffer.pop();
                 
                 receive = receiveValue;
@@ -35,10 +35,7 @@ void Sci3::Tick()
     }
 }
 
-void Sci3::Receive(std::vector<uint8_t> bytes)
+void Sci3::Receive(const uint8_t byte)
 {
-    for (uint8_t byte : bytes)
-    {
-        receiveBuffer.push(byte);
-    }
+    receiveBuffer.push(byte);
 }

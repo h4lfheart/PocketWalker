@@ -3,6 +3,7 @@
 
 #include "../../../H8/IO/IOComponent.h"
 #include "../../../H8/Timers/Components/TimerW.h"
+#include "../../../Utilities/EventHandler.h"
 
 class Beeper : public IOComponent
 {
@@ -23,8 +24,8 @@ public:
     {
         return 256;
     }
-    
-    std::function<void(float)> renderAudio;
+
+    EventHandler<float> OnPlayFrequency;
 private:
     TimerW* timerW;
 };

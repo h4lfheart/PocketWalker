@@ -107,13 +107,17 @@ int main(int argc, char* argv[])
 
         // TODO add proper handlers for these, no board access!!
         socket.setOnData([&](const std::vector<uint8_t>& data) {
-            pokeWalker.board->sci3->Receive(data);
+
+            for (auto byte : data)
+            {
+                pokeWalker.ReceiveSci3(byte);
+            }
         });
 
-        pokeWalker.board->sci3->sendData = [&](uint8_t byte)
+        pokeWalker.OnTransmitSci3([&](uint8_t byte)
         {
             socket.send({byte});
-        };
+        });
 
         if (serverMode) {
             if (!socket.startServer(8081)) {

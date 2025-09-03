@@ -32,14 +32,24 @@ PokeWalker::PokeWalker(uint8_t* ramBuffer, uint8_t* eepromBuffer) : H8300H(ramBu
     RegisterIOComponent(buttons, Ssu::PORT_B, Ssu::PIN_0);
 }
 
-void PokeWalker::OnDraw(std::function<void(uint8_t*)> handler) const
+void PokeWalker::OnDraw(const EventHandlerCallback<uint8_t*>& handler) const
 {
-    lcd->onDraw = handler;
+    lcd->OnDraw += handler;
 }
 
-void PokeWalker::OnAudio(std::function<void(float)> handler) const
+void PokeWalker::OnAudio(const EventHandlerCallback<float>& handler) const
 {
-    beeper->renderAudio = handler;
+    beeper->OnPlayFrequency += handler;
+}
+
+void PokeWalker::OnTransmitSci3(const EventHandlerCallback<uint8_t>& callback) const
+{
+    board->sci3->OnTransmitData += callback;
+}
+
+void PokeWalker::ReceiveSci3(const uint8_t byte) const
+{
+    board->sci3->Receive(byte);
 }
 
 void PokeWalker::PressButton(const Buttons::Button button) const
