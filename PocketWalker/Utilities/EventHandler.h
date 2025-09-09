@@ -1,5 +1,6 @@
 #pragma once
 #include <functional>
+#include <list>
 
 template <typename T>
 using EventHandlerCallback = std::function<void(T)>;

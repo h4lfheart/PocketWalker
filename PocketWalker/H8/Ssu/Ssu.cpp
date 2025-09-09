@@ -7,14 +7,18 @@
 
 void Ssu::Tick()
 {
-    if (~enable & SsuFlags::Enable::TRANSMIT_ENABLE)
+    // not changing for checks, use "cached" value
+    auto enableFlag = this->enable.Get();
+    auto statusFlag = this->status.Get();
+    
+    if (~enableFlag & SsuFlags::Enable::TRANSMIT_ENABLE && ~statusFlag & SsuFlags::Status::TRANSMIT_EMPTY)
     {
-        status |= SsuFlags::Status::TRANSMIT_EMPTY;
+        this->status |= SsuFlags::Status::TRANSMIT_EMPTY;
     }
 
-    if (enable & SsuFlags::Enable::TRANSMIT_ENABLE && enable & SsuFlags::Enable::RECEIVE_ENABLE)
+    if (enableFlag & SsuFlags::Enable::TRANSMIT_ENABLE && enableFlag & SsuFlags::Enable::RECEIVE_ENABLE)
     {
-        if (~status & SsuFlags::Status::TRANSMIT_EMPTY)
+        if (~statusFlag & SsuFlags::Status::TRANSMIT_EMPTY)
         {
             ExecutePeripherals([this](IOComponent* peripheral)
             {
@@ -22,9 +26,9 @@ void Ssu::Tick()
             });
         }
     }
-    else if (enable & SsuFlags::Enable::TRANSMIT_ENABLE)
+    else if (enableFlag & SsuFlags::Enable::TRANSMIT_ENABLE)
     {
-        if (~status & SsuFlags::Status::TRANSMIT_EMPTY)
+        if (~statusFlag & SsuFlags::Status::TRANSMIT_EMPTY)
         {
             ExecutePeripherals([this](IOComponent* peripheral)
             {
@@ -32,7 +36,7 @@ void Ssu::Tick()
             });
         }
     }
-    else if (enable & SsuFlags::Enable::RECEIVE_ENABLE)
+    else if (enableFlag & SsuFlags::Enable::RECEIVE_ENABLE)
     {
         throw std::runtime_error("Unimplemented receive enable for ssu.");
     }

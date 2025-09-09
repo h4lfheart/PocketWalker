@@ -32,6 +32,21 @@ PokeWalker::PokeWalker(uint8_t* ramBuffer, uint8_t* eepromBuffer) : H8300H(ramBu
     RegisterIOComponent(buttons, Ssu::PORT_B, Ssu::PIN_0);
 }
 
+void PokeWalker::Tick(uint64_t cycles)
+{
+    H8300H::Tick(cycles);
+
+    if (cycles % (Cpu::TICKS / Lcd::TICKS) == 0)
+    {
+        lcd->Tick();
+    }
+    
+    if (cycles % (Cpu::TICKS / Beeper::TICKS) == 0)
+    {
+        beeper->Tick();
+    }
+}
+
 void PokeWalker::OnDraw(const EventHandlerCallback<uint8_t*>& handler) const
 {
     lcd->OnDraw += handler;

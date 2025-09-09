@@ -36,6 +36,10 @@ int main(int argc, char* argv[])
         .help("Runs the TCP connection as a server.")
         .flag();
     
+    arguments.add_argument("--no-save")
+        .help("Disables eeprom saving.")
+        .flag();
+    
     try {
         arguments.parse_args(argc, argv);
     }
@@ -49,6 +53,7 @@ int main(int argc, char* argv[])
     }
     
     bool serverMode = arguments.is_used("--server");
+    bool noSaveMode = arguments.is_used("--no-save");
     
     std::string romPath = arguments.get<std::string>("rom");
     std::array<uint8_t, 0xFFFF> romBuffer = {};
@@ -186,7 +191,7 @@ int main(int argc, char* argv[])
         sdl.window->Render();
     }
 
-    if (!eepromPath.empty())
+    if (!eepromPath.empty() && !noSaveMode)
     {
         std::ofstream eepromFileOut(eepromPath, std::ios::binary);
         eepromFileOut.write(reinterpret_cast<const char*>(pokeWalker.GetEepromBuffer()), eepromBuffer.size());

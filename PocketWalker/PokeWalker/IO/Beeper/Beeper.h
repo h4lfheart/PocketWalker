@@ -15,17 +15,9 @@ public:
 
     void Tick() override;
 
-    bool DoesTick() override
-    {
-        return true;
-    }
-
-    size_t TickRate() override
-    {
-        return 256;
-    }
-
     EventHandler<float> OnPlayFrequency;
+
+    static constexpr size_t TICKS = 256;
 private:
     TimerW* timerW;
 };

@@ -19,11 +19,12 @@ protected:
     template <typename T>
     void RegisterIOComponent(T* component, Ssu::Port port, uint8_t pin)
     {
-        ioComponents.push_back(component);
         board->ssu->RegisterIOPeripheral(port, pin, component);
     }
 
     Board* board;
+
+    virtual void Tick(uint64_t cycles);
 
 private:
     void EmulatorLoop();
@@ -32,13 +33,4 @@ private:
     std::thread emulatorThread;
 
     uint64_t elapsedCycles;
-
-    std::vector<IOComponent*> ioComponents;
-};
-
-struct IOComponentContainer
-{
-    IOComponent* component;
-    Ssu::Port port;
-    uint8_t pin;
 };

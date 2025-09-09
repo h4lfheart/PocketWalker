@@ -2,6 +2,11 @@
 #include <cstdlib>
 #include <cstdint>
 
+#if ANDROID
+#include <__algorithm/fill.h>
+#endif
+
+
 class Memory;
 class Board;
 
@@ -10,9 +15,14 @@ class Registers
 public:
     Registers(Memory* ram) : ram(ram)
     {
-        this->buffer = new uint8_t[32]();
-        
-        this->sp = Register32(7);
+#if ANDROID
+        buffer = static_cast<uint8_t*>(std::aligned_alloc(4, 32));
+        std::fill_n(buffer, 32, 0);
+#else
+        buffer = new uint8_t[32]();
+#endif
+
+        sp = Register32(7);
     }
 
     uint8_t* Register8(const uint8_t control) const;
@@ -27,8 +37,11 @@ public:
     uint16_t pc;
     uint32_t* sp;
 
-    alignas(uint32_t) uint8_t* buffer;
-    
+#if !ANDROID
+    alignas(uint32_t)
+#endif
+    uint8_t* buffer;
+
 private:
     Memory* ram;
 };

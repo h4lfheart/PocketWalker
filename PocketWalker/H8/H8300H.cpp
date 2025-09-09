@@ -42,7 +42,7 @@ void H8300H::EmulatorLoop()
                 auto sleepTime = (elapsedCycles - expectedCycles) * SECONDS_PER_CYCLE;
                     std::this_thread::sleep_for(std::chrono::duration<double>(sleepTime));
             }
-        }    
+        }   
     }
     catch (const std::exception& e)
     {
@@ -57,17 +57,21 @@ uint8_t H8300H::Step()
     for (auto i = 0; i < cpuCycles; i++)
     {
         elapsedCycles++;
-        
-        board->Tick(elapsedCycles);
-        
-        for (auto component : ioComponents)
-        {
-            if (component->DoesTick() && elapsedCycles % (Cpu::TICKS / component->TickRate()) == 0)
-            {
-                component->Tick();
-            }
-        }
+
+        Tick(elapsedCycles);
     }
 
     return cpuCycles;
 }
+
+
+void H8300H::Tick(uint64_t cycles)
+{
+    board->Tick(cycles);
+
+    if (cycles % 64 == 0 && !board->cpu->flags->interrupt)
+    {
+        board->cpu->UpdateInterrupts();
+    }
+}
+

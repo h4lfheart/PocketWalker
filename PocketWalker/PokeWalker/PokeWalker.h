@@ -9,6 +9,8 @@ class PokeWalker : public H8300H
 {
 public:
     PokeWalker(uint8_t* ramBuffer, uint8_t* eepromBuffer);
+
+    void Tick(uint64_t cycles) override;
     
     void OnDraw(const EventHandlerCallback<uint8_t*>& handler) const;
     void OnAudio(const EventHandlerCallback<float>& handler) const;

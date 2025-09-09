@@ -19,16 +19,6 @@ public:
     void Tick() override;
     bool CanExecute(Ssu* ssu) override;
 
-    bool DoesTick() override
-    {
-        return true;
-    }
-
-    size_t TickRate() override
-    {
-        return 4;
-    }
-
     enum LcdState : uint8_t
     {
         Waiting,
@@ -56,4 +46,6 @@ public:
     static constexpr uint8_t TOTAL_COLUMNS = 96;
     
     static constexpr std::array<uint32_t, 4> PALETTE = {0xCCCCCC, 0x999999, 0x666666, 0x333333};
+    
+    static constexpr size_t TICKS = 4;
 };

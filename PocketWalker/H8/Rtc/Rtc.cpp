@@ -19,7 +19,11 @@ void Rtc::Tick()
     
     const time_t currentTime = std::time(nullptr);
     std::tm localTime;
+#if ANDROID
+    localtime_r(&currentTime, &localTime);
+#else
     localtime_s(&localTime, &currentTime);
+#endif
 
     second = BitUtilities::BinaryEncodedDecimal(localTime.tm_sec);
     minute = BitUtilities::BinaryEncodedDecimal(localTime.tm_min);

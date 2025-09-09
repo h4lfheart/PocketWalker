@@ -23,12 +23,12 @@ size_t Cpu::Step()
         instructionCount++;
     }
 
-    if (!flags->interrupt)
-    {
-        interrupts->Update(this);
-    }
-
     return cycleCount;
+}
+
+void Cpu::UpdateInterrupts()
+{
+    interrupts->Update(this);
 }
 
 void Cpu::OnAddress(const uint16_t address, const PCHandler& handler)

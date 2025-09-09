@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include <map>
+#include <print>
 
 #include "../Board/Component.h"
 #include "../Cpu/Components/Interrupts.h"

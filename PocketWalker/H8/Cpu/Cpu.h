@@ -40,6 +40,7 @@ public:
     }
 
     size_t Step();
+    void UpdateInterrupts();
     void OnAddress(uint16_t address, const PCHandler& handler);
 
     Memory* ram;
