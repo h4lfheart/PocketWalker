@@ -15,8 +15,11 @@ public:
     void Pause();
     void Resume();
     
-    bool isRunning;
-    bool isPaused;
+    bool IsRunning() const { return isRunning; }
+    bool IsPaused() const { return isPaused; }
+    
+    void SetExceptionHandling(const bool value) { isExceptionHandling = value; }
+
 
 protected:
     
@@ -35,6 +38,10 @@ private:
     uint8_t Step();
 
     std::thread emulatorThread;
+    
+    bool isExceptionHandling = true;
+    bool isRunning = false;
+    bool isPaused = false;
 
-    uint64_t elapsedCycles;
+    uint64_t elapsedCycles = 0;
 };

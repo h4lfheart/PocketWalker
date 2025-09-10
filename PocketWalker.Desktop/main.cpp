@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
             socket.connect("127.0.0.1", 8081);
         }
 
-        while (pokeWalker.isRunning) {
+        while (pokeWalker.IsRunning()) {
             if (!socket.isConnected()) {
                 socket.reconnect();
             }
@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
     });
     
     SDL_Event e;
-    while (pokeWalker.isRunning) {
+    while (pokeWalker.IsRunning()) {
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT)
                 pokeWalker.Stop();
@@ -163,6 +163,14 @@ int main(int argc, char* argv[])
                 }
                 case SDLK_RIGHT: {
                         pokeWalker.PressButton(Buttons::Right);
+                        break;
+                }
+                case SDLK_F1: {
+                        pokeWalker.Pause();
+                        break;
+                }
+                case SDLK_F2: {
+                        pokeWalker.Resume();
                         break;
                 }
                 }

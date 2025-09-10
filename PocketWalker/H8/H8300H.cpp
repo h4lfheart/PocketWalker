@@ -40,17 +40,30 @@ void H8300H::Resume()
 
 void H8300H::EmulatorLoop()
 {
-    try
+    auto loop = [&]()
     {
         constexpr double SECONDS_PER_CYCLE = 1.0 / Cpu::TICKS;
-        constexpr int INSTRUCTIONS_PER_TIMING_CHECK = 10000;
+        constexpr int INSTRUCTIONS_PER_TIMING_CHECK = 1000;
         int instructionCount = 0;
 
-        const auto startTime = std::chrono::high_resolution_clock::now();
+        auto startTime = std::chrono::high_resolution_clock::now();
 
         while (isRunning) {
             Step();
             instructionCount++;
+
+            if (isPaused) {
+                auto pauseStart = std::chrono::high_resolution_clock::now();
+                while (isPaused && isRunning) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                }
+                auto pauseEnd = std::chrono::high_resolution_clock::now();
+        
+                auto pausedDuration = pauseEnd - pauseStart;
+                startTime += pausedDuration;
+        
+                continue;
+            }
 
             if (instructionCount >= INSTRUCTIONS_PER_TIMING_CHECK) {
                 auto currentTime = std::chrono::high_resolution_clock::now();
@@ -63,15 +76,25 @@ void H8300H::EmulatorLoop()
                 }
                 
                 instructionCount = 0;
-
-                while (isPaused) { }
             }
         }
-    }
-    catch (const std::exception& e)
+    };
+
+    if (isExceptionHandling)
     {
-        std::println("\033[31m{}\033[0m", e.what());
-        Stop();
+        try
+        {
+            loop();
+        }
+        catch (const std::exception& e)
+        {
+            std::println("\033[31m{}\033[0m", e.what());
+            Stop();
+        }
+    }
+    else
+    {
+        loop();
     }
 }
 
