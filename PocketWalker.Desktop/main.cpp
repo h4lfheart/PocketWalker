@@ -86,8 +86,8 @@ int main(int argc, char* argv[])
     {
         sdl.audio->Render(frequency);
     });
-    
-    pokeWalker.Start();
+
+    pokeWalker.StartAsync();
     
     std::thread tcpThread([&]
     {
@@ -199,7 +199,7 @@ int main(int argc, char* argv[])
     }
     
     sdl.Stop();
-    
+
     tcpThread.join();
     
     return 0;

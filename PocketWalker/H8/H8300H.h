@@ -9,10 +9,14 @@ class H8300H
 public:
     H8300H(uint8_t* ramBuffer);
 
-    void Start();
+    void StartAsync();
+    void StartSync();
     void Stop();
+    void Pause();
+    void Resume();
     
     bool isRunning;
+    bool isPaused;
 
 protected:
     
