@@ -77,14 +77,14 @@ int main(int argc, char* argv[])
     
     PokeWalker pokeWalker(romBuffer.data(), eepromBuffer.data());
 
-    pokeWalker.OnDraw([&sdl](uint8_t* buffer)
+    pokeWalker.OnDraw([&](uint8_t* buffer)
     {
         sdl.window->Render(buffer);
     });
 
-    pokeWalker.OnAudio([&sdl](float frequency)
+    pokeWalker.OnAudio([&](const AudioInformation audio)
     {
-        sdl.audio->Render(frequency);
+        sdl.audio->Render(audio.frequency, audio.isFullVolume ? 1.0f : 0.25f);
     });
 
     pokeWalker.StartAsync();

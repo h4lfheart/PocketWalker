@@ -13,7 +13,7 @@ public:
     void Tick(uint64_t cycles) override;
     
     void OnDraw(const EventHandlerCallback<uint8_t*>& handler) const;
-    void OnAudio(const EventHandlerCallback<float>& handler) const;
+    void OnAudio(const EventHandlerCallback<AudioInformation>& handler) const;
 
     void OnTransmitSci3(const EventHandlerCallback<uint8_t>& callback) const;
     void ReceiveSci3(uint8_t byte) const;
@@ -21,8 +21,10 @@ public:
     void PressButton(Buttons::Button button) const;
     void ReleaseButton(Buttons::Button button) const;
     
-    void SetEepromBuffer(uint8_t* buffer);
     uint8_t* GetEepromBuffer();
+    void SetEepromBuffer(uint8_t* buffer);
+
+    uint8_t GetContrast();
 
 private:
     void SetupAddressHandlers();

@@ -52,9 +52,9 @@ void PokeWalker::OnDraw(const EventHandlerCallback<uint8_t*>& handler) const
     lcd->OnDraw += handler;
 }
 
-void PokeWalker::OnAudio(const EventHandlerCallback<float>& handler) const
+void PokeWalker::OnAudio(const EventHandlerCallback<AudioInformation>& handler) const
 {
-    beeper->OnPlayFrequency += handler;
+    beeper->OnPlayAudio += handler;
 }
 
 void PokeWalker::OnTransmitSci3(const EventHandlerCallback<uint8_t>& callback) const
@@ -80,6 +80,11 @@ void PokeWalker::ReleaseButton(const Buttons::Button button) const
 void PokeWalker::SetEepromBuffer(uint8_t* buffer)
 {
     eeprom->memory->buffer = buffer;
+}
+
+uint8_t PokeWalker::GetContrast()
+{
+    return lcd->contrast - 20;
 }
 
 uint8_t* PokeWalker::GetEepromBuffer()

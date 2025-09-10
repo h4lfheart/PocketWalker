@@ -5,6 +5,13 @@
 #include "../../../H8/Timers/Components/TimerW.h"
 #include "../../../Utilities/EventHandler.h"
 
+struct AudioInformation
+{
+    float frequency;
+    float isFullVolume;
+};
+
+
 class Beeper : public IOComponent
 {
 public:
@@ -15,7 +22,7 @@ public:
 
     void Tick() override;
 
-    EventHandler<float> OnPlayFrequency;
+    EventHandler<AudioInformation> OnPlayAudio;
 
     static constexpr size_t TICKS = 256;
 private:
