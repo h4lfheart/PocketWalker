@@ -71,7 +71,7 @@ bool Lcd::CanExecute(Ssu* ssu)
 
 void Lcd::Tick()
 {
-    constexpr size_t bufferSize = WIDTH * HEIGHT * 3;
+    constexpr size_t bufferSize = WIDTH * HEIGHT;
     const auto buffer = new uint8_t[bufferSize]();
 
     if (!powerSaveMode)
@@ -93,21 +93,16 @@ void Lcd::Tick()
                 const uint8_t secondBit = (secondByte >> bitOffset) & 1;
 
                 const uint8_t paletteIndex = (firstBit << 1) | secondBit;
-                const uint32_t color = PALETTE[paletteIndex];
 
-                const int baseOffset = (y * WIDTH + x) * 3;
-                buffer[baseOffset]     = (color >> 16) & 0xFF;
-                buffer[baseOffset + 1] = (color >> 8)  & 0xFF;
-                buffer[baseOffset + 2] = (color >> 0)  & 0xFF;
+                const int bufferIndex = y * WIDTH + x;
+                buffer[bufferIndex] = paletteIndex;
             }
         }
     }
     else
     {
-        std::memset(buffer, PALETTE[0], bufferSize);
+        std::memset(buffer, 0, bufferSize); // Fill with palette index 0 for power save mode
     }
 
     OnDraw(buffer);
 }
-
-

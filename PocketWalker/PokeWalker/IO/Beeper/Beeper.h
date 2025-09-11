@@ -8,7 +8,7 @@
 struct AudioInformation
 {
     float frequency;
-    float isFullVolume;
+    bool isFullVolume;
 };
 
 

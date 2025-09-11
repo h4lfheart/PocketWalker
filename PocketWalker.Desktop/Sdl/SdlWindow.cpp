@@ -5,7 +5,7 @@ SdlWindow::SdlWindow()
     : window(nullptr)
     , renderer(nullptr)
     , texture(nullptr)
-    , lcdDataBuffer(LCD_WIDTH * LCD_HEIGHT * 3, 0xCC) // Initialize with gray
+    , lcdDataBuffer(LCD_WIDTH * LCD_HEIGHT, 0)
 {
 }
 
@@ -61,12 +61,17 @@ void SdlWindow::InitializeRenderTexture() {
     int width = BASE_WIDTH;
     int height = BASE_HEIGHT;
 
+    constexpr uint32_t defaultColor = PALETTE[0];
+    constexpr uint8_t r = (defaultColor >> 16) & 0xFF;
+    constexpr uint8_t g = (defaultColor >> 8) & 0xFF;
+    constexpr uint8_t b = (defaultColor >> 0) & 0xFF;
+
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             int dstIndex = (y * width + x) * 3;
-            pixel_ptr[dstIndex] = 0xCC;
-            pixel_ptr[dstIndex + 1] = 0xCC;
-            pixel_ptr[dstIndex + 2] = 0xCC;
+            pixel_ptr[dstIndex] = r;
+            pixel_ptr[dstIndex + 1] = g;
+            pixel_ptr[dstIndex + 2] = b;
         }
     }
 
@@ -75,7 +80,7 @@ void SdlWindow::InitializeRenderTexture() {
 
 void SdlWindow::Render(uint8_t* data) {
     std::lock_guard lock(lcdDataMutex);
-    std::memcpy(lcdDataBuffer.data(), data, LCD_WIDTH * LCD_HEIGHT * 3);
+    std::memcpy(lcdDataBuffer.data(), data, LCD_WIDTH * LCD_HEIGHT);
     lcdDataUpdated.store(true);
 }
 
@@ -90,13 +95,20 @@ void SdlWindow::Render() {
             
             for (int y = 0; y < LCD_HEIGHT; y++) {
                 for (int x = 0; x < LCD_WIDTH; x++) {
-                    int srcIndex = (y * LCD_WIDTH + x) * 3;
-                    int dstX = MARGIN + x;
-                    int dstY = MARGIN + y;
-                    int dstIndex = (dstY * BASE_WIDTH + dstX) * 3;
-                    pixel_ptr[dstIndex] = lcdDataBuffer[srcIndex];
-                    pixel_ptr[dstIndex + 1] = lcdDataBuffer[srcIndex + 1];
-                    pixel_ptr[dstIndex + 2] = lcdDataBuffer[srcIndex + 2];
+                    int srcIndex = y * LCD_WIDTH + x;
+                    const uint8_t paletteIndex = lcdDataBuffer[srcIndex];
+
+                    const uint32_t color = PALETTE[paletteIndex];
+                    const uint8_t r = (color >> 16) & 0xFF;
+                    const uint8_t g = (color >> 8) & 0xFF;
+                    const uint8_t b = (color >> 0) & 0xFF;
+
+                    const int dstX = MARGIN + x;
+                    const int dstY = MARGIN + y;
+                    const int dstIndex = (dstY * BASE_WIDTH + dstX) * 3;
+                    pixel_ptr[dstIndex] = r;
+                    pixel_ptr[dstIndex + 1] = g;
+                    pixel_ptr[dstIndex + 2] = b;
                 }
             }
             
