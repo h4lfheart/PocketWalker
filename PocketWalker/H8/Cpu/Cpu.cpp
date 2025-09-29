@@ -10,6 +10,8 @@ size_t Cpu::Step()
         throw std::runtime_error("Program finished execution.");
     }
 
+    opcodes->Update(registers->pc);
+    
     PCHandlerResult handlerResult = Continue;
     if (addressHandlers.contains(registers->pc))
     {

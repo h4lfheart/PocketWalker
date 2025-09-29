@@ -2296,6 +2296,5 @@ InstructionTable::InstructionTable() :
 
 Instruction* InstructionTable::Execute(Cpu* cpu)
 {
-    cpu->opcodes->Update(cpu->registers->pc);
     return aH_aL.Execute(cpu);
 }

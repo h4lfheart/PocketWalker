@@ -24,7 +24,6 @@ SdlAudio::~SdlAudio() {
         SDL_CloseAudioDevice(audioDevice);
     }
 }
-
 void SdlAudio::Render(float frequency, float volumeMultiplier, float speed) {
     if (frequency != lastFreq) {
         lastFreq = frequency;
@@ -36,9 +35,12 @@ void SdlAudio::Render(float frequency, float volumeMultiplier, float speed) {
     Uint32 queuedBytes = SDL_GetQueuedAudioSize(audioDevice);
     float latency = (queuedBytes / 2.0f) / (SAMPLE_RATE / 1000.0f);
     
-    if (latency > TARGET_LATENCY) {
+    // Scale target latency by speed - at 2x speed, we want half the buffered audio
+    float adjustedTargetLatency = TARGET_LATENCY / speed;
+    
+    if (latency > adjustedTargetLatency) {
         sampleCount = std::max(1, sampleCount - 1);
-    } else if (latency < TARGET_LATENCY / 2.0f) {
+    } else if (latency < adjustedTargetLatency / 2.0f) {
         sampleCount += 1;
     }
     
@@ -68,6 +70,5 @@ void SdlAudio::Render(float frequency, float volumeMultiplier, float speed) {
         std::fill(audioBuffer.begin(), audioBuffer.end(), 0);
     }
     
-    // Queue the audio data
     SDL_QueueAudio(audioDevice, audioBuffer.data(), audioBuffer.size() * sizeof(int16_t));
 }

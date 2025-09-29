@@ -62,7 +62,8 @@ public:
     MemoryAccessor<uint8_t> transmit;
     MemoryAccessor<uint8_t> receive;
     
-    static constexpr size_t TICKS = 32678 / 2;
+    //static constexpr size_t TICKS = 32678 / 2;
+    static constexpr size_t TICKS = 115200 * 16;
 
 private:
     Memory* ram;
