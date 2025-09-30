@@ -61,8 +61,10 @@ int main(int argc, char* argv[])
     romFile.read(reinterpret_cast<char*>(romBuffer.data()), romBuffer.size());
 
     auto eepromPath = arguments.get<std::string>("eeprom");
+    if (eepromPath.empty()) eepromPath = "eeprom.bin";
+    
     std::array<uint8_t, 0xFFFF> eepromBuffer = {};
-    if (!eepromPath.empty() && std::filesystem::exists(eepromPath))
+    if (std::filesystem::exists(eepromPath))
     {
         std::ifstream eepromFile(eepromPath, std::ios::binary);
         eepromFile.read(reinterpret_cast<char*>(eepromBuffer.data()), eepromBuffer.size());
@@ -199,7 +201,7 @@ int main(int argc, char* argv[])
         sdl.window->Render();
     }
 
-    if (!eepromPath.empty() && !noSaveMode)
+    if (!noSaveMode)
     {
         std::ofstream eepromFileOut(eepromPath, std::ios::binary);
         eepromFileOut.write(reinterpret_cast<const char*>(pokeWalker.GetEepromBuffer()), eepromBuffer.size());
