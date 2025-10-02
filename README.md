@@ -13,7 +13,7 @@ PocketWalker - An H8/300H Emulator Tailored for the PokeWalker
 - RTC
 - [SCI3 IR Communication](https://github.com/Ceravia/melonDS-IR)
 - Peripherals
-  - LCD
+  - LCD (w/ Sleep Mode)
   - Eeprom
   - 3-Button Input
   - Beeper Audio
@@ -23,7 +23,6 @@ PocketWalker - An H8/300H Emulator Tailored for the PokeWalker
 - Accelerometer
 
 ## Planned Features
-- Sleep Mode
 - Walk Actions (Accelerometer)
+  - Gifts (Implicitly from Walking)
 - Peer Play
-- Gifts
