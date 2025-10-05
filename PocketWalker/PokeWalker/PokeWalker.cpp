@@ -77,22 +77,22 @@ void PokeWalker::ReleaseButton(const Buttons::Button button) const
     buttons->Release(button);
 }
 
-void PokeWalker::SetEepromBuffer(uint8_t* buffer)
+void PokeWalker::SetEepromBuffer(uint8_t* buffer) const
 {
     eeprom->memory->buffer = buffer;
 }
 
-uint8_t PokeWalker::GetContrast()
+uint8_t PokeWalker::GetContrast() const
 {
     return lcd->contrast - 20;
 }
 
-uint8_t* PokeWalker::GetEepromBuffer()
+uint8_t* PokeWalker::GetEepromBuffer() const
 {
     return eeprom->memory->buffer;
 }
 
-void PokeWalker::SetupAddressHandlers()
+void PokeWalker::SetupAddressHandlers() const
 {
     // add watts
     board->cpu->OnAddress(0x9A4E, [](Cpu* cpu)

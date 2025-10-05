@@ -23,6 +23,7 @@ void Sci3::Tick()
     {
         if (~status & Sci3Flags::STATUS_RECEIVE_FULL)
         {
+            std::lock_guard lock(receiveMutex);
             if (!receiveBuffer.empty())
             {
                 const uint8_t receiveValue = receiveBuffer.front();
@@ -37,5 +38,6 @@ void Sci3::Tick()
 
 void Sci3::Receive(const uint8_t byte)
 {
+    std::lock_guard lock(receiveMutex);
     receiveBuffer.push(byte);
 }

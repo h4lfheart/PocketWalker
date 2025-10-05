@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <mutex>
 #include <queue>
 #include <print>
 
@@ -62,8 +63,7 @@ public:
     MemoryAccessor<uint8_t> transmit;
     MemoryAccessor<uint8_t> receive;
     
-    //static constexpr size_t TICKS = 32678 / 2;
-    static constexpr size_t TICKS = 115200 * 16;
+    static constexpr size_t TICKS = 32678;
 
 private:
     Memory* ram;
@@ -72,5 +72,7 @@ private:
     static constexpr uint16_t TRANSMIT_ADDR = 0xFF9B;
     static constexpr uint16_t STATUS_ADDR = 0xFF9C;
     static constexpr uint16_t RECEIVE_ADDR = 0xFF9D;
+
+    std::mutex receiveMutex; 
     
 };

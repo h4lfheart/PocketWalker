@@ -21,13 +21,13 @@ public:
     void PressButton(Buttons::Button button) const;
     void ReleaseButton(Buttons::Button button) const;
     
-    uint8_t* GetEepromBuffer();
-    void SetEepromBuffer(uint8_t* buffer);
+    uint8_t* GetEepromBuffer() const;
+    void SetEepromBuffer(uint8_t* buffer) const;
 
-    uint8_t GetContrast();
+    uint8_t GetContrast() const;
 
 private:
-    void SetupAddressHandlers();
+    void SetupAddressHandlers() const;
     
     Eeprom* eeprom;
     Accelerometer* accelerometer;
