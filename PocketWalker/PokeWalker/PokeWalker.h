@@ -32,7 +32,6 @@ private:
     Eeprom* eeprom;
     Accelerometer* accelerometer;
     Lcd* lcd;
-    LcdData* lcdData;
     
     Beeper* beeper;
     Buttons* buttons;

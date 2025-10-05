@@ -16,8 +16,10 @@ public:
     }
     
     void Transmit(Ssu* ssu) override;
+    void TransmitAndReceive(Ssu* ssu) override;
     void Tick() override;
-    bool CanExecute(Ssu* ssu) override;
+    
+    static bool IsDataMode(Ssu* ssu);
 
     enum LcdState : uint8_t
     {

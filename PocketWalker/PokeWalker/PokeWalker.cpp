@@ -12,12 +12,8 @@ PokeWalker::PokeWalker(uint8_t* ramBuffer, uint8_t* eepromBuffer) : H8300H(ramBu
     accelerometer = new Accelerometer();
     RegisterIOComponent(accelerometer, Ssu::PORT_9, Ssu::PIN_0);
 
-    // todo combine lcd into one component with multiple pins
     lcd = new Lcd();
     RegisterIOComponent(lcd, Ssu::PORT_1,Ssu::PIN_0);
-    
-    lcdData = new LcdData(lcd);
-    RegisterIOComponent(lcdData, Ssu::PORT_1, Ssu::PIN_1);
 
     // TODO proper FTIOB and FTIOC usage, just placeholder for now
     // TODO dont use explicit timer w reference
@@ -103,25 +99,6 @@ void PokeWalker::SetupAddressHandlers() const
         }
 
         return Continue;
-    });
-
-    // cleanup input
-    /*board->cpu->OnAddress(0x9C3E, [](Cpu* cpu)
-    {
-        if (cpu->ram->ReadByte(0xFFDE) != 0)
-        {
-            cpu->ram->WriteByte(0xFFDE, 0);
-        }
-        
-        return Continue;
-    });*/
-
-    // factory tests
-    board->cpu->OnAddress(0x336, [](Cpu* cpu)
-    {
-        cpu->registers->pc += 4;
-            
-        return SkipInstruction; 
     });
 
     // accelerometer sleep TODO proper interrupt?

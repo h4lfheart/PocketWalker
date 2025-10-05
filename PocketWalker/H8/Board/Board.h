@@ -4,7 +4,6 @@
 #include "../Cpu/Cpu.h"
 #include "../Memory/Memory.h"
 #include "../../PokeWalker/IO/Lcd/Lcd.h"
-#include "../../PokeWalker/IO/Lcd/LcdData.h"
 #include "../Rtc/Rtc.h"
 #include "../Adc/Adc.h"
 #include "../../PokeWalker/IO/Buttons/Buttons.h"

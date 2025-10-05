@@ -2,71 +2,101 @@
 
 #include <print>
 
-#include "LcdData.h"
 #include "../../../H8/Ssu/Ssu.h"
 
 void Lcd::Transmit(Ssu* ssu)
 {
-    uint8_t command = ssu->transmit;
-    switch (state) {
-    case Waiting:
-        {
-            if (command <= 0xF) // low column
-            {
-                column &= 0xF0;
-                column |= command & 0xF;
-                offset = 0;
-            }
-            else if (command >= 0x10 && command <= 0x17) // high column
-            {
-                column &= 0xF;
-                column |= (command & 0b111) << 4;
-                offset = 0;
-            }
-            else if (command >= 0x40 && command <= 0x43)
-            {
-                state = PageOffset;
-            }
-            else if (command >= 0xB0 && command <= 0xBF) // page
-            {
-                page = command & 0xF;
-            }
-            else if (command == 0x81)
-            {
-                state = Contrast;
-            }
-            else if (command == 0xA9)
-            {
-                powerSaveMode = true;
-            }
-            else if (command == 0xE1)
-            {
-                powerSaveMode = false;
-            }
-            break;
-        }
-    case Contrast:
-        {
-            contrast = command;
-            state = Waiting;
-            break;
-        }
-    case PageOffset:
-        {
-            pageOffset = command / 8;
-            state = Waiting;
-            break;
-        }
-    }
+    // data mode
+    if (IsDataMode(ssu))
+    {
+        const uint16_t address = (page * TOTAL_COLUMNS * COLUMN_SIZE) + (column * COLUMN_SIZE) + offset;
+        memory->WriteByte(address, ssu->transmit);
 
-    ssu->status |= SsuFlags::Status::TRANSMIT_EMPTY;
-    ssu->status |= SsuFlags::Status::TRANSMIT_END;
+        if (offset == 1)
+        {
+            column++;
+        }
+
+        offset++;
+        offset %= 2;
+
+        ssu->status |= SsuFlags::Status::TRANSMIT_EMPTY;
+        ssu->status |= SsuFlags::Status::TRANSMIT_END;
+    }
+    else
+    {
+
+        const uint8_t command = ssu->transmit;
+        switch (state) {
+        case Waiting:
+            {
+                if (command <= 0xF) // low column
+                {
+                    column &= 0xF0;
+                    column |= command & 0xF;
+                    offset = 0;
+                }
+                else if (command >= 0x10 && command <= 0x17) // high column
+                {
+                    column &= 0xF;
+                    column |= (command & 0b111) << 4;
+                    offset = 0;
+                }
+                else if (command >= 0x40 && command <= 0x43)
+                {
+                    state = PageOffset;
+                }
+                else if (command >= 0xB0 && command <= 0xBF) // page
+                {
+                    page = command & 0xF;
+                }
+                else if (command == 0x81)
+                {
+                    state = Contrast;
+                }
+                else if (command == 0xA9)
+                {
+                    powerSaveMode = true;
+                }
+                else if (command == 0xE1)
+                {
+                    powerSaveMode = false;
+                }
+                else if (command == 0xE2) // reset command
+                {
+                    column = 0;
+                    offset = 0;
+                    page = 0;
+                    contrast = 20;
+                    pageOffset = 0;
+                    powerSaveMode = false;
+                }
+                break;
+            }
+        case Contrast:
+            {
+                contrast = command;
+                state = Waiting;
+                break;
+            }
+        case PageOffset:
+            {
+                pageOffset = command / 8;
+                state = Waiting;
+                break;
+            }
+        }
+
+        ssu->status |= SsuFlags::Status::TRANSMIT_EMPTY;
+        ssu->status |= SsuFlags::Status::TRANSMIT_END;
+    }
 }
 
-bool Lcd::CanExecute(Ssu* ssu)
+void Lcd::TransmitAndReceive(Ssu* ssu)
 {
-    // TODO create larger component for handling multiple pins
-    return !(ssu->GetPort(Ssu::Port::PORT_1) & Ssu::PIN_1);
+    Transmit(ssu);
+
+    ssu->status |= SsuFlags::Status::RECEIVE_FULL;
 }
 
 void Lcd::Tick()
@@ -106,3 +136,10 @@ void Lcd::Tick()
 
     OnDraw(buffer);
 }
+
+bool Lcd::IsDataMode(Ssu* ssu)
+{
+    // low is command, high is data
+    return ssu->GetPort(Ssu::Port::PORT_1) & Ssu::PIN_1;
+}
+
