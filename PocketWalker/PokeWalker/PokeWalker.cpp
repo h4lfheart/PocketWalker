@@ -43,7 +43,7 @@ void PokeWalker::Tick(uint64_t cycles)
     }
 }
 
-void PokeWalker::OnDraw(const EventHandlerCallback<uint8_t*>& handler) const
+void PokeWalker::OnDraw(const EventHandlerCallback<LcdInformation>& handler) const
 {
     lcd->OnDraw += handler;
 }
@@ -76,11 +76,6 @@ void PokeWalker::ReleaseButton(const Buttons::Button button) const
 void PokeWalker::SetEepromBuffer(uint8_t* buffer) const
 {
     eeprom->memory->buffer = buffer;
-}
-
-uint8_t PokeWalker::GetContrast() const
-{
-    return lcd->contrast - 20;
 }
 
 uint8_t* PokeWalker::GetEepromBuffer() const

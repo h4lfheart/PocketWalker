@@ -79,9 +79,9 @@ int main(int argc, char* argv[])
     
     PokeWalker pokeWalker(romBuffer.data(), eepromBuffer.data());
 
-    pokeWalker.OnDraw([&](uint8_t* buffer)
+    pokeWalker.OnDraw([&](const LcdInformation lcd)
     {
-        sdl.window->Render(buffer);
+        sdl.window->Render(lcd.data);
     });
 
     pokeWalker.OnAudio([&](const AudioInformation audio)
@@ -112,7 +112,6 @@ int main(int argc, char* argv[])
             });
         }
 
-        // TODO add proper handlers for these, no board access!!
         socket.setOnData([&](const std::vector<uint8_t>& data) {
 
             for (auto byte : data)

@@ -134,7 +134,7 @@ void Lcd::Tick()
         std::memset(buffer, 0, bufferSize); // Fill with palette index 0 for power save mode
     }
 
-    OnDraw(buffer);
+    OnDraw(LcdInformation(buffer, contrast - 20));
 }
 
 bool Lcd::IsDataMode(Ssu* ssu)

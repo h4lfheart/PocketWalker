@@ -7,6 +7,12 @@
 
 class Memory;
 
+struct LcdInformation
+{
+    uint8_t* data;
+    uint8_t contrast;
+};
+
 class Lcd : public IOComponent
 {
 public:
@@ -32,7 +38,7 @@ public:
     
     LcdState state;
 
-    EventHandler<uint8_t*> OnDraw;
+    EventHandler<LcdInformation> OnDraw;
 
     size_t column = 0;
     size_t offset = 0;

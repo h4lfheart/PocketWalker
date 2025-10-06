@@ -12,7 +12,7 @@ public:
 
     void Tick(uint64_t cycles) override;
     
-    void OnDraw(const EventHandlerCallback<uint8_t*>& handler) const;
+    void OnDraw(const EventHandlerCallback<LcdInformation>& handler) const;
     void OnAudio(const EventHandlerCallback<AudioInformation>& handler) const;
 
     void OnTransmitSci3(const EventHandlerCallback<uint8_t>& callback) const;
@@ -23,8 +23,6 @@ public:
     
     uint8_t* GetEepromBuffer() const;
     void SetEepromBuffer(uint8_t* buffer) const;
-
-    uint8_t GetContrast() const;
 
 private:
     void SetupAddressHandlers() const;
