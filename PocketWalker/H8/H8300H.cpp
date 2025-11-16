@@ -40,7 +40,7 @@ void H8300H::Resume()
 
 void H8300H::EmulatorLoop()
 {
-    auto loop = [&]()
+    auto loop = [&]
     {
         constexpr double SECONDS_PER_CYCLE = 1.0 / Cpu::TICKS;
         constexpr int INSTRUCTIONS_PER_TIMING_CHECK = 1000;
@@ -111,6 +111,11 @@ uint8_t H8300H::Step()
     return cpuCycles;
 }
 
+
+void H8300H::OnAddress(uint16_t address, const PCHandler& handler) const
+{
+    board->cpu->OnAddress(address, handler);
+}
 
 void H8300H::Tick(uint64_t cycles)
 {

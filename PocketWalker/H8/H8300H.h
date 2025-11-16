@@ -20,6 +20,8 @@ public:
     
     void SetExceptionHandling(const bool value) { isExceptionHandling = value; }
 
+    void OnAddress(uint16_t address, const PCHandler& handler) const;
+
 
 protected:
     
