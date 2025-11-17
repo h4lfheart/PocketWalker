@@ -13,7 +13,7 @@ PocketWalker - An H8/300H Emulator Tailored for the PokeWalker
 - CPU
 - SSU
 - RTC
-- [SCI3 IR Communication](https://github.com/Ceravia/melonDS-IR)
+- SCI3 ([melonDS-IR](https://github.com/Ceravia/melonDS-IR))
   - Peer Play
 - Peripherals
   - LCD (w/ Sleep Mode)
