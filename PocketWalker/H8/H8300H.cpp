@@ -112,6 +112,11 @@ uint8_t H8300H::Step()
 }
 
 
+void H8300H::SetSci3PacketTimeout(const int timeout) const
+{
+    board->sci3->SetPacketTimeout(timeout);
+}
+
 void H8300H::OnAddress(uint16_t address, const PCHandler& handler) const
 {
     board->cpu->OnAddress(address, handler);

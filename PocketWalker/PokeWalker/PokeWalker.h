@@ -15,7 +15,7 @@ public:
     void OnDraw(const EventHandlerCallback<LcdInformation>& handler) const;
     void OnAudio(const EventHandlerCallback<AudioInformation>& handler) const;
 
-    void OnTransmitSci3(const EventHandlerCallback<uint8_t>& callback) const;
+    void OnTransmitSci3(const EventHandlerCallback<std::vector<uint8_t>>& callback) const;
     void ReceiveSci3(uint8_t byte) const;
     
     void PressButton(Buttons::Button button) const;

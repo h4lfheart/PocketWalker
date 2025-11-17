@@ -39,6 +39,11 @@ int main(int argc, char* argv[])
     arguments.add_argument("--no-save")
         .help("Disables eeprom saving.")
         .flag();
+
+    arguments.add_argument("--packet-timeout")
+        .help("Packet timeout in milliseconds.")
+        .default_value(5)
+        .scan<'i', int>();
     
     try {
         arguments.parse_args(argc, argv);
@@ -78,6 +83,9 @@ int main(int argc, char* argv[])
     }
     
     PokeWalker pokeWalker(romBuffer.data(), eepromBuffer.data());
+
+    auto packetTimeout = arguments.get<int>("--packet-timeout");
+    pokeWalker.SetSci3PacketTimeout(packetTimeout);
 
     pokeWalker.OnDraw([&](const LcdInformation lcd)
     {
@@ -120,9 +128,9 @@ int main(int argc, char* argv[])
             }
         });
 
-        pokeWalker.OnTransmitSci3([&](uint8_t byte)
+        pokeWalker.OnTransmitSci3([&](const std::vector<uint8_t>& packet)
         {
-            socket.send({byte});
+            socket.send(packet);
         });
 
         if (serverMode) {

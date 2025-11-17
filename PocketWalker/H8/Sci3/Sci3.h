@@ -2,6 +2,10 @@
 #include <cstdint>
 #include <mutex>
 #include <queue>
+#include <vector>
+#include <chrono>
+#include <thread>
+#include <atomic>
 #include <print>
 
 #include "../../Utilities/EventHandler.h"
@@ -48,15 +52,31 @@ public:
             status &= ~Sci3Flags::STATUS_TRANSMIT_END;
             status &= ~Sci3Flags::STATUS_TRANSMIT_EMPTY;
         });
+
+        StartPacketAccumulator();
+    }
+
+    ~Sci3() override
+    {
+        StopPacketAccumulator();
     }
 
     void Tick() override;
 
     void Receive(uint8_t byte);
 
+    
+    void StartPacketAccumulator();
+    void StopPacketAccumulator();
+
+    void SetPacketTimeout(const int timeout)
+    {
+        packetTimeout = timeout;
+    }
+
     std::queue<uint8_t> receiveBuffer;
 
-    EventHandler<uint8_t> OnTransmitData;
+    EventHandler<std::vector<uint8_t>> OnTransmitPacket;
 
     MemoryAccessor<uint8_t> control;
     MemoryAccessor<uint8_t> status;
@@ -73,6 +93,14 @@ private:
     static constexpr uint16_t STATUS_ADDR = 0xFF9C;
     static constexpr uint16_t RECEIVE_ADDR = 0xFF9D;
 
-    std::mutex receiveMutex; 
+    std::mutex receiveMutex;
     
+    std::vector<uint8_t> transmitBuffer;
+    std::mutex transmitMutex;
+    std::chrono::steady_clock::time_point lastTransmitTime;
+    std::atomic<bool> hasTransmitData{false};
+    int packetTimeout = 5;
+    
+    std::thread packetSenderThread;
+    std::atomic<bool> senderRunning{false};
 };

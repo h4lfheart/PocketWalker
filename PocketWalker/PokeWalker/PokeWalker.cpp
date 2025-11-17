@@ -53,9 +53,9 @@ void PokeWalker::OnAudio(const EventHandlerCallback<AudioInformation>& handler) 
     beeper->OnPlayAudio += handler;
 }
 
-void PokeWalker::OnTransmitSci3(const EventHandlerCallback<uint8_t>& callback) const
+void PokeWalker::OnTransmitSci3(const EventHandlerCallback<std::vector<uint8_t>>& callback) const
 {
-    board->sci3->OnTransmitData += callback;
+    board->sci3->OnTransmitPacket += callback;
 }
 
 void PokeWalker::ReceiveSci3(const uint8_t byte) const

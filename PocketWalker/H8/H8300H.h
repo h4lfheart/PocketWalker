@@ -19,6 +19,7 @@ public:
     bool IsPaused() const { return isPaused; }
     
     void SetExceptionHandling(const bool value) { isExceptionHandling = value; }
+    void SetSci3PacketTimeout(int timeout) const;
 
     void OnAddress(uint16_t address, const PCHandler& handler) const;
 
