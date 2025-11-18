@@ -53,6 +53,8 @@ public:
             status &= ~Sci3Flags::STATUS_TRANSMIT_EMPTY;
         });
 
+        ram->AddReadOnlyAddress(STATUS_ADDR);
+        
         StartPacketAccumulator();
     }
 

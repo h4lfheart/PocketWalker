@@ -12,44 +12,52 @@ class MemoryAccessor {
 public:
     MemoryAccessor(Memory* mem, uint16_t addr) : memory(mem), address(addr) {}
     
-    MemoryAccessor& operator=(T value) {
+    MemoryAccessor& operator=(T value)
+    {
         write(value);
         return *this;
     }
     
-    operator T() const {
+    operator T() const
+    {
         return read();
     }
 
-    MemoryAccessor& operator+=(T value) {
+    MemoryAccessor& operator+=(T value)
+    {
         T current = read();
         write(current + value);
         return *this;
     }
     
-    MemoryAccessor& operator-=(T value) {
+    MemoryAccessor& operator-=(T value)
+    {
         T current = read();
         write(current - value);
         return *this;
     }
     
-    MemoryAccessor& operator&=(T value) {
+    MemoryAccessor& operator&=(T value)
+    {
         T current = read();
         write(current & value);
         return *this;
     }
     
-    MemoryAccessor& operator|=(T value) {
+    MemoryAccessor& operator|=(T value)
+    {
         T current = read();
         write(current | value);
         return *this;
     }
     
-    T Get() const {
+    T Get() const
+    {
         return read();
     }
     
-    void Set(T value) {
+    void Set(T value)
+    {
         write(value);
     }
 

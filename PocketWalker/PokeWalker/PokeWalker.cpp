@@ -104,11 +104,4 @@ void PokeWalker::SetupAddressHandlers() const
         return SkipInstruction; 
     });
 
-    // hacky ir fix
-    board->cpu->OnAddress(0x8EE, [](Cpu* cpu)
-    {
-        cpu->registers->pc += 2;
-            
-        return SkipInstruction; 
-    });
 }

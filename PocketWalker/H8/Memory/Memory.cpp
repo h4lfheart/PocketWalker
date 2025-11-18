@@ -53,8 +53,11 @@ uint32_t Memory::ReadInt(uint16_t address) const
     return value;
 }
 
-void Memory::WriteByte(uint16_t address, const uint8_t value) const
+void Memory::WriteByte(uint16_t address, const uint8_t value, bool hardwareWrite) const
 {
+    if (!hardwareWrite && IsReadOnlyAddress(address))
+        return;
+    
     this->buffer[address] = value;
 
     if (const auto it = writeHandlers.find(address); it != writeHandlers.end())
@@ -63,19 +66,25 @@ void Memory::WriteByte(uint16_t address, const uint8_t value) const
     }
 }
 
-void Memory::WriteShort(uint16_t address, uint16_t value) const
+void Memory::WriteShort(uint16_t address, uint16_t value, bool hardwareWrite) const
 {
+    if (!hardwareWrite && IsReadOnlyAddress(address))
+        return;
+    
     this->buffer[address] = value >> 8 & 0xFF;
     this->buffer[address + 1] = value & 0xFF;
-    \
+    
     if (const auto it = writeHandlers.find(address); it != writeHandlers.end())
     {
         it->second(value);
     }
 }
 
-void Memory::WriteInt(uint16_t address, uint32_t value) const
+void Memory::WriteInt(uint16_t address, uint32_t value, bool hardwareWrite) const
 {
+    if (!hardwareWrite && IsReadOnlyAddress(address))
+        return;
+    
     this->buffer[address] = value >> 24 & 0xFF;
     this->buffer[address + 1] = value >> 16 & 0xFF;
     this->buffer[address + 2] = value >> 8 & 0xFF;
