@@ -13,33 +13,33 @@ std::string Memory::ReadString(uint16_t address, size_t size)
     return data;
 }
 
-uint8_t Memory::ReadByte(uint16_t address) const
+uint8_t Memory::ReadByte(uint16_t address, bool isFromHardware) const
 {
     address &= 0xFFFF;
     const uint8_t value = this->buffer[address];
     
     if (const auto it = readHandlers.find(address); it != readHandlers.end())
     {
-        it->second(value);
+        it->second(value, isFromHardware);
     }
     
     return value;
 }
 
-uint16_t Memory::ReadShort(uint16_t address) const
+uint16_t Memory::ReadShort(uint16_t address, bool isFromHardware) const
 {
     address &= 0xFFFF;
     const uint16_t value = this->buffer[address] << 8 | this->buffer[address + 1];
     
     if (const auto it = readHandlers.find(address); it != readHandlers.end())
     {
-        it->second(value);
+        it->second(value, isFromHardware);
     }
     
     return value;
 }
 
-uint32_t Memory::ReadInt(uint16_t address) const
+uint32_t Memory::ReadInt(uint16_t address, bool isFromHardware) const
 {
     address &= 0xFFFF;
     
@@ -47,28 +47,28 @@ uint32_t Memory::ReadInt(uint16_t address) const
    
     if (const auto it = readHandlers.find(address); it != readHandlers.end())
     {
-        it->second(value);
+        it->second(value, isFromHardware);
     }
     
     return value;
 }
 
-void Memory::WriteByte(uint16_t address, const uint8_t value, bool hardwareWrite) const
+void Memory::WriteByte(uint16_t address, const uint8_t value, bool isFromHardware) const
 {
-    if (!hardwareWrite && IsReadOnlyAddress(address))
+    if (!isFromHardware && IsReadOnlyAddress(address))
         return;
     
     this->buffer[address] = value;
 
     if (const auto it = writeHandlers.find(address); it != writeHandlers.end())
     {
-        it->second(value);
+        it->second(value, isFromHardware);
     }
 }
 
-void Memory::WriteShort(uint16_t address, uint16_t value, bool hardwareWrite) const
+void Memory::WriteShort(uint16_t address, uint16_t value, bool isFromHardware) const
 {
-    if (!hardwareWrite && IsReadOnlyAddress(address))
+    if (!isFromHardware && IsReadOnlyAddress(address))
         return;
     
     this->buffer[address] = value >> 8 & 0xFF;
@@ -76,13 +76,13 @@ void Memory::WriteShort(uint16_t address, uint16_t value, bool hardwareWrite) co
     
     if (const auto it = writeHandlers.find(address); it != writeHandlers.end())
     {
-        it->second(value);
+        it->second(value, isFromHardware);
     }
 }
 
-void Memory::WriteInt(uint16_t address, uint32_t value, bool hardwareWrite) const
+void Memory::WriteInt(uint16_t address, uint32_t value, bool isFromHardware) const
 {
-    if (!hardwareWrite && IsReadOnlyAddress(address))
+    if (!isFromHardware && IsReadOnlyAddress(address))
         return;
     
     this->buffer[address] = value >> 24 & 0xFF;
@@ -92,6 +92,6 @@ void Memory::WriteInt(uint16_t address, uint32_t value, bool hardwareWrite) cons
     
     if (const auto it = writeHandlers.find(address); it != writeHandlers.end())
     {
-        it->second(value);
+        it->second(value, isFromHardware);
     }
 }

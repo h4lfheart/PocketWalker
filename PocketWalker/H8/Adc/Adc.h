@@ -22,7 +22,7 @@ public:
         start(ram->CreateAccessor<uint8_t>(START_ADDR)),
         result(ram->CreateAccessor<uint16_t>(RESULT_ADDR))
     {
-        ram->OnWrite(START_ADDR, [this](uint8_t)
+        ram->OnWrite(START_ADDR, [this](uint8_t, bool)
         {
             if (start & AdcFlags::START_CONVERSION)
             {

@@ -34,7 +34,7 @@ public:
         registerC(ram->CreateAccessor<uint16_t>(REGISTER_C_ADDR)),
         registerD(ram->CreateAccessor<uint16_t>(REGISTER_D_ADDR))
     {
-        ram->OnWrite(CONTROL_ADDR, [this](uint32_t control)
+        ram->OnWrite(CONTROL_ADDR, [this](uint32_t control, bool)
         {
             clockRate = clockRates[(control >> 4) & 0b111];
         });

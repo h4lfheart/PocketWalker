@@ -6,7 +6,7 @@ void TimerB1::Tick()
 {
     if (counter == std::numeric_limits<uint8_t>::max())
     {
-        counter = 0;
+        counter = loadValue;
         interrupts->flag2 |= InterruptFlags::ENABLE_TIMER_B1;
     }
     else

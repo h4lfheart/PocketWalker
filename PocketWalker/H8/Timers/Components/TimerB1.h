@@ -23,16 +23,23 @@ public:
         mode(ram->CreateAccessor<uint8_t>(MODE_ADDR)),
         counter(ram->CreateAccessor<uint8_t>(COUNTER_ADDR))
     {
-        ram->OnWrite(MODE_ADDR, [this](uint32_t mode)
+        ram->OnWrite(MODE_ADDR, [this](uint32_t mode, bool)
         {
             clockRate = clockRates[mode & 0b111];
+        });
+        
+        ram->OnWrite(COUNTER_ADDR, [this](uint32_t value, bool isHardware)
+        {
+            if (!isHardware)
+                loadValue = value;
         });
     }
 
     void Tick() override;
 
     size_t clockRate = 256;
-    bool isCounting;
+    uint8_t loadValue = 0;
+    bool isCounting = false;
 
     MemoryAccessor<uint8_t> mode;
     MemoryAccessor<uint8_t> counter;

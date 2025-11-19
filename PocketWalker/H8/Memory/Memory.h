@@ -6,7 +6,8 @@
 
 #include "MemoryAccessor.h"
 
-using MemoryHandler = std::function<void(uint32_t)>;
+// TODO create separate hardware/software read/write functions
+using MemoryHandler = std::function<void(uint32_t, bool isFromHardware)>;
 
 class Memory
 {
@@ -37,13 +38,13 @@ public:
     }
 
     std::string ReadString(uint16_t address, size_t size);
-    uint8_t ReadByte(uint16_t address) const;
-    uint16_t ReadShort(uint16_t address) const;
-    uint32_t ReadInt(uint16_t address) const;
+    uint8_t ReadByte(uint16_t address, bool isFromHardware = false) const;
+    uint16_t ReadShort(uint16_t address, bool isFromHardware = false) const;
+    uint32_t ReadInt(uint16_t address, bool isFromHardware = false) const;
     
-    void WriteByte(uint16_t address, uint8_t value, bool hardwareWrite = false) const;
-    void WriteShort(uint16_t address, uint16_t value, bool hardwareWrite = false) const;
-    void WriteInt(uint16_t address, uint32_t value, bool hardwareWrite = false) const;
+    void WriteByte(uint16_t address, uint8_t value, bool isFromHardware = false) const;
+    void WriteShort(uint16_t address, uint16_t value, bool isFromHardware = false) const;
+    void WriteInt(uint16_t address, uint32_t value, bool isFromHardware = false) const;
 
     void AddReadOnlyAddresses(const std::vector<uint16_t>& locations)
     {

@@ -42,12 +42,12 @@ public:
         transmit(ram->CreateAccessor<uint8_t>(TRANSMIT_ADDR)),
         receive(ram->CreateAccessor<uint8_t>(RECEIVE_ADDR))
     {
-        ram->OnRead(RECEIVE_ADDR, [this](uint8_t)
+        ram->OnRead(RECEIVE_ADDR, [this](uint8_t, bool)
         {
             status &= ~Sci3Flags::STATUS_RECEIVE_FULL;
         });
         
-        ram->OnWrite(TRANSMIT_ADDR, [this](uint8_t)
+        ram->OnWrite(TRANSMIT_ADDR, [this](uint8_t, bool)
         {
             status &= ~Sci3Flags::STATUS_TRANSMIT_END;
             status &= ~Sci3Flags::STATUS_TRANSMIT_EMPTY;

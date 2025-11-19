@@ -3,8 +3,6 @@
 #include <functional>
 #include <unordered_map>
 
-using MemoryHandler = std::function<void(uint32_t)>;
-
 class Memory;
 
 template<typename T>

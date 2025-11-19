@@ -5,7 +5,7 @@
 template<>
 uint8_t MemoryAccessor<uint8_t>::read() const
 {
-    return memory->ReadByte(address);
+    return memory->ReadByte(address, true);
 }
 
 template<>
@@ -17,7 +17,7 @@ void MemoryAccessor<uint8_t>::write(uint8_t value)
 template<>
 uint16_t MemoryAccessor<uint16_t>::read() const
 {
-    return memory->ReadShort(address);
+    return memory->ReadShort(address, true);
 }
 
 template<>
@@ -29,7 +29,7 @@ void MemoryAccessor<uint16_t>::write(uint16_t value)
 template<>
 uint32_t MemoryAccessor<uint32_t>::read() const
 {
-    return memory->ReadInt(address);
+    return memory->ReadInt(address, true);
 }
 
 template<>

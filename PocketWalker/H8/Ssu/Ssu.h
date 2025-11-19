@@ -86,23 +86,23 @@ public:
         port9(ram->CreateAccessor<uint8_t>(PORT_9)),
         portB(ram->CreateAccessor<uint8_t>(PORT_B))
     {
-        ram->OnRead(RECEIVE_ADDR, [this](uint32_t)
+        ram->OnRead(RECEIVE_ADDR, [this](uint32_t, bool)
         {
             status &= ~SsuFlags::Status::RECEIVE_FULL;
         });
         
-        ram->OnWrite(TRANSMIT_ADDR, [this](uint32_t)
+        ram->OnWrite(TRANSMIT_ADDR, [this](uint32_t, bool)
         {
             status &= ~SsuFlags::Status::TRANSMIT_EMPTY;
             status &= ~SsuFlags::Status::TRANSMIT_END;
         });
 
-        ram->OnWrite(MODE_ADDR, [this](uint32_t mode)
+        ram->OnWrite(MODE_ADDR, [this](uint32_t mode, bool)
         {
             clockRate = clockRates[mode & 0b111];
         });
         
-        ram->OnWrite(PORT_1, [this](uint32_t)
+        ram->OnWrite(PORT_1, [this](uint32_t, bool)
         {
             ExecutePeripherals(PORT_1, [](IOComponent* peripheral)
             {
@@ -110,7 +110,7 @@ public:
             }, true, false);
         });
         
-        ram->OnWrite(PORT_9, [this](uint32_t)
+        ram->OnWrite(PORT_9, [this](uint32_t, bool)
         {
             ExecutePeripherals(PORT_9, [](IOComponent* peripheral)
             {
@@ -118,7 +118,7 @@ public:
             }, true, false);
         });
         
-        ram->OnWrite(PORT_B, [this](uint32_t port)
+        ram->OnWrite(PORT_B, [this](uint32_t port, bool)
         {
             if (port & SsuFlags::PortB::IRQ0)
             {
