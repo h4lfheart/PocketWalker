@@ -44,6 +44,10 @@ int main(int argc, char* argv[])
         .help("Packet timeout in milliseconds.")
         .default_value(5)
         .scan<'i', int>();
+
+    arguments.add_argument("--ip")
+        .help("IP address to connect to in client mode.")
+        .default_value("127.0.0.1");
     
     try {
         arguments.parse_args(argc, argv);
@@ -138,7 +142,9 @@ int main(int argc, char* argv[])
                 std::println("[TCP] Failed to start server");
             }
         } else {
-            socket.connect("127.0.0.1", 8081);
+            auto ipAddress = arguments.get<std::string>("--ip");
+            std::println("[TCP] Connecting to {}:8081", ipAddress);
+            socket.connect(ipAddress, 8081);
         }
 
         while (pokeWalker.IsRunning()) {
