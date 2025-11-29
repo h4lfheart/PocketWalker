@@ -48,7 +48,12 @@ int main(int argc, char* argv[])
     arguments.add_argument("--ip")
         .help("IP address to connect to in client mode.")
         .default_value("127.0.0.1");
-    
+ 
+    arguments.add_argument("--port")
+        .help("Port Number to connect either server or client mode")
+        .default_value(8081)
+        .scan<'i', int>();
+
     try {
         arguments.parse_args(argc, argv);
     }
@@ -137,14 +142,16 @@ int main(int argc, char* argv[])
             socket.send(packet);
         });
 
+        auto portNumber = arguments.get<int>("--port");
+
         if (serverMode) {
-            if (!socket.startServer(8081)) {
+            if (!socket.startServer(portNumber)) {
                 std::println("[TCP] Failed to start server");
             }
         } else {
             auto ipAddress = arguments.get<std::string>("--ip");
-            std::println("[TCP] Connecting to {}:8081", ipAddress);
-            socket.connect(ipAddress, 8081);
+            std::println("[TCP] Connecting to {}:{}", ipAddress, portNumber);
+            socket.connect(ipAddress, portNumber);
         }
 
         while (pokeWalker.IsRunning()) {
