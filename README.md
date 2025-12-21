@@ -9,6 +9,17 @@ PocketWalker - An H8/300H Emulator Tailored for the PokeWalker
 
 ![image](.github/cover.png)
 
+## Building PocketWalker
+To build PocketWalker from source, first clone the repository and all of its submodules.
+```
+git clone -b feature/cmake https://github.com/halfuwu/PocketWalker --recursive
+```
+
+Then open the project directory in a terminal window and build.
+```
+./build.sh
+```
+
 ## Fully Implemented Features
 - CPU
 - SSU
@@ -22,8 +33,8 @@ PocketWalker - An H8/300H Emulator Tailored for the PokeWalker
   - Beeper Audio
 
 ## Partially Implemented Features
-- ADC
-- Accelerometer
+- ADC (Fake Values)
+- Accelerometer (No Step Tracking Yet)
 
 ## Planned Features
 - Step Tracking (Accelerometer)
