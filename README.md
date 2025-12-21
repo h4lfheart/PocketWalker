@@ -12,7 +12,7 @@ PocketWalker - An H8/300H Emulator Tailored for the PokeWalker
 ## Building PocketWalker
 To build PocketWalker from source, first clone the repository and all of its submodules.
 ```
-git clone -b feature/cmake https://github.com/halfuwu/PocketWalker --recursive
+git clone -b feature/cmake https://github.com/h4lfheart/PocketWalker --recursive
 ```
 
 Then open the project directory in a terminal window and build.
