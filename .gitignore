@@ -8,3 +8,7 @@ riderModule.iml
 .idea
 x64
 *.user
+
+build
+release
+x64

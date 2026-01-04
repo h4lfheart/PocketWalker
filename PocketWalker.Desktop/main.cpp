@@ -26,11 +26,11 @@ int main(int argc, char* argv[])
 
     arguments.add_argument("rom")
         .help("The path for your PokeWalker rom file.")
-        .required();
+        .default_value("rom.bin");
     
     arguments.add_argument("eeprom")
         .help("The path for your PokeWalker eeprom file.")
-        .default_value("");
+        .default_value("eeprom.bin");
 
     arguments.add_argument("--server")
         .help("Runs the TCP connection as a server.")
@@ -70,12 +70,18 @@ int main(int argc, char* argv[])
     bool noSaveMode = arguments.is_used("--no-save");
     
     std::string romPath = arguments.get<std::string>("rom");
+    if (!std::filesystem::exists(romPath))
+    {
+        std::println("Failed to find a rom with the name \"{}\"", romPath);
+        std::cin.get();
+        return 1;
+    }
+    
     std::array<uint8_t, 0xFFFF> romBuffer = {};
     std::ifstream romFile(romPath, std::ios::binary);
     romFile.read(reinterpret_cast<char*>(romBuffer.data()), romBuffer.size());
 
     auto eepromPath = arguments.get<std::string>("eeprom");
-    if (eepromPath.empty()) eepromPath = "eeprom.bin";
     
     std::array<uint8_t, 0xFFFF> eepromBuffer = {};
     if (std::filesystem::exists(eepromPath))
@@ -88,6 +94,8 @@ int main(int argc, char* argv[])
     SdlSystem sdl;
     if (!sdl.Initialize())
     {
+        std::println("Failed to initialize SDL");
+        std::cin.get();
         return 1;
     }
     
